@@ -1,0 +1,43 @@
+﻿version: "3.8"
+
+services:
+  database:
+    image: mysql:8.0
+    container_name: mezon_khb_db
+    environment:
+      MYSQL_ROOT_PASSWORD: \
+      MYSQL_DATABASE: mezon_knowledge_hub
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: always
+
+  bot-service:
+    build: ./bot
+    container_name: mezon_khb_bot
+    depends_on:
+      - database
+    environment:
+      - MEZON_BOT_TOKEN=\
+      - GEMINI_API_KEY=\
+      - TAVILY_API_KEY=\
+      - DB_HOST=database
+      - DB_USER=root
+      - DB_PASSWORD=\
+      - DB_NAME=mezon_knowledge_hub
+    restart: always
+
+  web-dashboard:
+    build: ./web-dashboard
+    container_name: mezon_khb_dashboard
+    ports:
+      - "3001:3000"
+    depends_on:
+      - database
+    environment:
+      - DATABASE_URL=mysql://root:\@database:3306/mezon_knowledge_hub
+    restart: always
+
+volumes:
+  mysql_data:
