@@ -1,14 +1,51 @@
-'use client';
-import { useWorkspaceStore } from '@/features/folders/store';
-import { fileService } from '@/features/files/services';
-import FileViewer from '@/features/files/components/FileViewer';
-import { useEffect, useState } from 'react';
+"use client";
+import { useWorkspaceStore } from "@/features/folders/store";
+import { fileService } from "@/features/files/services";
+import FileViewer from "@/features/files/components/FileViewer";
+import { useEffect, useState, use } from "react";
+import { useRouter } from "next/navigation";
+import ChatHistory from "@/components/chat/ChatHistory";
+import ChatInput from "@/components/chat/ChatInput";
+import { MessageProps } from "@/components/chat/ChatMessage";
+import { PanelRightClose, PanelRight } from "lucide-react";
 
-export default function FolderPage({ params }: { params: { folderId: string } }) {
-  const { folders, selectedFileId } = useWorkspaceStore() as any;
+export default function FolderPage({
+  params,
+}: {
+  params: Promise<{ folderId: string }> | { folderId: string };
+}) {
+  const resolvedParams = params instanceof Promise ? use(params) : params;
+  const folderId = resolvedParams.folderId;
+  const router = useRouter();
+
+  const {
+    folders,
+    selectedFileId,
+    setSidebarOpen,
+    isDocumentSideOpen,
+    setDocumentSideOpen,
+    toggleDocumentSide,
+  } = useWorkspaceStore() as any;
   const [fileDetails, setFileDetails] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
+  const [messages, setMessages] = useState<MessageProps[]>([
+    {
+      id: "msg-1",
+      role: "bot",
+      content:
+        "I have generated the knowledge hub folder for you. Let me know if you need any adjustments.",
+    },
+  ]);
 
-  const folder = folders.find((f: any) => f.id === params.folderId);
+  useEffect(() => {
+    if (folderId === "default") {
+      router.replace("/dashboard");
+    } else {
+      setSidebarOpen(true);
+    }
+  }, [folderId, router, setSidebarOpen]);
+
+  const folder = folders.find((f: any) => f.id === folderId);
   const fileSummary = folder?.files?.find((f: any) => f.id === selectedFileId);
 
   useEffect(() => {
@@ -21,13 +58,14 @@ export default function FolderPage({ params }: { params: { folderId: string } })
         const res = await fileService.getFile(selectedFileId);
         if (res.success) {
           setFileDetails(res.data);
+          setDocumentSideOpen(true);
         }
       } catch (err) {
         console.error(err);
       }
     }
     loadFile();
-  }, [selectedFileId]);
+  }, [selectedFileId, setDocumentSideOpen]);
 
   const handleSaveContent = async (newContent: string) => {
     if (!selectedFileId) return;
@@ -41,13 +79,112 @@ export default function FolderPage({ params }: { params: { folderId: string } })
     }
   };
 
+  const handleSendMessage = (message: string, file?: File | null) => {
+    const userMsg: MessageProps = {
+      id: `msg-${Date.now()}`,
+      role: "user",
+      content: message,
+      fileAttachment: file?.name,
+    };
+    setMessages((prev) => [...prev, userMsg]);
+
+    setIsLoading(true);
+    setTimeout(() => {
+      const botMsg: MessageProps = {
+        id: `msg-${Date.now() + 1}`,
+        role: "bot",
+        content: "I am processing your request and updating the document...",
+        isStatus: true,
+      };
+      setMessages((prev) => [...prev, botMsg]);
+      setIsLoading(false);
+      setDocumentSideOpen(true);
+    }, 1000);
+  };
+
+  if (folderId === "default") {
+    return null;
+  }
+
   return (
-    <div className="flex h-full w-full">
-      <FileViewer 
-        file={fileDetails} 
-        folderName={folder?.name || ''} 
-        onSaveContent={handleSaveContent} 
-      />
+    <div className="flex h-full w-full overflow-hidden bg-[rgb(var(--color-bg))]">
+      {/* Left Pane: Chat Interface */}
+      <div
+        className={`flex flex-col shrink-0 transition-all duration-300 ease-in-out h-full ${
+          isDocumentSideOpen
+            ? "w-full lg:w-1/3 xl:w-2/5 border-r border-[rgb(var(--color-border))]"
+            : "w-full"
+        }`}
+      >
+        <div className="p-4 border-b border-[rgb(var(--color-border))] flex items-center justify-between pl-16">
+          <h2 className="font-semibold text-lg text-[rgb(var(--color-text-primary))] truncate">
+            {folder?.name || "Chat Session"}
+          </h2>
+          <button
+            onClick={toggleDocumentSide}
+            className="p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors"
+            title="Toggle Document Viewer"
+          >
+            {isDocumentSideOpen ? (
+              <PanelRightClose size={20} />
+            ) : (
+              <PanelRight size={20} />
+            )}
+          </button>
+        </div>
+
+        <ChatHistory messages={messages} />
+
+        <div className="p-4 bg-[rgb(var(--color-bg))] border-t border-[rgb(var(--color-border))]">
+          <ChatInput
+            onSubmit={handleSendMessage}
+            isLoading={isLoading}
+            placeholder="Ask a question or request edits..."
+          />
+        </div>
+      </div>
+
+      {/* Right Pane: File Viewer (Collapsible) */}
+      <div
+        className={`flex flex-col min-w-0 h-full bg-[rgb(var(--color-surface-1))] transition-all duration-300 ease-in-out ${
+          isDocumentSideOpen
+            ? "flex-1 opacity-100"
+            : "w-0 opacity-0 overflow-hidden"
+        }`}
+      >
+        {selectedFileId && fileDetails ? (
+          <FileViewer
+            file={fileDetails}
+            folderName={folder?.name || ""}
+            onSaveContent={handleSaveContent}
+          />
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-[rgb(var(--color-text-muted))] p-8 text-center min-w-[300px]">
+            <div className="flex flex-col items-center gap-4">
+              <div className="w-16 h-16 bg-indigo-500/20 rounded-full flex items-center justify-center text-indigo-400 mb-2">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="24"
+                  height="24"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
+                  <polyline points="14 2 14 8 20 8" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-medium text-[rgb(var(--color-text-primary))]">
+                No Document Selected
+              </h3>
+              <p>Select a document from the sidebar to view its contents.</p>
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   );
 }
