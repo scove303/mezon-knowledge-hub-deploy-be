@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useRef } from 'react';
-import ReactMarkdown from 'react-markdown';
-import remarkGfm from 'remark-gfm';
+import React, { useState, useEffect, useRef } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import {
   FileText,
   Calendar,
@@ -12,25 +12,30 @@ import {
   Video,
   Clock,
   Play,
-} from 'lucide-react';
-import { Button } from '@/components/base-ui/Button';
-import { useWorkspaceStore } from '@/features/folders/store';
-import { fileService } from '@/features/files/services';
+} from "lucide-react";
+import { Button } from "@/components/base-ui/Button";
+import { useWorkspaceStore } from "@/features/folders/store";
+import { fileService } from "@/features/files/services";
 
 export default function FileViewer({ file, onSaveContent, folderName }) {
   const [isEditing, setIsEditing] = useState(false);
-  const [editedContent, setEditedContent] = useState('');
+  const [editedContent, setEditedContent] = useState(file ? file.content : "");
   const [seekTime, setSeekTime] = useState(0);
   const [playerKey, setPlayerKey] = useState(0);
+
+  // Việc thay đổi giá trị của ref sẽ không làm component render lại (khác với state).
   const iframeRef = useRef(null);
 
-  useEffect(() => {
+  const [prevFile, setPrevFile] = useState(file);
+
+  if (file !== prevFile) {
+    setPrevFile(file); // Cập nhật lại file cũ để không bị lặp lại ở lần render sau
     if (file) {
-      setEditedContent(file.content);
-      setIsEditing(false);
-      setSeekTime(0);
+      setEditedContent(file.content); // Khởi tạo nội dung tương ứng với file mới
+      setIsEditing(false); // Tắt chế độ chỉnh sửa
+      setSeekTime(0); // Trả thời gian video về 0
     }
-  }, [file]);
+  }
 
   if (!file) {
     return (
@@ -42,8 +47,8 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
           Không có tài liệu nào đang mở
         </p>
         <p className="text-xs text-[rgb(var(--color-text-muted))] mt-1 max-w-xs text-center">
-          Hãy chọn một file từ cây thư mục ở Sidebar hoặc gửi lệnh tạo tri thức trên
-          Mezon Bot.
+          Hãy chọn một file từ cây thư mục ở Sidebar hoặc gửi lệnh tạo tri thức
+          trên Mezon Bot.
         </p>
       </div>
     );
@@ -71,8 +76,8 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
 
   const MarkdownComponents = {
     a: ({ href, children, ...props }) => {
-      if (href && href.startsWith('timestamp://')) {
-        const secs = parseInt(href.replace('timestamp://', ''), 10);
+      if (href && href.startsWith("timestamp://")) {
+        const secs = parseInt(href.replace("timestamp://", ""), 10);
         return (
           <button
             onClick={() => handleSeek(secs)}
@@ -157,7 +162,7 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
       </td>
     ),
     code: ({ inline, className, children, ...props }) => {
-      const match = /language-(\w+)/.exec(className || '');
+      const match = /language-(\w+)/.exec(className || "");
       return !inline && match ? (
         <pre className="bg-[rgb(var(--color-bg))] border border-[rgb(var(--color-border))] rounded-lg p-4 my-4 overflow-x-auto text-xs font-mono text-[rgb(var(--color-text-secondary))] shadow-inner">
           <code className={className} {...props}>
@@ -189,7 +194,7 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
             </h2>
             <div className="flex items-center space-x-2 text-[10px] text-[rgb(var(--color-text-muted))] font-medium">
               <span className="truncate max-w-xs">
-                {folderName || 'Thư mục gốc'}
+                {folderName || "Thư mục gốc"}
               </span>
               <span>•</span>
               <Calendar className="w-3 h-3" />
@@ -201,7 +206,12 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
         {/* Actions */}
         <div className="flex items-center space-x-2">
           {isEditing ? (
-            <Button id="btn-save-file" variant="success" size="sm" onClick={handleSave}>
+            <Button
+              id="btn-save-file"
+              variant="success"
+              size="sm"
+              onClick={handleSave}
+            >
               <Save className="w-3.5 h-3.5" />
               Lưu
             </Button>
@@ -221,7 +231,7 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
             id="btn-download-file"
             variant="secondary"
             size="icon"
-            onClick={() => alert('Đang tải file PDF...')}
+            onClick={() => alert("Đang tải file PDF...")}
             title="Xuất PDF"
           >
             <Download className="w-3.5 h-3.5" />
@@ -233,7 +243,7 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
             size="icon"
             onClick={() => {
               navigator.clipboard.writeText(window.location.href);
-              alert('Đã copy đường dẫn chia sẻ vào clipboard!');
+              alert("Đã copy đường dẫn chia sẻ vào clipboard!");
             }}
             title="Chia sẻ link"
           >
@@ -300,8 +310,8 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
                       onClick={() => handleSeek(t.seconds)}
                       className={`flex items-start space-x-2.5 p-2 rounded-md cursor-pointer transition-all ${
                         seekTime === t.seconds
-                          ? 'bg-indigo-600/10 border border-indigo-500/30 text-indigo-300'
-                          : 'hover:bg-[rgb(var(--color-surface-1))]/50 border border-transparent text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))]'
+                          ? "bg-indigo-600/10 border border-indigo-500/30 text-indigo-300"
+                          : "hover:bg-[rgb(var(--color-surface-1))]/50 border border-transparent text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))]"
                       }`}
                     >
                       <span className="text-xs font-mono font-bold bg-[rgb(var(--color-surface-1))] text-indigo-400 px-1.5 py-0.5 rounded shrink-0">

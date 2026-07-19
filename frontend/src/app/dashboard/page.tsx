@@ -12,7 +12,6 @@ export default function DashboardIndex() {
   const handleSubmit = async (message: string, file?: File | null) => {
     setIsLoading(true);
     try {
-      // Simulate creating a folder and redirecting for now
       const folderId = `folder-${Date.now()}`;
       router.push(`/dashboard/folders/${folderId}`);
     } catch (error) {
