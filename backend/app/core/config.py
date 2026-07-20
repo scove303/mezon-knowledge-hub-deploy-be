@@ -1,5 +1,9 @@
 from pydantic_settings import BaseSettings
 from typing import List
+from dotenv import load_dotenv
+import os
+
+load_dotenv()
 
 
 class Settings(BaseSettings):
@@ -18,7 +22,7 @@ class Settings(BaseSettings):
     DB_HOST: str = "127.0.0.1"
     DB_PORT: int = 3306
     DB_USER: str = "root"
-    DB_PASSWORD: str = ""
+    DB_PASSWORD: str = os.getenv("DATABASE_PASSWORD")
     DB_NAME: str = "mezon_knowledge_hub"
 
     @property

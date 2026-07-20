@@ -1,6 +1,10 @@
 -- ====================================================================
 -- DATABASE SCHEMA: MEZON KNOWLEDGE HUB BOT (AI-KHB)
 -- ====================================================================
+create database mezon_knowledge_hub;
+use mezon_knowledge_hub;
+
+
 
 -- 1. Bảng users (Lưu thông tin người dùng đồng bộ từ Mezon)
 CREATE TABLE IF NOT EXISTS users (
