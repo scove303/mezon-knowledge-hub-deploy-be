@@ -1,6 +1,7 @@
 from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel
+from file import FileItem
 
 
 class FileInFolder(BaseModel):
@@ -22,3 +23,7 @@ class FolderRead(BaseModel):
     created_at: datetime
     files: List[FileInFolder] = []
     model_config = {"from_attributes": True}
+
+class RoadmapResponse(BaseModel):
+    folder_name: str
+    files: List[FileItem]

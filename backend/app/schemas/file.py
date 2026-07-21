@@ -9,9 +9,9 @@ class TimestampItem(BaseModel):
     text: str
 
 
-class FileCreate(BaseModel):
-    name: str
-    content: str = ""
+class FileItem(BaseModel):
+    title: str
+    text_content: str = ""
 
 
 class FileUpdate(BaseModel):
