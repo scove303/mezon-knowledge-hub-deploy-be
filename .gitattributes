@@ -1,0 +1,4 @@
+*.js filter=hide-learning-comments
+*.jsx filter=hide-learning-comments
+*.ts filter=hide-learning-comments
+*.tsx filter=hide-learning-comments
