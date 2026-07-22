@@ -24,7 +24,7 @@ async def roadmap_service(topic: str,user_id:int):
     return new_folder
     
 
-asyncio.run(roadmap_service("tổng hợp kiến thức python từ cơ bản đến nâng cao",1))
+asyncio.run(roadmap_service("tổng hợp kiến thức coin và WEB3 từ cơ bản đến nâng cao",1))
 
 
 
