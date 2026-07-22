@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState } from "react";
 import {
   Folder,
   FileText,
@@ -11,14 +11,15 @@ import {
   FileCheck,
   Video,
   HardDrive,
-} from 'lucide-react';
-import { Button } from '@/components/base-ui/Button';
-import { Input } from '@/components/base-ui/Input';
-import { Modal } from '@/components/base-ui/Modal';
-import { authService } from '@/features/auth/services';
-import { useAuthStore } from '@/features/auth/store';
-import { useWorkspaceStore } from '@/features/folders/store';
-import { folderService } from '@/features/folders/services';
+} from "lucide-react";
+import { Button } from "@/components/base-ui/Button";
+import { Input } from "@/components/base-ui/Input";
+import { Modal } from "@/components/base-ui/Modal";
+import { authService } from "@/features/auth/services";
+import { useAuthStore } from "@/features/auth/store";
+import { useWorkspaceStore } from "@/features/folders/store";
+import { folderService } from "@/features/folders/services";
+import UserProfileMenu from "@/features/home/components/UserProfileMenu";
 
 export default function Sidebar() {
   const store = useWorkspaceStore();
@@ -54,11 +55,11 @@ export default function Sidebar() {
     // ...
   };
   const [expandedFolders, setExpandedFolders] = useState({
-    'folder-1': true,
-    'folder-2': true,
-    'folder-3': true,
+    "folder-1": true,
+    "folder-2": true,
+    "folder-3": true,
   });
-  const [newFolderName, setNewFolderName] = useState('');
+  const [newFolderName, setNewFolderName] = useState("");
   const [showAddFolder, setShowAddFolder] = useState(false);
   const [newFileName, setNewFileName] = useState({});
   const [addingFileToFolderId, setAddingFileToFolderId] = useState(null);
@@ -71,37 +72,41 @@ export default function Sidebar() {
   const handleCreateFolder = (e) => {
     e.preventDefault();
     if (!newFolderName.trim()) return;
-    const types = ['roadmap', 'document', 'video'];
+    const types = ["roadmap", "document", "video"];
     const randomType = types[folders.length % 3];
     const emoji =
-      randomType === 'roadmap' ? '🐍 ' : randomType === 'document' ? '🚗 ' : '🎥 ';
+      randomType === "roadmap"
+        ? "🐍 "
+        : randomType === "document"
+          ? "🚗 "
+          : "🎥 ";
     createFolder(emoji + newFolderName.trim(), randomType);
-    setNewFolderName('');
+    setNewFolderName("");
     setShowAddFolder(false);
   };
 
   const handleCreateFile = (folderId) => {
     const fileName = newFileName[folderId];
     if (!fileName || !fileName.trim()) return;
-    const formattedName = fileName.trim().endsWith('.md')
+    const formattedName = fileName.trim().endsWith(".md")
       ? fileName.trim()
       : `${fileName.trim()}.md`;
     createFile(
       folderId,
       formattedName,
-      `# ${formattedName.replace('.md', '')}\n\nNhập nội dung tài liệu ở đây...`
+      `# ${formattedName.replace(".md", "")}\n\nNhập nội dung tài liệu ở đây...`,
     );
-    setNewFileName((prev) => ({ ...prev, [folderId]: '' }));
+    setNewFileName((prev) => ({ ...prev, [folderId]: "" }));
     setAddingFileToFolderId(null);
   };
 
   const getFolderIcon = (type) => {
     switch (type) {
-      case 'roadmap':
+      case "roadmap":
         return <Compass className="w-4 h-4 text-emerald-400" />;
-      case 'document':
+      case "document":
         return <FileCheck className="w-4 h-4 text-cyan-400" />;
-      case 'video':
+      case "video":
         return <Video className="w-4 h-4 text-rose-400" />;
       default:
         return <Folder className="w-4 h-4 text-indigo-400" />;
@@ -204,8 +209,8 @@ export default function Sidebar() {
                     onClick={() => selectFolder(folder.id)}
                     className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
                       isSelected
-                        ? 'bg-indigo-600/10 text-indigo-300 border border-indigo-500/20 font-medium'
-                        : 'hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))] border border-transparent'
+                        ? "bg-indigo-600/10 text-indigo-300 border border-indigo-500/20 font-medium"
+                        : "hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))] border border-transparent"
                     }`}
                   >
                     <div className="flex items-center space-x-2.5 min-w-0">
@@ -231,7 +236,9 @@ export default function Sidebar() {
                         onClick={(e) => {
                           e.stopPropagation();
                           setAddingFileToFolderId(
-                            addingFileToFolderId === folder.id ? null : folder.id
+                            addingFileToFolderId === folder.id
+                              ? null
+                              : folder.id,
                           );
                         }}
                         className="text-[rgb(var(--color-text-muted))] hover:text-indigo-400 p-0.5 rounded transition-colors"
@@ -243,7 +250,9 @@ export default function Sidebar() {
                         onClick={(e) => {
                           e.stopPropagation();
                           if (
-                            confirm(`Bạn có chắc muốn xóa thư mục "${folder.name}"?`)
+                            confirm(
+                              `Bạn có chắc muốn xóa thư mục "${folder.name}"?`,
+                            )
                           ) {
                             deleteFolder(folder.id);
                           }
@@ -265,7 +274,7 @@ export default function Sidebar() {
                           <input
                             type="text"
                             placeholder="file_name.md..."
-                            value={newFileName[folder.id] || ''}
+                            value={newFileName[folder.id] || ""}
                             onChange={(e) =>
                               setNewFileName((prev) => ({
                                 ...prev,
@@ -275,8 +284,10 @@ export default function Sidebar() {
                             className="bg-transparent text-xs text-[rgb(var(--color-text-primary))] outline-none w-full py-0.5"
                             autoFocus
                             onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleCreateFile(folder.id);
-                              if (e.key === 'Escape') setAddingFileToFolderId(null);
+                              if (e.key === "Enter")
+                                handleCreateFile(folder.id);
+                              if (e.key === "Escape")
+                                setAddingFileToFolderId(null);
                             }}
                           />
                           <button
@@ -297,8 +308,8 @@ export default function Sidebar() {
                             onClick={() => selectFile(folder.id, file.id)}
                             className={`group/file flex items-center justify-between px-3 py-1.5 rounded cursor-pointer transition-colors ${
                               isFileSelected
-                                ? 'bg-indigo-600/15 text-indigo-400 font-semibold'
-                                : 'hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))]'
+                                ? "bg-indigo-600/15 text-indigo-400 font-semibold"
+                                : "hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))]"
                             }`}
                           >
                             <div className="flex items-center space-x-2 min-w-0">
@@ -312,7 +323,7 @@ export default function Sidebar() {
                                 e.stopPropagation();
                                 if (
                                   confirm(
-                                    `Bạn có chắc muốn xóa file "${file.name}"?`
+                                    `Bạn có chắc muốn xóa file "${file.name}"?`,
                                   )
                                 ) {
                                   deleteFile(folder.id, file.id);
@@ -343,9 +354,12 @@ export default function Sidebar() {
 
       {/* Footer */}
       <div className="p-4 bg-[rgb(var(--color-bg))] border-t border-[rgb(var(--color-border))] text-[10px] text-[rgb(var(--color-text-muted))] flex flex-col space-y-1">
-        <div className="flex justify-between">
+        <UserProfileMenu />
+        {/* <div className="flex justify-between">
           <span>Phiên bản UI</span>
-          <span className="font-semibold text-[rgb(var(--color-text-secondary))]">2.0.0</span>
+          <span className="font-semibold text-[rgb(var(--color-text-secondary))]">
+            2.0.0
+          </span>
         </div>
         <div className="flex justify-between">
           <span>Kết nối API</span>
@@ -353,7 +367,7 @@ export default function Sidebar() {
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
             <span className="text-emerald-500 font-semibold">Đang đồng bộ</span>
           </span>
-        </div>
+        </div> */}
       </div>
     </aside>
   );
