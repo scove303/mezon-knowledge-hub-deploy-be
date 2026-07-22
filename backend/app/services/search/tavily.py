@@ -9,7 +9,7 @@ load_dotenv()
 async def tavily_search(query: str) -> str:
 
     client = AsyncTavilyClient(os.getenv("TAVILY_API"))
-    response = client.search(
+    response = await client.search(
         query=query,
         search_depth="advanced",
         include_answer="advanced",

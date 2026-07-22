@@ -33,10 +33,10 @@ class Settings(BaseSettings):
         )
 
     # External APIs
-    GEMINI_API_KEY: str = ""
+    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
     MEZON_BOT_TOKEN: str = ""
     MEZON_BOT_ID: str = ""
-    TAVILY_API_KEY: str = ""
+    TAVILY_API_KEY: str = os.getenv("TAVILY_API_KEY")
 
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]

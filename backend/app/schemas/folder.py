@@ -1,7 +1,7 @@
 from typing import List, Optional
 from datetime import datetime
 from pydantic import BaseModel
-from file import FileItem
+from app.schemas.file import FileItem
 
 
 class FileInFolder(BaseModel):

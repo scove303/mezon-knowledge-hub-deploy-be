@@ -9,9 +9,9 @@ class TimestampItem(BaseModel):
     text: str
 
 
-class FileItem(BaseModel):
-    title: str
-    text_content: str = ""
+class FileCreate(BaseModel):
+    name: str
+    content: str = ""
 
 
 class FileUpdate(BaseModel):
@@ -26,3 +26,7 @@ class FileRead(BaseModel):
     timestamps: Optional[List[TimestampItem]] = None
     created_at: datetime
     model_config = {"from_attributes": True}
+
+class FileItem(BaseModel):
+    title:str
+    text_content:str = ""
