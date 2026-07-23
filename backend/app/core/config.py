@@ -1,7 +1,10 @@
+from pathlib import Path
 from typing import List
-import os
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+# 1. Resolve the path to the root .env file relative to this file:
+# config.py -> core -> app -> backend -> root folder (mezon-campus-studio-06-2026-team)
+DOTENV_PATH = Path(__file__).resolve().parent.parent.parent.parent / ".env"
 
 
 class Settings(BaseSettings):
@@ -23,7 +26,9 @@ class Settings(BaseSettings):
     DB_HOST: str = "127.0.0.1"
     DB_PORT: int = 3306
     DB_USER: str = "root"
-    DB_PASSWORD: str = os.getenv("DATABASE_PASSWORD")
+    
+    # Required fields (Pydantic loads these from DOTENV_PATH)
+    DB_PASSWORD: str
     DB_NAME: str = "mezon_knowledge_hub"
 
     @property
@@ -34,17 +39,17 @@ class Settings(BaseSettings):
         )
 
     # External APIs
-    GEMINI_API_KEY: str = os.getenv("GEMINI_API_KEY")
+    GEMINI_API_KEY: str
     MEZON_BOT_TOKEN: str = ""
     MEZON_BOT_ID: str = ""
-    TAVILY_API_KEY: str = os.getenv("TAVILY_API_KEY")
+    TAVILY_API_KEY: str
 
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
 
-    # Cấu hình Pydantic v2 (Gộp gọn 1 nơi duy nhất)
+    # Cấu hình Pydantic v2
     model_config = SettingsConfigDict(
-        env_file=".env",
+        env_file=DOTENV_PATH,  # <--- Points directly to the root .env file
         extra="ignore",
         case_sensitive=True
     )

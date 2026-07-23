@@ -1,18 +1,19 @@
-import axios from 'axios';
+import axios from "axios";
 
 const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
-  headers: { 'Content-Type': 'application/json' },
+  headers: { "Content-Type": "application/json" },
   timeout: 30000,
 });
 
 const getTokens = () => {
-  if (typeof window === 'undefined') return { accessToken: null, refreshToken: null };
+  if (typeof window === "undefined")
+    return { accessToken: null, refreshToken: null };
   try {
-    const authData = localStorage.getItem('mezon-auth');
+    const authData = localStorage.getItem("mezon-auth");
     if (authData) {
       const parsed = JSON.parse(authData);
       return {
@@ -21,7 +22,7 @@ const getTokens = () => {
       };
     }
   } catch (e) {
-    console.error('Lỗi phân tích cú pháp mezon-auth:', e);
+    console.error("Lỗi phân tích cú pháp mezon-auth:", e);
   }
   return { accessToken: null, refreshToken: null };
 };
@@ -35,7 +36,7 @@ axiosInstance.interceptors.request.use(
     }
     return config;
   },
-  (error) => Promise.reject(error)
+  (error) => Promise.reject(error),
 );
 
 // ─── Response Interceptor ─────────────────────────────────────────────────────
@@ -57,6 +58,17 @@ axiosInstance.interceptors.response.use(
 
     // Chỉ thực hiện tự động làm mới token nếu gặp lỗi 401
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // 1. Lấy refreshToken ngay khi bắt đầu gặp lỗi 401
+      const { refreshToken } = getTokens();
+
+      // 2. NẾU LÀ GUEST (Không có refresh token):
+      // Trả thẳng lỗi 401 gốc về cho component tự xử lý (ví dụ: dùng data Mock),
+      // tránh gọi cơ chế refresh và không quăng ra Error tùy ý làm sập giao diện.
+      if (!refreshToken) {
+        return Promise.reject(error);
+      }
+
+      // Nếu đã có refreshToken, tiến hành các bước làm mới bên dưới:
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           pendingQueue.push({ resolve, reject });
@@ -72,9 +84,7 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const { refreshToken } = getTokens();
-        if (!refreshToken) throw new Error('Không tìm thấy refresh token');
-
+        // Không cần check 'if (!refreshToken)' ở đây nữa vì đã check sớm ở phía trên
         const { data } = await axios.post(`${BASE_URL}/auth/refresh`, {
           refreshToken,
         });
@@ -82,13 +92,13 @@ axiosInstance.interceptors.response.use(
         const newAccessToken = data.data.accessToken;
         const newRefreshToken = data.data.refreshToken;
 
-        if (typeof window !== 'undefined') {
-          const authData = localStorage.getItem('mezon-auth');
+        if (typeof window !== "undefined") {
+          const authData = localStorage.getItem("mezon-auth");
           if (authData) {
             const parsed = JSON.parse(authData);
             parsed.state.accessToken = newAccessToken;
             parsed.state.refreshToken = newRefreshToken;
-            localStorage.setItem('mezon-auth', JSON.stringify(parsed));
+            localStorage.setItem("mezon-auth", JSON.stringify(parsed));
           }
         }
 
@@ -98,8 +108,8 @@ axiosInstance.interceptors.response.use(
       } catch (refreshError) {
         processQueue(refreshError, null);
         // Không tự động chuyển hướng (redirect) về login nữa để cho phép chế độ Guest hoạt động
-        if (typeof window !== 'undefined') {
-          localStorage.removeItem('mezon-auth');
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("mezon-auth");
         }
         return Promise.reject(refreshError);
       } finally {
@@ -108,7 +118,7 @@ axiosInstance.interceptors.response.use(
     }
 
     return Promise.reject(error);
-  }
+  },
 );
 
 export default axiosInstance;
