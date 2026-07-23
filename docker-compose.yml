@@ -1,4 +1,4 @@
-version: "3.8"
+
 
 services:
   database:
@@ -8,7 +8,7 @@ services:
       MYSQL_ROOT_PASSWORD: ${DB_PASSWORD}
       MYSQL_DATABASE: mezon_knowledge_hub
     ports:
-      - "3306:3306"
+      - "3307:3306"
     volumes:
       - mysql_data:/var/lib/mysql
     restart: always
@@ -19,7 +19,6 @@ services:
     depends_on:
       - database
     environment:
-      - MEZON_BOT_TOKEN=${MEZON_BOT_TOKEN}
       - GEMINI_API_KEY=${GEMINI_API_KEY}
       - TAVILY_API_KEY=${TAVILY_API_KEY}
       - DB_HOST=database
@@ -34,7 +33,7 @@ services:
     build: ./frontend
     container_name: mezon_khb_dashboard
     ports:
-      - "3001:3000"
+      - "3000:3000"
     depends_on:
       - database
     environment:
