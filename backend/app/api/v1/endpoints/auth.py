@@ -31,7 +31,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 # =============================================================
 # 1. ĐĂNG NHẬP USERNAME / PASSWORD (JWT)
 # =============================================================
-@router.post("/login")
+@router.post("/auth/login")
 def login(data: LoginRequest, session: SessionDep):
     user = session.exec(select(User).where(User.username == data.username)).first()
     
@@ -64,7 +64,7 @@ def login(data: LoginRequest, session: SessionDep):
 # =============================================================
 # 2. ĐĂNG NHẬP GOOGLE OAUTH2
 # =============================================================
-@router.post("/google")
+@router.post("/auth/google")
 def login_with_google(data: GoogleLoginRequest, session: SessionDep):
     # 1. Verify id_token với Google Server
     try:
@@ -151,7 +151,7 @@ def login_with_google(data: GoogleLoginRequest, session: SessionDep):
 # =============================================================
 # 3. LÀM MỚI TOKEN (REFRESH TOKEN)
 # =============================================================
-@router.post("/refresh")
+@router.post("/auth/refresh")
 def refresh_token(data: RefreshRequest, session: SessionDep):
     try:
         payload = decode_token(data.refreshToken)
@@ -188,7 +188,7 @@ def refresh_token(data: RefreshRequest, session: SessionDep):
 # =============================================================
 # 4. ĐĂNG KÝ TÀI KHOẢN
 # =============================================================
-@router.post("/register")
+@router.post("/auth/register")
 def register(data: RegisterRequest, session: SessionDep):
     # 1. Kiểm tra xem username đã tồn tại chưa
     existing_user = session.exec(select(User).where(User.username == data.username)).first()
