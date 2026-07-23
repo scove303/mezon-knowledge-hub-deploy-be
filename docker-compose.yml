@@ -26,6 +26,8 @@ services:
       - DB_USER=root
       - DB_PASSWORD=${DB_PASSWORD}
       - DB_NAME=mezon_knowledge_hub
+    ports:
+      - "8000:8000"
     restart: always
 
   web-dashboard:
