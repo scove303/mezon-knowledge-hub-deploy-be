@@ -1,9 +1,7 @@
-from pydantic_settings import BaseSettings
 from typing import List
-from dotenv import load_dotenv
 import os
+from pydantic_settings import BaseSettings, SettingsConfigDict
 
-load_dotenv()
 
 
 class Settings(BaseSettings):
@@ -17,6 +15,9 @@ class Settings(BaseSettings):
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
+
+    # Google OAuth2
+    GOOGLE_CLIENT_ID: str = ""
 
     # Database
     DB_HOST: str = "127.0.0.1"
@@ -41,7 +42,12 @@ class Settings(BaseSettings):
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
 
-    model_config = {"env_file": "../.env", "case_sensitive": True}
+    # Cấu hình Pydantic v2 (Gộp gọn 1 nơi duy nhất)
+    model_config = SettingsConfigDict(
+        env_file=".env",
+        extra="ignore",
+        case_sensitive=True
+    )
 
 
 settings = Settings()

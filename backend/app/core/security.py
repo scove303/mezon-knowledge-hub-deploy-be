@@ -6,18 +6,23 @@ import bcrypt
 
 from app.core.config import settings
 
+
 def verify_password(plain_password: str, hashed_password: str) -> bool:
     try:
         # Sử dụng thư viện bcrypt trực tiếp để tránh lỗi tương thích của passlib trên Python 3.12+
-        return bcrypt.checkpw(plain_password.encode('utf-8'), hashed_password.encode('utf-8'))
+        pwd_bytes = plain_password[:72].encode('utf-8')
+        return bcrypt.checkpw(pwd_bytes, hashed_password.encode('utf-8'))
     except Exception as e:
         print("Lỗi xác thực mật khẩu:", e)
         return False
 
+
 def get_password_hash(password: str) -> str:
+    pwd_bytes = password[:72].encode('utf-8')
     salt = bcrypt.gensalt()
-    hashed = bcrypt.hashpw(password.encode('utf-8'), salt)
+    hashed = bcrypt.hashpw(pwd_bytes, salt)
     return hashed.decode('utf-8')
+
 
 def create_access_token(subject: Any) -> str:
     expire = datetime.now(timezone.utc) + timedelta(
