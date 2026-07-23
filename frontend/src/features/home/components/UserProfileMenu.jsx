@@ -1,30 +1,11 @@
 import React, { useEffect, useRef, useState } from "react";
-import {
-  Folder,
-  FileText,
-  Search,
-  Plus,
-  Trash2,
-  ChevronDown,
-  ChevronRight,
-  Compass,
-  FileCheck,
-  Video,
-  HardDrive,
-} from "lucide-react";
-import { Button } from "@/components/base-ui/Button";
-import { Input } from "@/components/base-ui/Input";
-import { Modal } from "@/components/base-ui/Modal";
+import { LogOut, ChevronUp } from "lucide-react";
 import { authService } from "@/features/auth/services";
 import { useAuthStore } from "@/features/auth/store";
-import { useWorkspaceStore } from "@/features/folders/store";
-import { folderService } from "@/features/folders/services";
 import { cn } from "@/utils/formatTailwind";
 
 export default function UserProfileMenu() {
   const [isOpen, setIsOpen] = useState(false);
-
-  // Tạo 1 reference gắn vào thẻ div bao ngoài toàn bộ Menu. Dùng để xác định điểm va chạm khi người dùng click chuột.
   const menuRef = useRef(null);
 
   const user = useAuthStore((state) => state.user) || {
@@ -33,7 +14,7 @@ export default function UserProfileMenu() {
     avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
   };
 
-  // Lắng nghe sự kiện click toàn trang. Nếu vị trí click KHÔNG nằm trong menuRef.current (click ra ngoài Menu), lập tức set setIsOpen(false). Đây là kỹ thuật giải quyết dứt điểm lỗi UI bị kẹt Menu Popover.
+  // Click outside listener
   useEffect(() => {
     const handleClickOutside = (event) => {
       if (menuRef.current && !menuRef.current.contains(event.target)) {
@@ -47,7 +28,6 @@ export default function UserProfileMenu() {
 
   const handleLogout = async () => {
     try {
-      // DO
       await authService.logout();
     } catch (err) {
       console.error("Logout failed", err);
@@ -55,8 +35,49 @@ export default function UserProfileMenu() {
   };
 
   return (
-    <div className="relative w-full" ref={menuRef}>
-      {/* Profile Menu Xuất hiện phía TRÊN Avatar khi mở */}
+    <div className={cn("relative w-full")} ref={menuRef}>
+      {/* 1. NÚT TRIGGER (Hiển thị Avatar & Tên trong Sidebar) */}
+      <button
+        type="button"
+        onClick={() => setIsOpen((prev) => !prev)}
+        className={cn(
+          "w-full flex items-center justify-between p-2 rounded-xl hover:bg-[rgb(var(--color-surface-2))] transition-colors group cursor-pointer border border-transparent hover:border-[rgb(var(--color-border))]",
+        )}
+      >
+        <div className={cn("flex items-center space-x-3 min-w-0")}>
+          <img
+            src={user.avatarUrl}
+            alt={user.name}
+            className={cn(
+              "w-8 h-8 rounded-lg bg-indigo-500/20 flex-shrink-0 object-cover",
+            )}
+          />
+          <div className={cn("text-left min-w-0")}>
+            <p
+              className={cn(
+                "text-xs font-semibold text-[rgb(var(--color-text-primary))] truncate",
+              )}
+            >
+              {user.name}
+            </p>
+            <p
+              className={cn(
+                "text-[10px] text-[rgb(var(--color-text-muted))] truncate",
+              )}
+            >
+              {user.email}
+            </p>
+          </div>
+        </div>
+        <ChevronUp
+          className={cn(
+            "w-4 h-4 text-[rgb(var(--color-text-muted))] transition-transform duration-200 flex-shrink-0",
+            isOpen ? "rotate-0" : "rotate-180",
+          )}
+        />
+      </button>
+
+      {/* 2. POPOVER MENU (Xuất hiện phía TRÊN Nút Trigger khi click) */}
       {isOpen && (
         <div
           className={cn(
@@ -85,26 +106,16 @@ export default function UserProfileMenu() {
             </p>
           </div>
 
-          {/* Các chức năng Mở rộng sau này */}
-          {/* <div>
-            <button>
-              <span>Setting</span>
-            </button>
-          </div> */}
-
-          <div
-            className={cn(
-              "border-t border-[rgb(var(--color-border))] pt-1 px-1",
-            )}
-          >
-            {/* Nút Logout */}
+          {/* Nút Logout */}
+          <div className="pt-1 px-1">
             <button
               onClick={handleLogout}
               className={cn(
                 "w-full flex items-center space-x-2.5 px-2.5 py-1.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors",
               )}
             >
-              <span className={cn("font-medium")}>Logout</span>
+              <LogOut className="w-3.5 h-3.5" />
+              <span className={cn("font-medium")}>Đăng xuất</span>
             </button>
           </div>
         </div>
