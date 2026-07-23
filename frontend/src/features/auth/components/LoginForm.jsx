@@ -32,7 +32,7 @@ export default function LoginForm() {
       const res = await authService.login(values.username, values.password);
       if (res.success) {
         setAuth(res.data.user, res.data.accessToken, res.data.refreshToken);
-        router.push('/dashboard/folders/default');
+        router.push('/dashboard');
       } else {
         setServerError(res.message);
       }

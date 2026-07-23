@@ -231,7 +231,7 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
             id="btn-download-file"
             variant="secondary"
             size="icon"
-            onClick={() => alert("Đang tải file PDF...")}
+            onClick={() => window.print()}
             title="Xuất PDF"
           >
             <Download className="w-3.5 h-3.5" />

@@ -9,15 +9,29 @@ const axiosInstance = axios.create({
   timeout: 30000,
 });
 
+const getTokens = () => {
+  if (typeof window === 'undefined') return { accessToken: null, refreshToken: null };
+  try {
+    const authData = localStorage.getItem('mezon-auth');
+    if (authData) {
+      const parsed = JSON.parse(authData);
+      return {
+        accessToken: parsed.state?.accessToken || null,
+        refreshToken: parsed.state?.refreshToken || null,
+      };
+    }
+  } catch (e) {
+    console.error('Lỗi phân tích cú pháp mezon-auth:', e);
+  }
+  return { accessToken: null, refreshToken: null };
+};
+
 // ─── Request Interceptor ─────────────────────────────────────────────────────
-// Attach access token from localStorage on every request
 axiosInstance.interceptors.request.use(
   (config) => {
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('accessToken');
-      if (token) {
-        config.headers.Authorization = `Bearer ${token}`;
-      }
+    const { accessToken } = getTokens();
+    if (accessToken) {
+      config.headers.Authorization = `Bearer ${accessToken}`;
     }
     return config;
   },
@@ -25,7 +39,6 @@ axiosInstance.interceptors.request.use(
 );
 
 // ─── Response Interceptor ─────────────────────────────────────────────────────
-// Auto-refresh token on 401. Queue concurrent requests while refreshing.
 let isRefreshing = false;
 let pendingQueue = [];
 
@@ -42,9 +55,9 @@ axiosInstance.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
+    // Chỉ thực hiện tự động làm mới token nếu gặp lỗi 401
     if (error.response?.status === 401 && !originalRequest._retry) {
       if (isRefreshing) {
-        // Queue this request until the refresh finishes
         return new Promise((resolve, reject) => {
           pendingQueue.push({ resolve, reject });
         })
@@ -59,12 +72,8 @@ axiosInstance.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        const refreshToken =
-          typeof window !== 'undefined'
-            ? localStorage.getItem('refreshToken')
-            : null;
-
-        if (!refreshToken) throw new Error('No refresh token available');
+        const { refreshToken } = getTokens();
+        if (!refreshToken) throw new Error('Không tìm thấy refresh token');
 
         const { data } = await axios.post(`${BASE_URL}/auth/refresh`, {
           refreshToken,
@@ -73,19 +82,24 @@ axiosInstance.interceptors.response.use(
         const newAccessToken = data.data.accessToken;
         const newRefreshToken = data.data.refreshToken;
 
-        localStorage.setItem('accessToken', newAccessToken);
-        localStorage.setItem('refreshToken', newRefreshToken);
+        if (typeof window !== 'undefined') {
+          const authData = localStorage.getItem('mezon-auth');
+          if (authData) {
+            const parsed = JSON.parse(authData);
+            parsed.state.accessToken = newAccessToken;
+            parsed.state.refreshToken = newRefreshToken;
+            localStorage.setItem('mezon-auth', JSON.stringify(parsed));
+          }
+        }
 
         processQueue(null, newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        // Clear auth state and redirect to login
-        localStorage.removeItem('accessToken');
-        localStorage.removeItem('refreshToken');
+        // Không tự động chuyển hướng (redirect) về login nữa để cho phép chế độ Guest hoạt động
         if (typeof window !== 'undefined') {
-          window.location.href = '/login';
+          localStorage.removeItem('mezon-auth');
         }
         return Promise.reject(refreshError);
       } finally {
