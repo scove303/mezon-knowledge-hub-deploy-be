@@ -6,10 +6,13 @@ export const authService = {
       username,
       password,
     });
-    if (data.success) {
-      localStorage.setItem('accessToken', data.data.accessToken);
-      localStorage.setItem('refreshToken', data.data.refreshToken);
-    }
+    return data;
+  },
+
+  async googleLogin(idToken) {
+    const { data } = await axiosInstance.post('/auth/google', {
+      id_token: idToken,
+    });
     return data;
   },
 
@@ -21,7 +24,6 @@ export const authService = {
   },
 
   logout() {
-    localStorage.removeItem('accessToken');
-    localStorage.removeItem('refreshToken');
+    // State clearing is handled by the store
   },
 };

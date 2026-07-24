@@ -2,6 +2,7 @@
 
 import { useWorkspaceStore } from '@/features/folders/store';
 import { fileService } from '@/features/files/services';
+import { folderService } from '@/features/folders/services';
 import { aiService } from '@/features/ai/services';
 import FileViewer from '@/features/files/components/FileViewer';
 import { useEffect, useState, use } from 'react';

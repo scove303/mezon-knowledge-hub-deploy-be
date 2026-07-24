@@ -12,7 +12,9 @@ class User(SQLModel, table=True):
 
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(max_length=100, unique=True, index=True)
+    email: Optional[str] = Field(default=None, max_length=255, index=True)
     display_name: Optional[str] = Field(default=None, max_length=100)
+    avatar_url: Optional[str] = Field(default=None, max_length=500)
     hashed_password: str
     role: str = Field(default="USER", max_length=20)
     created_at: datetime = Field(default_factory=datetime.utcnow)

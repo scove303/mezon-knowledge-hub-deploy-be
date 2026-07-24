@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Folder,
   FileText,
@@ -13,69 +13,76 @@ import {
   HardDrive,
   LogOut,
   LogIn,
-} from 'lucide-react';
-import { Button } from '@/components/base-ui/Button';
-import { Modal } from '@/components/base-ui/Modal';
-import { useAuthStore } from '@/features/auth/store';
-import { useWorkspaceStore } from '@/features/folders/store';
-import { folderService } from '@/features/folders/services';
-import { fileService } from '@/features/files/services';
-import { useRouter } from 'next/navigation';
+} from "lucide-react";
+import { Button } from "@/components/base-ui/Button";
+import { Modal } from "@/components/base-ui/Modal";
+import { useAuthStore } from "@/features/auth/store";
+import { useWorkspaceStore } from "@/features/folders/store";
+import { folderService } from "@/features/folders/services";
+import { fileService } from "@/features/files/services";
+import { useRouter } from "next/navigation";
 
 // Dữ liệu mock dùng làm dự phòng khi không đăng nhập hoặc backend offline
 const MOCK_FOLDERS = [
   {
-    id: 'mock-folder-1',
-    name: '🐍 Lộ trình Python cho người mới',
-    type: 'roadmap',
+    id: "mock-folder-1",
+    name: "🐍 Lộ trình Python cho người mới",
+    type: "roadmap",
     files: [
       {
-        id: 'mock-file-1',
-        name: 'Tong_quan.md',
-        createdAt: '23/07/2026',
-        content: '# Lộ Trình Học Python\n\nChào mừng bạn đến với lộ trình học Python! Dưới đây là các chủ đề chính:\n\n- [x] Cú pháp cơ bản\n- [ ] Lập trình hướng đối tượng (OOP)\n- [ ] Xử lý file và ngoại lệ\n- [ ] Làm việc với cơ sở dữ liệu MySQL'
-      }
-    ]
+        id: "mock-file-1",
+        name: "Tong_quan.md",
+        createdAt: "23/07/2026",
+        content:
+          "# Lộ Trình Học Python\n\nChào mừng bạn đến với lộ trình học Python! Dưới đây là các chủ đề chính:\n\n- [x] Cú pháp cơ bản\n- [ ] Lập trình hướng đối tượng (OOP)\n- [ ] Xử lý file và ngoại lệ\n- [ ] Làm việc với cơ sở dữ liệu MySQL",
+      },
+    ],
   },
   {
-    id: 'mock-folder-2',
-    name: '📄 Nghiên cứu AI Agents',
-    type: 'document',
+    id: "mock-folder-2",
+    name: "📄 Nghiên cứu AI Agents",
+    type: "document",
     files: [
       {
-        id: 'mock-file-2',
-        name: 'Action_Items.md',
-        createdAt: '23/07/2026',
-        content: '# Kế hoạch hành động AI Agents\n\nTập trung nghiên cứu các framework chính:\n\n1. LangChain / LangGraph\n2. Autogen\n3. CrewAI\n\n*Mục tiêu: Đưa ra so sánh chi tiết giữa các framework trong tháng này.*'
-      }
-    ]
+        id: "mock-file-2",
+        name: "Action_Items.md",
+        createdAt: "23/07/2026",
+        content:
+          "# Kế hoạch hành động AI Agents\n\nTập trung nghiên cứu các framework chính:\n\n1. LangChain / LangGraph\n2. Autogen\n3. CrewAI\n\n*Mục tiêu: Đưa ra so sánh chi tiết giữa các framework trong tháng này.*",
+      },
+    ],
   },
   {
-    id: 'mock-folder-3',
-    name: '🎥 Video System Design',
-    type: 'video',
+    id: "mock-folder-3",
+    name: "🎥 Video System Design",
+    type: "video",
     files: [
       {
-        id: 'mock-file-3',
-        name: 'Video_Summary.md',
-        createdAt: '23/07/2026',
-        content: '# Tóm tắt Video Kiến trúc Hệ thống\n\nCác nội dung chính kèm mốc thời gian:\n\n- [00:00](timestamp://0) : Giới thiệu tổng quan\n- [03:15](timestamp://195) : Phân biệt Monolith và Microservices\n- [08:45](timestamp://525) : Thiết kế cơ sở dữ liệu phân tán',
-        videoUrl: 'https://www.youtube.com/watch?v=xpDnVSmNFX0',
+        id: "mock-file-3",
+        name: "Video_Summary.md",
+        createdAt: "23/07/2026",
+        content:
+          "# Tóm tắt Video Kiến trúc Hệ thống\n\nCác nội dung chính kèm mốc thời gian:\n\n- [00:00](timestamp://0) : Giới thiệu tổng quan\n- [03:15](timestamp://195) : Phân biệt Monolith và Microservices\n- [08:45](timestamp://525) : Thiết kế cơ sở dữ liệu phân tán",
+        videoUrl: "https://www.youtube.com/watch?v=xpDnVSmNFX0",
         timestamps: [
-          { time: '00:00', seconds: 0, text: 'Giới thiệu tổng quan' },
-          { time: '03:15', seconds: 195, text: 'Monolith vs Microservices' },
-          { time: '08:45', seconds: 525, text: 'Thiết kế cơ sở dữ liệu phân tán' }
-        ]
-      }
-    ]
-  }
+          { time: "00:00", seconds: 0, text: "Giới thiệu tổng quan" },
+          { time: "03:15", seconds: 195, text: "Monolith vs Microservices" },
+          {
+            time: "08:45",
+            seconds: 525,
+            text: "Thiết kế cơ sở dữ liệu phân tán",
+          },
+        ],
+      },
+    ],
+  },
 ];
 
 export default function Sidebar() {
   const store = useWorkspaceStore();
   const router = useRouter();
   const { isAuthenticated, clearAuth } = useAuthStore();
-  
+
   const folders = store.getFilteredFolders();
   const selectedFolder = store.getSelectedFolder();
   const selectedFile = store.getSelectedFile();
@@ -108,7 +115,10 @@ export default function Sidebar() {
         store.setFolders(res.data);
       }
     } catch (err) {
-      console.error('Lỗi khi tải danh sách thư mục (sử dụng dữ liệu Mock thay thế):', err);
+      console.error(
+        "Lỗi khi tải danh sách thư mục (sử dụng dữ liệu Mock thay thế):",
+        err,
+      );
       store.setFolders(MOCK_FOLDERS);
     }
   };
@@ -123,7 +133,7 @@ export default function Sidebar() {
         id: `mock-folder-${Date.now()}`,
         name,
         type,
-        files: []
+        files: [],
       };
       store.setFolders([...store.folders, newMockFolder]);
       return;
@@ -135,24 +145,24 @@ export default function Sidebar() {
         await refreshFolders();
       }
     } catch (err) {
-      console.error('Lỗi khi tạo thư mục:', err);
+      console.error("Lỗi khi tạo thư mục:", err);
     }
   };
 
   // Hàm xử lý kích hoạt xóa khi người dùng xác nhận ở Modal
   const confirmDelete = async () => {
     if (!itemToDelete) return;
-    
+
     const { type, folderId, fileId } = itemToDelete;
     setDeleteConfirmOpen(false);
 
-    if (type === 'folder') {
-      if (!isAuthenticated || folderId.startsWith('mock-')) {
-        const updated = store.folders.filter(f => f.id !== folderId);
+    if (type === "folder") {
+      if (!isAuthenticated || folderId.startsWith("mock-")) {
+        const updated = store.folders.filter((f) => f.id !== folderId);
         store.setFolders(updated);
         if (store.selectedFolderId === folderId) {
           store.setSelectedFolder(null);
-          router.push('/dashboard');
+          router.push("/dashboard");
         }
         return;
       }
@@ -163,17 +173,20 @@ export default function Sidebar() {
           await refreshFolders();
           if (store.selectedFolderId === folderId) {
             store.setSelectedFolder(null);
-            router.push('/dashboard');
+            router.push("/dashboard");
           }
         }
       } catch (err) {
-        console.error('Lỗi khi xóa thư mục:', err);
+        console.error("Lỗi khi xóa thư mục:", err);
       }
-    } else if (type === 'file') {
-      if (!isAuthenticated || fileId.startsWith('mock-')) {
-        const updated = store.folders.map(f => {
+    } else if (type === "file") {
+      if (!isAuthenticated || fileId.startsWith("mock-")) {
+        const updated = store.folders.map((f) => {
           if (f.id === folderId) {
-            return { ...f, files: f.files.filter(file => file.id !== fileId) };
+            return {
+              ...f,
+              files: f.files.filter((file) => file.id !== fileId),
+            };
           }
           return f;
         });
@@ -193,13 +206,13 @@ export default function Sidebar() {
           }
         }
       } catch (err) {
-        console.error('Lỗi khi xóa file:', err);
+        console.error("Lỗi khi xóa file:", err);
       }
     }
   };
 
   const [expandedFolders, setExpandedFolders] = useState({});
-  const [newFolderName, setNewFolderName] = useState('');
+  const [newFolderName, setNewFolderName] = useState("");
   const [showAddFolder, setShowAddFolder] = useState(false);
 
   const toggleExpand = (folderId, e) => {
@@ -210,33 +223,37 @@ export default function Sidebar() {
   const handleCreateFolder = (e) => {
     e.preventDefault();
     if (!newFolderName.trim()) return;
-    
-    const types = ['roadmap', 'document', 'video'];
+
+    const types = ["roadmap", "document", "video"];
     const randomType = types[folders.length % 3];
     const emoji =
-      randomType === 'roadmap' ? '🐍 ' : randomType === 'document' ? '📄 ' : '🎥 ';
-      
+      randomType === "roadmap"
+        ? "🐍 "
+        : randomType === "document"
+          ? "📄 "
+          : "🎥 ";
+
     createFolder(emoji + newFolderName.trim(), randomType);
-    setNewFolderName('');
+    setNewFolderName("");
     setShowAddFolder(false);
   };
 
   const handleLogout = () => {
     clearAuth();
-    router.push('/login');
+    router.push("/login");
   };
 
   const handleLoginRedirect = () => {
-    router.push('/login');
+    router.push("/login");
   };
 
   const getFolderIcon = (type) => {
     switch (type) {
-      case 'roadmap':
+      case "roadmap":
         return <Compass className="w-4 h-4 text-emerald-400" />;
-      case 'document':
+      case "document":
         return <FileCheck className="w-4 h-4 text-cyan-400" />;
-      case 'video':
+      case "video":
         return <Video className="w-4 h-4 text-rose-400" />;
       default:
         return <Folder className="w-4 h-4 text-indigo-400" />;
@@ -258,9 +275,9 @@ export default function Sidebar() {
             <p className="text-xs text-indigo-400 font-medium">Knowledge Hub</p>
           </div>
         </div>
-        
+
         {isAuthenticated ? (
-          <button 
+          <button
             onClick={handleLogout}
             className="p-2 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-rose-400 rounded-lg transition-colors"
             title="Đăng xuất"
@@ -268,7 +285,7 @@ export default function Sidebar() {
             <LogOut className="w-4 h-4" />
           </button>
         ) : (
-          <button 
+          <button
             onClick={handleLoginRedirect}
             className="p-2 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-indigo-400 rounded-lg transition-colors"
             title="Đăng nhập"
@@ -296,7 +313,7 @@ export default function Sidebar() {
       {/* Folder Navigation */}
       <div className="flex-1 overflow-y-auto px-3 space-y-4 pb-4 scrollbar-thin">
         <div className="flex items-center justify-between px-2 text-xs font-semibold text-[rgb(var(--color-text-muted))] uppercase tracking-wider">
-          <span>Danh sách Thư Mục {!isAuthenticated && '(Bản thử)'}</span>
+          <span>Danh sách Thư Mục {!isAuthenticated && "(Bản thử)"}</span>
           <Button
             id="btn-add-folder"
             variant="ghost"
@@ -359,8 +376,8 @@ export default function Sidebar() {
                     onClick={() => selectFolder(folder.id)}
                     className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
                       isSelected
-                        ? 'bg-indigo-600/10 text-indigo-300 border border-indigo-500/20 font-medium'
-                        : 'hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))] border border-transparent'
+                        ? "bg-indigo-600/10 text-indigo-300 border border-indigo-500/20 font-medium"
+                        : "hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))] border border-transparent"
                     }`}
                   >
                     <div className="flex items-center space-x-2.5 min-w-0">
@@ -385,7 +402,9 @@ export default function Sidebar() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          alert('Tài liệu mới chỉ có thể được tạo tự động bởi AI thông qua Khung chat ở trang chính!');
+                          alert(
+                            "Tài liệu mới chỉ có thể được tạo tự động bởi AI thông qua Khung chat ở trang chính!",
+                          );
                         }}
                         className="text-[rgb(var(--color-text-muted))] hover:text-indigo-400 p-0.5 rounded transition-colors"
                         title="Tạo file bằng AI"
@@ -395,7 +414,11 @@ export default function Sidebar() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setItemToDelete({ type: 'folder', folderId: folder.id, name: folder.name });
+                          setItemToDelete({
+                            type: "folder",
+                            folderId: folder.id,
+                            name: folder.name,
+                          });
                           setDeleteConfirmOpen(true);
                         }}
                         className="text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-colors"
@@ -410,37 +433,43 @@ export default function Sidebar() {
                   {isExpanded && (
                     <ul className="pl-7 pr-1 mt-1 mb-2 space-y-1 border-l border-[rgb(var(--color-border))] ml-4 animate-fade-in">
                       {/* File Items */}
-                      {folder.files && folder.files.map((file) => {
-                        const isFileSelected = selectedFile?.id === file.id;
-                        return (
-                          <li
-                            key={file.id}
-                            onClick={() => selectFile(folder.id, file.id)}
-                            className={`group/file flex items-center justify-between px-3 py-1.5 rounded cursor-pointer transition-colors ${
-                              isFileSelected
-                                ? 'bg-indigo-600/15 text-indigo-400 font-semibold'
-                                : 'hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))]'
-                            }`}
-                          >
-                            <div className="flex items-center space-x-2 min-w-0">
-                              <FileText className="w-3.5 h-3.5 flex-shrink-0" />
-                              <span className="text-xs truncate select-none">
-                                {file.name}
-                              </span>
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setItemToDelete({ type: 'file', folderId: folder.id, fileId: file.id, name: file.name });
-                                setDeleteConfirmOpen(true);
-                              }}
-                              className="opacity-0 group-hover/file:opacity-100 text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-all"
+                      {folder.files &&
+                        folder.files.map((file) => {
+                          const isFileSelected = selectedFile?.id === file.id;
+                          return (
+                            <li
+                              key={file.id}
+                              onClick={() => selectFile(folder.id, file.id)}
+                              className={`group/file flex items-center justify-between px-3 py-1.5 rounded cursor-pointer transition-colors ${
+                                isFileSelected
+                                  ? "bg-indigo-600/15 text-indigo-400 font-semibold"
+                                  : "hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))]"
+                              }`}
                             >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </li>
-                        );
-                      })}
+                              <div className="flex items-center space-x-2 min-w-0">
+                                <FileText className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span className="text-xs truncate select-none">
+                                  {file.name}
+                                </span>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setItemToDelete({
+                                    type: "file",
+                                    folderId: folder.id,
+                                    fileId: file.id,
+                                    name: file.name,
+                                  });
+                                  setDeleteConfirmOpen(true);
+                                }}
+                                className="opacity-0 group-hover/file:opacity-100 text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-all"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </li>
+                          );
+                        })}
 
                       {(!folder.files || folder.files.length === 0) && (
                         <div className="text-[10px] text-[rgb(var(--color-text-disabled))] px-3 py-1 italic select-none">
@@ -460,7 +489,7 @@ export default function Sidebar() {
       <Modal
         isOpen={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
-        title={itemToDelete?.type === 'folder' ? 'Xóa Thư Mục' : 'Xóa Tài Liệu'}
+        title={itemToDelete?.type === "folder" ? "Xóa Thư Mục" : "Xóa Tài Liệu"}
         size="sm"
         footer={
           <div className="flex justify-end gap-2 w-full">
@@ -474,7 +503,10 @@ export default function Sidebar() {
         }
       >
         <p className="text-sm text-[rgb(var(--color-text-secondary))] leading-relaxed">
-          Bạn có chắc chắn muốn xóa {itemToDelete?.type === 'folder' ? `thư mục "${itemToDelete?.name}" và toàn bộ tài liệu bên trong? Hành động này không thể hoàn tác.` : `tài liệu "${itemToDelete?.name}" khỏi thư mục?`}
+          Bạn có chắc chắn muốn xóa{" "}
+          {itemToDelete?.type === "folder"
+            ? `thư mục "${itemToDelete?.name}" và toàn bộ tài liệu bên trong? Hành động này không thể hoàn tác.`
+            : `tài liệu "${itemToDelete?.name}" khỏi thư mục?`}
         </p>
       </Modal>
 
@@ -482,14 +514,20 @@ export default function Sidebar() {
       <div className="p-4 bg-[rgb(var(--color-bg))] border-t border-[rgb(var(--color-border))] text-[10px] text-[rgb(var(--color-text-muted))] flex flex-col space-y-1">
         <div className="flex justify-between">
           <span>Phiên bản UI</span>
-          <span className="font-semibold text-[rgb(var(--color-text-secondary))]">2.0.0</span>
+          <span className="font-semibold text-[rgb(var(--color-text-secondary))]">
+            2.0.0
+          </span>
         </div>
         <div className="flex justify-between">
           <span>Kết nối API</span>
           <span className="flex items-center space-x-1">
-            <span className={`w-1.5 h-1.5 rounded-full ${isAuthenticated ? 'bg-emerald-500 animate-pulse' : 'bg-amber-500'}`} />
-            <span className={`${isAuthenticated ? 'text-emerald-500' : 'text-amber-500'} font-semibold`}>
-              {isAuthenticated ? 'Đang kết nối' : 'Thử nghiệm (Guest)'}
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${isAuthenticated ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}
+            />
+            <span
+              className={`${isAuthenticated ? "text-emerald-500" : "text-amber-500"} font-semibold`}
+            >
+              {isAuthenticated ? "Đang kết nối" : "Thử nghiệm (Guest)"}
             </span>
           </span>
         </div>
