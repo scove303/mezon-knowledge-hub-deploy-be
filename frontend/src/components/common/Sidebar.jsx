@@ -80,6 +80,10 @@ const MOCK_FOLDERS = [
 
 export default function Sidebar() {
   const store = useWorkspaceStore();
+
+  // 1. Tách riêng hàm setFolders từ store (hàm này sẽ ổn định tham chiếu, không bị đổi)
+  const setFolders = useWorkspaceStore((state) => state.setFolders);
+
   const router = useRouter();
   const { isAuthenticated, clearAuth } = useAuthStore();
 
@@ -91,7 +95,7 @@ export default function Sidebar() {
 
   // State quản lý việc mở modal xác nhận xóa
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
-  const [itemToDelete, setItemToDelete] = useState(null); // { type: 'folder' | 'file', folderId, fileId, name }
+  const [itemToDelete, setItemToDelete] = useState(null);
 
   const selectFolder = (folderId) => {
     store.setSelectedFolder(folderId);
@@ -103,25 +107,26 @@ export default function Sidebar() {
     router.push(`/dashboard/folders/${folderId}`);
   };
 
+  // 2. Sửa lại useCallback: Thay 'store' thành 'setFolders' ở mảng Dependency
   const refreshFolders = useCallback(async () => {
     if (!isAuthenticated) {
-      store.setFolders(MOCK_FOLDERS);
+      setFolders(MOCK_FOLDERS);
       return;
     }
 
     try {
       const res = await folderService.getFolders();
       if (res.success) {
-        store.setFolders(res.data);
+        setFolders(res.data);
       }
     } catch (err) {
       console.error(
         "Lỗi khi tải danh sách thư mục (sử dụng dữ liệu Mock thay thế):",
         err,
       );
-      store.setFolders(MOCK_FOLDERS);
+      setFolders(MOCK_FOLDERS);
     }
-  }, [isAuthenticated, store]);
+  }, [isAuthenticated, setFolders]);
 
   useEffect(() => {
     refreshFolders();
