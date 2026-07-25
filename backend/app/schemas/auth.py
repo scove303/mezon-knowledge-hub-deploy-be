@@ -1,5 +1,5 @@
 from typing import Optional
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 # --- 1. SCHEMAS CHO ĐĂNG NHẬP USERNAME / PASSWORD ---
@@ -19,8 +19,9 @@ class UserInfo(BaseModel):
     username: str
     role: str
     display_name: Optional[str] = None
-    email: Optional[str] = None        
-    avatar_url: Optional[str] = None
+
+    class Config:
+        from_attributes = True
 
 
 class LoginResponse(BaseModel):
@@ -41,7 +42,6 @@ class RefreshResponse(BaseModel):
 
 # --- 5. SCHEMAS CHO ĐĂNG KÝ TÀI KHOẢN ---
 class RegisterRequest(BaseModel):
-    username: str
-    password: str
-    email: Optional[str] = None         # ✅ Đã đổi từ Optional[EmailStr] sang Optional[str]
-    display_name: Optional[str] = None
+    username: str = Field(..., min_length=3, max_length=50, description="Tên đăng nhập từ 3-50 ký tự")
+    password: str = Field(..., min_length=6, description="Mật khẩu tối thiểu 6 ký tự")
+    display_name: Optional[str] = Field(None, max_length=100)
