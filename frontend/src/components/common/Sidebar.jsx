@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Folder,
   FileText,
@@ -124,7 +124,7 @@ export default function Sidebar() {
         "Lỗi khi tải danh sách thư mục (sử dụng dữ liệu Mock thay thế):",
         err,
       );
-      setFolders(MOCK_FOLDERS);
+      store.setFolders(MOCK_FOLDERS);
     }
   }, [isAuthenticated, setFolders]);
 

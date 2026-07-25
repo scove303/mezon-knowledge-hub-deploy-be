@@ -1,4 +1,5 @@
 import uuid
+import uuid
 from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, status
 from google.oauth2 import id_token
@@ -14,8 +15,15 @@ from app.core.security import (
     decode_token,
     verify_password,
     get_password_hash,
+    get_password_hash,
 )
 from app.models.user import User
+from app.schemas.auth import (
+    LoginRequest,
+    GoogleLoginRequest,
+    RefreshRequest,
+    RegisterRequest,
+)
 from app.schemas.auth import (
     LoginRequest,
     GoogleLoginRequest,
@@ -41,8 +49,10 @@ def login(data: LoginRequest, session: SessionDep):
             detail=error_response("Tên đăng nhập hoặc mật khẩu không đúng"),
         )
     
+    
     access_token = create_access_token(user.id)
     refresh_token = create_refresh_token(user.id)
+    
     
     return success_response(
         message="Đăng nhập thành công",

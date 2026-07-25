@@ -1,17 +1,17 @@
 "use client"; // Bắt buộc khi sử dụng React hooks
 
-import { useWorkspaceStore } from "@/features/folders/store";
-import { fileService } from "@/features/files/services";
-import { aiService } from "@/features/ai/services";
-import FileViewer from "@/features/files/components/FileViewer";
-import { useEffect, useState, use } from "react";
-import { useRouter } from "next/navigation";
-import ChatHistory from "@/components/chat/ChatHistory";
-import ChatInput from "@/components/chat/ChatInput";
-import { MessageProps } from "@/components/chat/ChatMessage";
-import { PanelRightClose, PanelRight } from "lucide-react";
-import { useAuthStore } from "@/features/auth/store";
-import { folderService } from "@/features/folders/services";
+import { useWorkspaceStore } from '@/features/folders/store';
+import { fileService } from '@/features/files/services';
+import { folderService } from '@/features/folders/services';
+import { aiService } from '@/features/ai/services';
+import FileViewer from '@/features/files/components/FileViewer';
+import { useEffect, useState, use } from 'react';
+import { useRouter } from 'next/navigation';
+import ChatHistory from '@/components/chat/ChatHistory';
+import ChatInput from '@/components/chat/ChatInput';
+import { MessageProps } from '@/components/chat/ChatMessage';
+import { PanelRightClose, PanelRight } from 'lucide-react';
+import { useAuthStore } from '@/features/auth/store';
 
 export default function FolderPage({
   params,
