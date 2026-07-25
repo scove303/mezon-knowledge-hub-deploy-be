@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from "react";
 import {
   Folder,
   FileText,
@@ -11,57 +11,209 @@ import {
   FileCheck,
   Video,
   HardDrive,
-} from 'lucide-react';
-import { Button } from '@/components/base-ui/Button';
-import { Input } from '@/components/base-ui/Input';
-import { Modal } from '@/components/base-ui/Modal';
-import { authService } from '@/features/auth/services';
-import { useAuthStore } from '@/features/auth/store';
-import { useWorkspaceStore } from '@/features/folders/store';
-import { folderService } from '@/features/folders/services';
+  LogOut,
+  LogIn,
+} from "lucide-react";
+import { Button } from "@/components/base-ui/Button";
+import { Modal } from "@/components/base-ui/Modal";
+import { useAuthStore } from "@/features/auth/store";
+import { useWorkspaceStore } from "@/features/folders/store";
+import { folderService } from "@/features/folders/services";
+import { fileService } from "@/features/files/services";
+import { useRouter } from "next/navigation";
+
+// Dữ liệu mock dùng làm dự phòng khi không đăng nhập hoặc backend offline
+const MOCK_FOLDERS = [
+  {
+    id: "mock-folder-1",
+    name: "🐍 Lộ trình Python cho người mới",
+    type: "roadmap",
+    files: [
+      {
+        id: "mock-file-1",
+        name: "Tong_quan.md",
+        createdAt: "23/07/2026",
+        content:
+          "# Lộ Trình Học Python\n\nChào mừng bạn đến với lộ trình học Python! Dưới đây là các chủ đề chính:\n\n- [x] Cú pháp cơ bản\n- [ ] Lập trình hướng đối tượng (OOP)\n- [ ] Xử lý file và ngoại lệ\n- [ ] Làm việc với cơ sở dữ liệu MySQL",
+      },
+    ],
+  },
+  {
+    id: "mock-folder-2",
+    name: "📄 Nghiên cứu AI Agents",
+    type: "document",
+    files: [
+      {
+        id: "mock-file-2",
+        name: "Action_Items.md",
+        createdAt: "23/07/2026",
+        content:
+          "# Kế hoạch hành động AI Agents\n\nTập trung nghiên cứu các framework chính:\n\n1. LangChain / LangGraph\n2. Autogen\n3. CrewAI\n\n*Mục tiêu: Đưa ra so sánh chi tiết giữa các framework trong tháng này.*",
+      },
+    ],
+  },
+  {
+    id: "mock-folder-3",
+    name: "🎥 Video System Design",
+    type: "video",
+    files: [
+      {
+        id: "mock-file-3",
+        name: "Video_Summary.md",
+        createdAt: "23/07/2026",
+        content:
+          "# Tóm tắt Video Kiến trúc Hệ thống\n\nCác nội dung chính kèm mốc thời gian:\n\n- [00:00](timestamp://0) : Giới thiệu tổng quan\n- [03:15](timestamp://195) : Phân biệt Monolith và Microservices\n- [08:45](timestamp://525) : Thiết kế cơ sở dữ liệu phân tán",
+        videoUrl: "https://www.youtube.com/watch?v=xpDnVSmNFX0",
+        timestamps: [
+          { time: "00:00", seconds: 0, text: "Giới thiệu tổng quan" },
+          { time: "03:15", seconds: 195, text: "Monolith vs Microservices" },
+          {
+            time: "08:45",
+            seconds: 525,
+            text: "Thiết kế cơ sở dữ liệu phân tán",
+          },
+        ],
+      },
+    ],
+  },
+];
 
 export default function Sidebar() {
   const store = useWorkspaceStore();
+  const router = useRouter();
+  const { isAuthenticated, clearAuth } = useAuthStore();
+
   const folders = store.getFilteredFolders();
   const selectedFolder = store.getSelectedFolder();
   const selectedFile = store.getSelectedFile();
   const searchQuery = store.searchQuery;
   const setSearchQuery = store.setSearch;
-  const selectFolder = store.setSelectedFolder;
+
+  // State quản lý việc mở modal xác nhận xóa
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState(null); // { type: 'folder' | 'file', folderId, fileId, name }
+
+  const selectFolder = (folderId) => {
+    store.setSelectedFolder(folderId);
+  };
+
   const selectFile = (folderId, fileId) => {
     store.setSelectedFolder(folderId);
     store.setSelectedFile(fileId);
+    router.push(`/dashboard/folders/${folderId}`);
   };
 
+  const refreshFolders = async () => {
+    if (!isAuthenticated) {
+      store.setFolders(MOCK_FOLDERS);
+      return;
+    }
+
+    try {
+      const res = await folderService.getFolders();
+      if (res.success) {
+        store.setFolders(res.data);
+      }
+    } catch (err) {
+      console.error(
+        "Lỗi khi tải danh sách thư mục (sử dụng dữ liệu Mock thay thế):",
+        err,
+      );
+      store.setFolders(MOCK_FOLDERS);
+    }
+  };
+
+  useEffect(() => {
+    refreshFolders();
+  }, [isAuthenticated]);
+
   const createFolder = async (name, type) => {
+    if (!isAuthenticated) {
+      const newMockFolder = {
+        id: `mock-folder-${Date.now()}`,
+        name,
+        type,
+        files: [],
+      };
+      store.setFolders([...store.folders, newMockFolder]);
+      return;
+    }
+
     try {
       const res = await folderService.createFolder(name, type);
       if (res.success) {
-        // Optimistic update or refetch
+        await refreshFolders();
       }
-    } catch (err) {}
+    } catch (err) {
+      console.error("Lỗi khi tạo thư mục:", err);
+    }
   };
 
-  const createFile = async (folderId, name, content) => {
-    // ... fileService integration
+  // Hàm xử lý kích hoạt xóa khi người dùng xác nhận ở Modal
+  const confirmDelete = async () => {
+    if (!itemToDelete) return;
+
+    const { type, folderId, fileId } = itemToDelete;
+    setDeleteConfirmOpen(false);
+
+    if (type === "folder") {
+      if (!isAuthenticated || folderId.startsWith("mock-")) {
+        const updated = store.folders.filter((f) => f.id !== folderId);
+        store.setFolders(updated);
+        if (store.selectedFolderId === folderId) {
+          store.setSelectedFolder(null);
+          router.push("/dashboard");
+        }
+        return;
+      }
+
+      try {
+        const res = await folderService.deleteFolder(folderId);
+        if (res.success) {
+          await refreshFolders();
+          if (store.selectedFolderId === folderId) {
+            store.setSelectedFolder(null);
+            router.push("/dashboard");
+          }
+        }
+      } catch (err) {
+        console.error("Lỗi khi xóa thư mục:", err);
+      }
+    } else if (type === "file") {
+      if (!isAuthenticated || fileId.startsWith("mock-")) {
+        const updated = store.folders.map((f) => {
+          if (f.id === folderId) {
+            return {
+              ...f,
+              files: f.files.filter((file) => file.id !== fileId),
+            };
+          }
+          return f;
+        });
+        store.setFolders(updated);
+        if (store.selectedFileId === fileId) {
+          store.setSelectedFile(null);
+        }
+        return;
+      }
+
+      try {
+        const res = await fileService.deleteFile(fileId);
+        if (res.success) {
+          await refreshFolders();
+          if (store.selectedFileId === fileId) {
+            store.setSelectedFile(null);
+          }
+        }
+      } catch (err) {
+        console.error("Lỗi khi xóa file:", err);
+      }
+    }
   };
 
-  const deleteFolder = async (folderId) => {
-    // ...
-  };
-
-  const deleteFile = async (folderId, fileId) => {
-    // ...
-  };
-  const [expandedFolders, setExpandedFolders] = useState({
-    'folder-1': true,
-    'folder-2': true,
-    'folder-3': true,
-  });
-  const [newFolderName, setNewFolderName] = useState('');
+  const [expandedFolders, setExpandedFolders] = useState({});
+  const [newFolderName, setNewFolderName] = useState("");
   const [showAddFolder, setShowAddFolder] = useState(false);
-  const [newFileName, setNewFileName] = useState({});
-  const [addingFileToFolderId, setAddingFileToFolderId] = useState(null);
 
   const toggleExpand = (folderId, e) => {
     e.stopPropagation();
@@ -71,37 +223,37 @@ export default function Sidebar() {
   const handleCreateFolder = (e) => {
     e.preventDefault();
     if (!newFolderName.trim()) return;
-    const types = ['roadmap', 'document', 'video'];
+
+    const types = ["roadmap", "document", "video"];
     const randomType = types[folders.length % 3];
     const emoji =
-      randomType === 'roadmap' ? '🐍 ' : randomType === 'document' ? '🚗 ' : '🎥 ';
+      randomType === "roadmap"
+        ? "🐍 "
+        : randomType === "document"
+          ? "📄 "
+          : "🎥 ";
+
     createFolder(emoji + newFolderName.trim(), randomType);
-    setNewFolderName('');
+    setNewFolderName("");
     setShowAddFolder(false);
   };
 
-  const handleCreateFile = (folderId) => {
-    const fileName = newFileName[folderId];
-    if (!fileName || !fileName.trim()) return;
-    const formattedName = fileName.trim().endsWith('.md')
-      ? fileName.trim()
-      : `${fileName.trim()}.md`;
-    createFile(
-      folderId,
-      formattedName,
-      `# ${formattedName.replace('.md', '')}\n\nNhập nội dung tài liệu ở đây...`
-    );
-    setNewFileName((prev) => ({ ...prev, [folderId]: '' }));
-    setAddingFileToFolderId(null);
+  const handleLogout = () => {
+    clearAuth();
+    router.push("/login");
+  };
+
+  const handleLoginRedirect = () => {
+    router.push("/login");
   };
 
   const getFolderIcon = (type) => {
     switch (type) {
-      case 'roadmap':
+      case "roadmap":
         return <Compass className="w-4 h-4 text-emerald-400" />;
-      case 'document':
+      case "document":
         return <FileCheck className="w-4 h-4 text-cyan-400" />;
-      case 'video':
+      case "video":
         return <Video className="w-4 h-4 text-rose-400" />;
       default:
         return <Folder className="w-4 h-4 text-indigo-400" />;
@@ -111,16 +263,36 @@ export default function Sidebar() {
   return (
     <aside className="w-80 bg-[rgb(var(--color-surface-1))] border-r border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] flex flex-col h-full select-none">
       {/* Brand Header */}
-      <div className="p-5 border-b border-[rgb(var(--color-border))] flex items-center space-x-3">
-        <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
-          <HardDrive className="w-5 h-5 text-white" />
+      <div className="p-5 border-b border-[rgb(var(--color-border))] flex items-center justify-between">
+        <div className="flex items-center space-x-3">
+          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+            <HardDrive className="w-5 h-5 text-white" />
+          </div>
+          <div>
+            <h1 className="text-base font-bold text-[rgb(var(--color-text-primary))] tracking-wide">
+              Mezon MindFolder
+            </h1>
+            <p className="text-xs text-indigo-400 font-medium">Knowledge Hub</p>
+          </div>
         </div>
-        <div>
-          <h1 className="text-base font-bold text-[rgb(var(--color-text-primary))] tracking-wide">
-            Mezon MindFolder
-          </h1>
-          <p className="text-xs text-indigo-400 font-medium">Knowledge Hub</p>
-        </div>
+
+        {isAuthenticated ? (
+          <button
+            onClick={handleLogout}
+            className="p-2 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-rose-400 rounded-lg transition-colors"
+            title="Đăng xuất"
+          >
+            <LogOut className="w-4 h-4" />
+          </button>
+        ) : (
+          <button
+            onClick={handleLoginRedirect}
+            className="p-2 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-indigo-400 rounded-lg transition-colors"
+            title="Đăng nhập"
+          >
+            <LogIn className="w-4 h-4" />
+          </button>
+        )}
       </div>
 
       {/* Search */}
@@ -141,7 +313,7 @@ export default function Sidebar() {
       {/* Folder Navigation */}
       <div className="flex-1 overflow-y-auto px-3 space-y-4 pb-4 scrollbar-thin">
         <div className="flex items-center justify-between px-2 text-xs font-semibold text-[rgb(var(--color-text-muted))] uppercase tracking-wider">
-          <span>Danh sách Thư Mục</span>
+          <span>Danh sách Thư Mục {!isAuthenticated && "(Bản thử)"}</span>
           <Button
             id="btn-add-folder"
             variant="ghost"
@@ -191,7 +363,7 @@ export default function Sidebar() {
             </div>
           ) : (
             folders.map((folder) => {
-              const isExpanded = !!expandedFolders[folder.id];
+              const isExpanded = expandedFolders[folder.id] !== false;
               const isSelected = selectedFolder?.id === folder.id;
 
               return (
@@ -204,8 +376,8 @@ export default function Sidebar() {
                     onClick={() => selectFolder(folder.id)}
                     className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
                       isSelected
-                        ? 'bg-indigo-600/10 text-indigo-300 border border-indigo-500/20 font-medium'
-                        : 'hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))] border border-transparent'
+                        ? "bg-indigo-600/10 text-indigo-300 border border-indigo-500/20 font-medium"
+                        : "hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))] border border-transparent"
                     }`}
                   >
                     <div className="flex items-center space-x-2.5 min-w-0">
@@ -230,23 +402,24 @@ export default function Sidebar() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          setAddingFileToFolderId(
-                            addingFileToFolderId === folder.id ? null : folder.id
+                          alert(
+                            "Tài liệu mới chỉ có thể được tạo tự động bởi AI thông qua Khung chat ở trang chính!",
                           );
                         }}
                         className="text-[rgb(var(--color-text-muted))] hover:text-indigo-400 p-0.5 rounded transition-colors"
-                        title="Tạo file mới"
+                        title="Tạo file bằng AI"
                       >
                         <Plus className="w-3.5 h-3.5" />
                       </button>
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (
-                            confirm(`Bạn có chắc muốn xóa thư mục "${folder.name}"?`)
-                          ) {
-                            deleteFolder(folder.id);
-                          }
+                          setItemToDelete({
+                            type: "folder",
+                            folderId: folder.id,
+                            name: folder.name,
+                          });
+                          setDeleteConfirmOpen(true);
                         }}
                         className="text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-colors"
                         title="Xóa thư mục"
@@ -259,79 +432,50 @@ export default function Sidebar() {
                   {/* Children Files */}
                   {isExpanded && (
                     <ul className="pl-7 pr-1 mt-1 mb-2 space-y-1 border-l border-[rgb(var(--color-border))] ml-4 animate-fade-in">
-                      {/* Inline file creation */}
-                      {addingFileToFolderId === folder.id && (
-                        <div className="px-2 py-1.5 bg-[rgb(var(--color-bg))] rounded border border-[rgb(var(--color-border))] flex items-center space-x-1">
-                          <input
-                            type="text"
-                            placeholder="file_name.md..."
-                            value={newFileName[folder.id] || ''}
-                            onChange={(e) =>
-                              setNewFileName((prev) => ({
-                                ...prev,
-                                [folder.id]: e.target.value,
-                              }))
-                            }
-                            className="bg-transparent text-xs text-[rgb(var(--color-text-primary))] outline-none w-full py-0.5"
-                            autoFocus
-                            onKeyDown={(e) => {
-                              if (e.key === 'Enter') handleCreateFile(folder.id);
-                              if (e.key === 'Escape') setAddingFileToFolderId(null);
-                            }}
-                          />
-                          <button
-                            onClick={() => handleCreateFile(folder.id)}
-                            className="text-indigo-400 hover:text-indigo-300 text-xs font-semibold px-1 transition-colors"
-                          >
-                            Lưu
-                          </button>
+                      {/* File Items */}
+                      {folder.files &&
+                        folder.files.map((file) => {
+                          const isFileSelected = selectedFile?.id === file.id;
+                          return (
+                            <li
+                              key={file.id}
+                              onClick={() => selectFile(folder.id, file.id)}
+                              className={`group/file flex items-center justify-between px-3 py-1.5 rounded cursor-pointer transition-colors ${
+                                isFileSelected
+                                  ? "bg-indigo-600/15 text-indigo-400 font-semibold"
+                                  : "hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))]"
+                              }`}
+                            >
+                              <div className="flex items-center space-x-2 min-w-0">
+                                <FileText className="w-3.5 h-3.5 flex-shrink-0" />
+                                <span className="text-xs truncate select-none">
+                                  {file.name}
+                                </span>
+                              </div>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setItemToDelete({
+                                    type: "file",
+                                    folderId: folder.id,
+                                    fileId: file.id,
+                                    name: file.name,
+                                  });
+                                  setDeleteConfirmOpen(true);
+                                }}
+                                className="opacity-0 group-hover/file:opacity-100 text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-all"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </li>
+                          );
+                        })}
+
+                      {(!folder.files || folder.files.length === 0) && (
+                        <div className="text-[10px] text-[rgb(var(--color-text-disabled))] px-3 py-1 italic select-none">
+                          Không có file nào
                         </div>
                       )}
-
-                      {/* File Items */}
-                      {folder.files.map((file) => {
-                        const isFileSelected = selectedFile?.id === file.id;
-                        return (
-                          <li
-                            key={file.id}
-                            onClick={() => selectFile(folder.id, file.id)}
-                            className={`group/file flex items-center justify-between px-3 py-1.5 rounded cursor-pointer transition-colors ${
-                              isFileSelected
-                                ? 'bg-indigo-600/15 text-indigo-400 font-semibold'
-                                : 'hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))]'
-                            }`}
-                          >
-                            <div className="flex items-center space-x-2 min-w-0">
-                              <FileText className="w-3.5 h-3.5 flex-shrink-0" />
-                              <span className="text-xs truncate select-none">
-                                {file.name}
-                              </span>
-                            </div>
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                if (
-                                  confirm(
-                                    `Bạn có chắc muốn xóa file "${file.name}"?`
-                                  )
-                                ) {
-                                  deleteFile(folder.id, file.id);
-                                }
-                              }}
-                              className="opacity-0 group-hover/file:opacity-100 text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-all"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </li>
-                        );
-                      })}
-
-                      {folder.files.length === 0 &&
-                        addingFileToFolderId !== folder.id && (
-                          <div className="text-[10px] text-[rgb(var(--color-text-disabled))] px-3 py-1 italic select-none">
-                            Không có file nào
-                          </div>
-                        )}
                     </ul>
                   )}
                 </li>
@@ -341,17 +485,50 @@ export default function Sidebar() {
         </ul>
       </div>
 
+      {/* Modal xác nhận xóa custom thay thế cho confirm() thô sơ của trình duyệt */}
+      <Modal
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        title={itemToDelete?.type === "folder" ? "Xóa Thư Mục" : "Xóa Tài Liệu"}
+        size="sm"
+        footer={
+          <div className="flex justify-end gap-2 w-full">
+            <Button variant="ghost" onClick={() => setDeleteConfirmOpen(false)}>
+              Hủy
+            </Button>
+            <Button variant="danger" onClick={confirmDelete}>
+              Đồng ý xóa
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-[rgb(var(--color-text-secondary))] leading-relaxed">
+          Bạn có chắc chắn muốn xóa{" "}
+          {itemToDelete?.type === "folder"
+            ? `thư mục "${itemToDelete?.name}" và toàn bộ tài liệu bên trong? Hành động này không thể hoàn tác.`
+            : `tài liệu "${itemToDelete?.name}" khỏi thư mục?`}
+        </p>
+      </Modal>
+
       {/* Footer */}
       <div className="p-4 bg-[rgb(var(--color-bg))] border-t border-[rgb(var(--color-border))] text-[10px] text-[rgb(var(--color-text-muted))] flex flex-col space-y-1">
         <div className="flex justify-between">
           <span>Phiên bản UI</span>
-          <span className="font-semibold text-[rgb(var(--color-text-secondary))]">2.0.0</span>
+          <span className="font-semibold text-[rgb(var(--color-text-secondary))]">
+            2.0.0
+          </span>
         </div>
         <div className="flex justify-between">
           <span>Kết nối API</span>
           <span className="flex items-center space-x-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span className="text-emerald-500 font-semibold">Đang đồng bộ</span>
+            <span
+              className={`w-1.5 h-1.5 rounded-full ${isAuthenticated ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}
+            />
+            <span
+              className={`${isAuthenticated ? "text-emerald-500" : "text-amber-500"} font-semibold`}
+            >
+              {isAuthenticated ? "Đang kết nối" : "Thử nghiệm (Guest)"}
+            </span>
           </span>
         </div>
       </div>

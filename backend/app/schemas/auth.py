@@ -7,6 +7,21 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class GoogleLoginRequest(BaseModel):
+    id_token: str
+
+
+class RefreshRequest(BaseModel):
+    refreshToken: str
+
+
+class RegisterRequest(BaseModel):
+    username: str
+    password: str
+    email: Optional[str] = None
+    display_name: Optional[str] = None
+
+
 class UserInfo(BaseModel):
     id: int
     username: str

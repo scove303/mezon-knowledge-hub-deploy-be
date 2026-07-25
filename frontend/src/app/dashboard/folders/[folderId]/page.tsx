@@ -1,239 +1,246 @@
-"use client"; // Bắt buộc trong Next.js (App Router) khi file có sử dụng state (useState), effect (useEffect), hoặc các sự kiện (onClick).
+'use client'; // Bắt buộc khi sử dụng React hooks
 
-import { useWorkspaceStore } from "@/features/folders/store";
-import { fileService } from "@/features/files/services";
-import FileViewer from "@/features/files/components/FileViewer";
-import { useEffect, useState, use } from "react";
-import { useRouter } from "next/navigation";
-import ChatHistory from "@/components/chat/ChatHistory";
-import ChatInput from "@/components/chat/ChatInput";
-import { MessageProps } from "@/components/chat/ChatMessage";
-import { PanelRightClose, PanelRight } from "lucide-react";
+import { useWorkspaceStore } from '@/features/folders/store';
+import { fileService } from '@/features/files/services';
+import { folderService } from '@/features/folders/services';
+import { aiService } from '@/features/ai/services';
+import FileViewer from '@/features/files/components/FileViewer';
+import { useEffect, useState, use } from 'react';
+import { useRouter } from 'next/navigation';
+import ChatHistory from '@/components/chat/ChatHistory';
+import ChatInput from '@/components/chat/ChatInput';
+import { MessageProps } from '@/components/chat/ChatMessage';
+import { PanelRightClose, PanelRight } from 'lucide-react';
+import { useAuthStore } from '@/features/auth/store';
 
-export default function FolderPage({
-  params,
-}: {
-  params: Promise<{ folderId: string }> | { folderId: string };
-}) {
-  // lấy folderId từ đường dẫn URL, ví dụ: /dashboard/folders/123 -> folderId là '123')
+export default function FolderPage({ params }: { params: Promise<{ folderId: string }> | { folderId: string } }) {
   const resolvedParams = params instanceof Promise ? use(params) : params;
   const folderId = resolvedParams.folderId;
-
-  // useRouter dùng để điều hướng trang (chuyển hướng URL)
   const router = useRouter();
 
-  // Lấy các state và function từ Zustand store (giống như kho lưu trữ dữ liệu dùng chung cho toàn bộ app)
-  const {
-    folders,
-    selectedFileId,
-    setSidebarOpen,
-    isDocumentSideOpen,
-    setDocumentSideOpen,
-    toggleDocumentSide,
-  } = useWorkspaceStore() as any;
-
-  const [fileDetails, setFileDetails] = useState<any>(null); // Lưu trữ chi tiết nội dung của file đang mở
-  const [isLoading, setIsLoading] = useState(false); // Trạng thái đang tải (hiển thị spinner hoặc vô hiệu hóa nút bấm)
-
-  // Lưu trữ danh sách tin nhắn của ô chat
+  const { isAuthenticated } = useAuthStore() as any;
+  const { folders, selectedFileId, setSidebarOpen, isDocumentSideOpen, setDocumentSideOpen, toggleDocumentSide, setFolders } = useWorkspaceStore() as any;
+  
+  const [fileDetails, setFileDetails] = useState<any>(null);
+  const [isLoading, setIsLoading] = useState(false);
   const [messages, setMessages] = useState<MessageProps[]>([
     {
-      id: "msg-1",
-      role: "bot",
-      content:
-        "I have generated the knowledge hub folder for you. Let me know if you need any adjustments.",
-    },
+      id: 'msg-1',
+      role: 'bot',
+      content: 'Thư mục tri thức đã được khởi tạo thành công. Bạn có thể xem tài liệu ở khung bên phải, hoặc tải thêm tài liệu/dán link YouTube vào đây để AI tóm tắt thêm vào thư mục này.',
+    }
   ]);
 
-  // useEffect (1): Chạy mỗi khi `folderId`, `router` hoặc `setSidebarOpen` thay đổi.
-  // Dùng để xử lý logic khi mới vào trang (chuyển hướng hoặc mở sidebar).
+  const folder = folders.find((f: any) => f.id === folderId);
+
+  // useEffect (1): Tự động mở Sidebar khi vào phòng chat
   useEffect(() => {
-    // Nếu vô tình vào URL cũ là 'default', chuyển hướng ngay lập tức về trang chủ Dashboard
-    if (folderId === "default") {
-      router.replace("/dashboard");
+    if (folderId === 'default') {
+      router.replace('/dashboard');
     } else {
-      // Tự động mở thanh Sidebar bên trái khi người dùng vào phòng chat này
       setSidebarOpen(true);
     }
   }, [folderId, router, setSidebarOpen]);
 
-  // Tìm thư mục hiện tại và tóm tắt file từ trong mảng folders (dữ liệu lấy từ Store)
-  const folder = folders.find((f: any) => f.id === folderId);
-  const fileSummary = folder?.files?.find((f: any) => f.id === selectedFileId);
-
-  // useEffect (2): Lắng nghe sự thay đổi của `selectedFileId`.
-  // Mỗi khi người dùng bấm chọn một file khác ở Sidebar, biến selectedFileId sẽ thay đổi, kéo theo hàm bên dưới được gọi.
+  // useEffect (2): Tải chi tiết file khi người dùng bấm chọn ở Sidebar
   useEffect(() => {
     async function loadFile() {
-      // Nếu chưa chọn file nào, xóa thông tin file hiện tại trên giao diện và dừng hàm
       if (!selectedFileId) {
         setFileDetails(null);
         return;
       }
+      
+      // Nếu là Guest (Chưa đăng nhập), dùng dữ liệu offline từ State
+      if (!isAuthenticated || selectedFileId.startsWith('mock-')) {
+        const activeFolder = folders.find((f: any) => f.id === folderId);
+        const activeFile = activeFolder?.files?.find((f: any) => f.id === selectedFileId);
+        setFileDetails(activeFile || null);
+        setDocumentSideOpen(true);
+        return;
+      }
 
       try {
-        // Gọi API backend để lấy chi tiết nội dung của file
         const res = await fileService.getFile(selectedFileId);
         if (res.success) {
-          setFileDetails(res.data); // Cập nhật state fileDetails
-          setDocumentSideOpen(true); // Tự động mở cửa sổ bên phải (Document Viewer) để đọc nội dung
+          setFileDetails(res.data);
+          setDocumentSideOpen(true);
         }
       } catch (err) {
-        console.error("Lỗi khi lấy dữ liệu file:", err);
+        console.error('Lỗi khi tải chi tiết tài liệu:', err);
       }
     }
-
     loadFile();
-  }, [selectedFileId, setDocumentSideOpen]);
+  }, [selectedFileId, folders, folderId, isAuthenticated, setDocumentSideOpen]);
 
-  // Hàm xử lý lưu lại nội dung sau khi người dùng sửa file (VD: Edit Markdown)
+  // Lưu nội dung sau khi chỉnh sửa
   const handleSaveContent = async (newContent: string) => {
     if (!selectedFileId) return;
+
+    if (!isAuthenticated || selectedFileId.startsWith('mock-')) {
+      // Mock lưu local cho Guest
+      const updatedFolders = folders.map((f: any) => {
+        if (f.id === folderId) {
+          return {
+            ...f,
+            files: f.files.map((file: any) => {
+              if (file.id === selectedFileId) {
+                return { ...file, content: newContent };
+              }
+              return file;
+            })
+          };
+        }
+        return f;
+      });
+      setFolders(updatedFolders);
+      return;
+    }
+
     try {
       const res = await fileService.updateFile(selectedFileId, newContent);
       if (res.success) {
         setFileDetails(res.data);
       }
     } catch (err) {
-      console.error("Lỗi khi lưu file:", err);
+      console.error('Lỗi khi cập nhật tài liệu:', err);
     }
   };
 
-  // Hàm xử lý khi người dùng gõ phím Enter hoặc bấm nút Gửi tin nhắn
-  const handleSendMessage = (message: string, file?: File | null) => {
-    // 1. Tạo tin nhắn của người dùng và thêm vào danh sách
-    const userMsg: MessageProps = {
-      id: `msg-${Date.now()}`, // Tạo ID ngẫu nhiên bằng thời gian hiện tại
-      role: "user",
-      content: message,
-      fileAttachment: file?.name, // Tên file đính kèm nếu có
-    };
-
-    // setMessages nhận vào một callback để đảm bảo lấy được mảng cũ (prev), sau đó nối tin nhắn mới vào cuối
-    setMessages((prev) => [...prev, userMsg]);
-
-    // 2. Chuyển trạng thái đang xử lý để khóa nút Gửi
-    setIsLoading(true);
-
-    // TODO: Đây chỉ là mô phỏng (fake) thời gian đợi AI.
-    // Sau này sẽ thay setTimeout bằng việc gọi api fetch/axios gửi dữ liệu lên Backend ở đây
-    setTimeout(() => {
-      const botMsg: MessageProps = {
-        id: `msg-${Date.now() + 1}`,
-        role: "bot",
-        content: "I am processing your request and updating the document...",
-        isStatus: true,
-      };
-
-      setMessages((prev) => [...prev, botMsg]); // Cập nhật tin nhắn của Bot vào mảng
-      setIsLoading(false); // Xong thì tắt trạng thái loading
-
-      // Giả lập việc mở cửa sổ tài liệu bên phải sau khi Bot phản hồi xong
-      setDocumentSideOpen(true);
-    }, 1000); // Đợi 1 giây (1000ms)
+  // Kiểm tra chuỗi nhập có phải đường link YouTube không
+  const isYoutubeUrl = (text: string) => {
+    return text.includes('youtube.com/') || text.includes('youtu.be/');
   };
 
-  // Tránh render giao diện nếu URL là 'default' (vì đang chuẩn bị bị redirect đi chỗ khác)
-  if (folderId === "default") {
-    return null;
-  }
+  // Gửi tin nhắn mới hoặc tải file mới lên thư mục hiện tại
+  const handleSendMessage = async (message: string, file?: File | null) => {
+    // 1. Thêm tin nhắn của User vào ô chat
+    const userMsg: MessageProps = {
+      id: `msg-${Date.now()}`,
+      role: 'user',
+      content: message,
+      fileAttachment: file?.name,
+    };
+    setMessages(prev => [...prev, userMsg]);
+    setIsLoading(true);
 
-  // --- GIAO DIỆN (JSX) ---
+    try {
+      // ─── CHẾ ĐỘ THỬ NGHIỆM (GUEST) ───
+      if (!isAuthenticated) {
+        setTimeout(() => {
+          const botMsg: MessageProps = {
+            id: `msg-${Date.now() + 1}`,
+            role: 'bot',
+            content: 'Tính năng AI thật yêu cầu kết nối Backend. Ở chế độ Guest, hệ thống chỉ mô phỏng phản hồi!',
+            isStatus: true,
+          };
+          setMessages(prev => [...prev, botMsg]);
+          setIsLoading(false);
+        }, 1000);
+        return;
+      }
+
+      // ─── CHẾ ĐỘ THỰC TẾ (API KẾT NỐI BACKEND) ───
+      if (file) {
+        // Tình huống A: Tải file mới lên thư mục hiện tại
+        const res = await aiService.digestDocument(file, folderId);
+        if (res.success) {
+          const botMsg: MessageProps = {
+            id: `msg-${Date.now() + 1}`,
+            role: 'bot',
+            content: `Đã xử lý xong tài liệu "${file.name}". Vui lòng bấm chọn file mới vừa xuất hiện trong thư mục ở thanh bên trái!`,
+          };
+          setMessages(prev => [...prev, botMsg]);
+          // Re-fetch danh sách folder để hiển thị file mới
+          const foldersRes = await folderService.getFolders();
+          if (foldersRes.success) setFolders(foldersRes.data);
+        }
+      } else if (isYoutubeUrl(message)) {
+        // Tình huống B: Dán link video YouTube mới vào thư mục hiện tại
+        const res = await aiService.summarizeYoutube(message, folderId);
+        if (res.success) {
+          const botMsg: MessageProps = {
+            id: `msg-${Date.now() + 1}`,
+            role: 'bot',
+            content: `Đang lấy phụ đề và tóm tắt video. Vui lòng kiểm tra file "${res.data.name || 'Video_Summary.md'}" ở Sidebar sau vài giây!`,
+          };
+          setMessages(prev => [...prev, botMsg]);
+          // Re-fetch folders để đồng bộ
+          const foldersRes = await folderService.getFolders();
+          if (foldersRes.success) setFolders(foldersRes.data);
+        }
+      } else {
+        // Tình huống C: Hội thoại thường.
+        // Do API backend chưa hỗ trợ nói chuyện tiếp nối cho từng Folder, chúng ta tạm thời phản hồi giả lập
+        // và lưu vết tin nhắn để hiển thị lịch sử chat cho trực quan.
+        const botMsg: MessageProps = {
+          id: `msg-${Date.now() + 1}`,
+          role: 'bot',
+          content: `Backend hiện chưa hỗ trợ API hội thoại tiếp diễn (Chỉ hỗ trợ tạo Lộ trình mới bằng cách gõ lệnh từ Trang chủ). Tin nhắn của bạn: "${message}"`,
+        };
+        setMessages(prev => [...prev, botMsg]);
+      }
+    } catch (err) {
+      console.error('Lỗi gửi tin nhắn đến AI:', err);
+      const botMsg: MessageProps = {
+        id: `msg-${Date.now() + 1}`,
+        role: 'bot',
+        content: 'Không thể kết nối với dịch vụ AI. Vui lòng thử lại sau!',
+        isStatus: true,
+      };
+      setMessages(prev => [...prev, botMsg]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <div className="flex h-full w-full overflow-hidden bg-[rgb(var(--color-bg))]">
-      {/* ---------------------------------------------------- */}
-      {/* KHUNG BÊN TRÁI: Ô Chat (Left Pane)                    */}
-      {/* ---------------------------------------------------- */}
-      <div
-        className={`flex flex-col shrink-0 transition-all duration-300 ease-in-out h-full ${
-          // Nếu khung bên phải (isDocumentSideOpen) ĐANG MỞ, khung bên trái chỉ chiếm 1/3 màn hình.
-          // Ngược lại, nếu khung bên phải ĐANG ĐÓNG, khung bên trái sẽ mở rộng 100% (w-full).
-          isDocumentSideOpen
-            ? "w-full lg:w-1/3 xl:w-2/5 border-r border-[rgb(var(--color-border))]"
-            : "w-full"
-        }`}
-      >
-        {/* Tiêu đề ô chat */}
+      {/* Left Pane: Chat Interface */}
+      <div className={`flex flex-col shrink-0 transition-all duration-300 ease-in-out h-full ${
+        isDocumentSideOpen ? 'w-full lg:w-1/3 xl:w-2/5 border-r border-[rgb(var(--color-border))]' : 'w-full'
+      }`}>
         <div className="p-4 border-b border-[rgb(var(--color-border))] flex items-center justify-between pl-16">
           <h2 className="font-semibold text-lg text-[rgb(var(--color-text-primary))] truncate">
-            {folder?.name || "Chat Session"}
+            {folder?.name || 'Chat Session'}
           </h2>
-
-          {/* Nút bấm để Bật/Tắt khung Tài liệu bên phải */}
-          <button
+          <button 
             onClick={toggleDocumentSide}
             className="p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors"
             title="Bật/Tắt cửa sổ tài liệu"
           >
-            {isDocumentSideOpen ? (
-              <PanelRightClose size={20} />
-            ) : (
-              <PanelRight size={20} />
-            )}
+            {isDocumentSideOpen ? <PanelRightClose size={20} /> : <PanelRight size={20} />}
           </button>
         </div>
-
-        {/* Component hiển thị Lịch sử chat (đẩy mảng messages vào qua props) */}
+        
         <ChatHistory messages={messages} />
-
-        {/* Component chứa Ô nhập liệu (Chat Input) */}
+        
         <div className="p-4 bg-[rgb(var(--color-bg))] border-t border-[rgb(var(--color-border))]">
-          <ChatInput
-            onSubmit={handleSendMessage}
-            isLoading={isLoading}
-            placeholder="Đặt câu hỏi hoặc yêu cầu chỉnh sửa..."
+          <ChatInput 
+            onSubmit={handleSendMessage} 
+            isLoading={isLoading} 
+            placeholder="Đặt câu hỏi hoặc tải lên tài liệu mới..."
           />
         </div>
       </div>
 
-      {/* ---------------------------------------------------- */}
-      {/* KHUNG BÊN PHẢI: Trình xem tài liệu (Right Pane)        */}
-      {/* ---------------------------------------------------- */}
-      <div
-        className={`flex flex-col min-w-0 h-full bg-[rgb(var(--color-surface-1))] transition-all duration-300 ease-in-out ${
-          // Hiệu ứng ẩn/hiện: Nếu isDocumentSideOpen là true thì cho độ rộng flex-1 (chiếm phần còn lại).
-          // Nếu false thì cho chiều rộng = 0 (w-0) và ẩn đi (opacity-0).
-          isDocumentSideOpen
-            ? "flex-1 opacity-100"
-            : "w-0 opacity-0 overflow-hidden"
-        }`}
-      >
-        {/* Kiểm tra (Conditional Rendering): Nếu người dùng ĐÃ chọn file và file ĐÃ tải xong dữ liệu */}
+      {/* Right Pane: File Viewer (Collapsible) */}
+      <div className={`flex flex-col min-w-0 h-full bg-[rgb(var(--color-surface-1))] transition-all duration-300 ease-in-out ${
+        isDocumentSideOpen ? 'flex-1 opacity-100' : 'w-0 opacity-0 overflow-hidden'
+      }`}>
         {selectedFileId && fileDetails ? (
-          // Hiển thị Component đọc file (Markdown / Video)
-          <FileViewer
-            file={fileDetails}
-            folderName={folder?.name || ""}
-            onSaveContent={handleSaveContent}
+          <FileViewer 
+            file={fileDetails} 
+            folderName={folder?.name || ''} 
+            onSaveContent={handleSaveContent} 
           />
         ) : (
-          // Nếu CHƯA chọn file nào, hiển thị màn hình hướng dẫn (Empty State)
           <div className="flex-1 flex items-center justify-center text-[rgb(var(--color-text-muted))] p-8 text-center min-w-[300px]">
             <div className="flex flex-col items-center gap-4">
-              {/* Icon minh họa */}
               <div className="w-16 h-16 bg-indigo-500/20 rounded-full flex items-center justify-center text-indigo-400 mb-2">
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="24"
-                  height="24"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z" />
-                  <polyline points="14 2 14 8 20 8" />
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M14.5 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V7.5L14.5 2z"/><polyline points="14 2 14 8 20 8"/></svg>
               </div>
-              <h3 className="text-xl font-medium text-[rgb(var(--color-text-primary))]">
-                Chưa chọn tài liệu
-              </h3>
-              <p>
-                Hãy chọn một tài liệu từ thanh bên trái (Sidebar) để xem nội
-                dung.
-              </p>
+              <h3 className="text-xl font-medium text-[rgb(var(--color-text-primary))]">Chưa chọn tài liệu</h3>
+              <p>Hãy chọn một tài liệu từ thanh bên trái (Sidebar) để xem nội dung.</p>
             </div>
           </div>
         )}

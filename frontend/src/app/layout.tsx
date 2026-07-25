@@ -17,6 +17,9 @@ export const metadata = {
   description:
     'Trợ lý AI biên soạn, phân loại và quản lý tri thức đa phương tiện trên Mezon.',
   keywords: ['knowledge hub', 'mezon', 'ai', 'learning', 'documents'],
+  icons: {
+    icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📁</text></svg>',
+  },
 };
 
 export default function RootLayout({ children }) {
@@ -25,7 +28,7 @@ export default function RootLayout({ children }) {
       lang="vi"
       className={`${geistSans.variable} ${geistMono.variable} h-full`}
     >
-      <body className="h-full antialiased">
+      <body className="h-full antialiased" suppressHydrationWarning>
         <Providers>{children}</Providers>
       </body>
     </html>
