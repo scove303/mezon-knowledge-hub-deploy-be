@@ -29,13 +29,13 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 
 # =============================================================
-# 1. ĐĂNG NHẬP USERNAME / PASSWORD (JWT)
+# 1. ĐĂNG NHẬP USERNAME / PASSWORD
 # =============================================================
 @router.post("/login")
 def login(data: LoginRequest, session: SessionDep):
     user = session.exec(select(User).where(User.username == data.username)).first()
     
-    if not user or not user.hashed_password or not verify_password(data.password, user.hashed_password):
+    if not user or not verify_password(data.password, user.hashed_password):
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail=error_response("Tên đăng nhập hoặc mật khẩu không đúng"),
@@ -54,8 +54,6 @@ def login(data: LoginRequest, session: SessionDep):
                 "username": user.username,
                 "role": user.role,
                 "display_name": user.display_name or user.username,
-                "email": user.email,
-                "avatar_url": user.avatar_url,
             },
         },
     )
@@ -66,22 +64,26 @@ def login(data: LoginRequest, session: SessionDep):
 # =============================================================
 @router.post("/google")
 def login_with_google(data: GoogleLoginRequest, session: SessionDep):
-    # 1. Verify id_token với Google Server
+    # 1. Xác thực id_token với Google Server
     try:
         id_info = id_token.verify_oauth2_token(
             data.id_token,
             google_requests.Request(),
             settings.GOOGLE_CLIENT_ID
         )
-    except Exception:
+    except Exception as e:
+        # In chi tiết lỗi gốc ra terminal của uvicorn để dễ debug
+        import traceback
+        traceback.print_exc()
+        print(f"--- GOOGLE VERIFY ERROR DETAIL: {str(e)} ---")
+        
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=error_response("Google Token không hợp lệ hoặc đã hết hạn"),
+            detail=error_response(f"Google Token không hợp lệ: {str(e)}"),
         )
 
     google_email = id_info.get("email")
     google_name = id_info.get("name", "")
-    google_picture = id_info.get("picture", "")
 
     if not google_email:
         raise HTTPException(
@@ -89,43 +91,33 @@ def login_with_google(data: GoogleLoginRequest, session: SessionDep):
             detail=error_response("Không lấy được email từ tài khoản Google"),
         )
 
-    # 2. Tìm user theo email thu được từ Google
-    user = session.exec(select(User).where(User.email == google_email)).first()
+    # 2. Tạo username dựa trên prefix email Google
+    base_username = google_email.split("@")[0]
     
-    # 3. Nếu chưa có tài khoản trong DB thì tự động tạo mới
+    # Tìm user theo username
+    user = session.exec(select(User).where(User.username == base_username)).first()
+    
+    # 3. Nếu chưa có tài khoản thì tự động tạo mới
     if not user:
-        base_username = google_email.split("@")[0]
         username = base_username
         
-        # Xử lý tránh trùng lặp UNIQUE username
-        existing_username = session.exec(select(User).where(User.username == username)).first()
-        if existing_username:
+        # Xử lý nếu username trùng lặp
+        existing_user = session.exec(select(User).where(User.username == username)).first()
+        if existing_user:
             username = f"{base_username}_{uuid.uuid4().hex[:4]}"
 
+        # Tạo password ngẫu nhiên và băm lại (để thỏa mãn NOT NULL của DB)
+        random_dummy_pass = uuid.uuid4().hex
+        
         user = User(
             username=username,
-            email=google_email,
-            display_name=google_name,
-            avatar_url=google_picture,
-            hashed_password="",  # Login qua Google không dùng password nội bộ
+            display_name=google_name or username,
+            hashed_password=get_password_hash(random_dummy_pass),
             role="USER"
         )
         session.add(user)
         session.commit()
         session.refresh(user)
-    else:
-        # Cập nhật thông tin mới nhất từ Google nếu có thay đổi
-        updated = False
-        if google_picture and user.avatar_url != google_picture:
-            user.avatar_url = google_picture
-            updated = True
-        if google_name and not user.display_name:
-            user.display_name = google_name
-            updated = True
-        if updated:
-            session.add(user)
-            session.commit()
-            session.refresh(user)
 
     # 4. Cấp cặp JWT Token nội bộ
     access_token = create_access_token(user.id)
@@ -141,8 +133,6 @@ def login_with_google(data: GoogleLoginRequest, session: SessionDep):
                 "username": user.username,
                 "role": user.role,
                 "display_name": user.display_name or user.username,
-                "email": user.email,
-                "avatar_url": user.avatar_url,
             },
         },
     )
@@ -197,31 +187,21 @@ def register(data: RegisterRequest, session: SessionDep):
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error_response("Tên đăng nhập đã tồn tại"),
         )
-    
-    # 2. Kiểm tra email (nếu người dùng có nhập)
-    if data.email:
-        existing_email = session.exec(select(User).where(User.email == data.email)).first()
-        if existing_email:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail=error_response("Email đã được sử dụng"),
-            )
 
-    # 3. Băm mật khẩu và tạo user mới
+    # 2. Băm mật khẩu và tạo user mới trong DB
     new_user = User(
         username=data.username,
-        email=data.email,
         hashed_password=get_password_hash(data.password),
         display_name=data.display_name or data.username,
         role="USER"
     )
     
-    # 4. Lưu vào MySQL
+    # 3. Lưu vào MySQL
     session.add(new_user)
     session.commit()
     session.refresh(new_user)
 
-    # 5. Tự động cấp Token đăng nhập
+    # 4. Tự động cấp Token đăng nhập
     access_token = create_access_token(new_user.id)
     refresh_token = create_refresh_token(new_user.id)
 
@@ -233,10 +213,8 @@ def register(data: RegisterRequest, session: SessionDep):
             "user": {
                 "id": new_user.id,
                 "username": new_user.username,
-                "email": new_user.email,
                 "role": new_user.role,
                 "display_name": new_user.display_name,
-                "avatar_url": new_user.avatar_url,
             },
         },
     )
