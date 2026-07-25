@@ -7,7 +7,7 @@ import asyncio
 from app.api.v1.router import api_router
 from app.core.config import settings
 from app.core.database import create_db_and_tables
-from app.bot.runner import start_mezon_bot
+# from app.bot.runner import start_mezon_bot
 
 
 @asynccontextmanager
@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
     create_db_and_tables()
     
     # Bật Bot Mezon chạy ngầm cùng lúc
-    asyncio.create_task(start_mezon_bot())
+    # asyncio.create_task(start_mezon_bot())
     
     yield
     # Shutdown (cleanup if needed)
