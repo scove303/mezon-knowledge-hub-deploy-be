@@ -7,9 +7,15 @@ from sqlmodel import Session
 from app.core.database import get_session
 from app.api.deps import CurrentUser
 from app.schemas.common import success_response
+from fastapi import APIRouter, HTTPException, status
+from app.api.deps import SessionDep, CurrentUser
+from app.core.state import active_roadmap_users
+from app.services.knowledge.roadmap import roadmap_service
+from app.schemas.common import success_response
+from app.schemas.ai import RoadmapCreateRequest
 
 router = APIRouter()
-SessionDep = Annotated[Session, Depends(get_session)]
+
 
 
 def process_heavy_job(job_id: str, payload: dict):
@@ -22,22 +28,59 @@ def process_heavy_job(job_id: str, payload: dict):
 
 @router.post("/roadmap")
 async def generate_roadmap(
-    topic: str,
-    folder_name: str,
+    body: RoadmapCreateRequest,
     session: SessionDep,
     current_user: CurrentUser,
-    background_tasks: BackgroundTasks,
 ):
-    """
-    Tạo lộ trình học tập tự động từ Internet.
-    """
-    job_id = f"job-{uuid.uuid4().hex[:8]}"
-    background_tasks.add_task(process_heavy_job, job_id, {"topic": topic, "folder_name": folder_name})
-    
-    return success_response(
-        message="Đang tổng hợp lộ trình học tập, vui lòng kiểm tra lại sau vài giây",
-        data={"job_id": job_id, "folder_name": folder_name, "topic": topic},
-    )
+
+    user_id = current_user.id
+
+    # 1. Anti-Spam Check: Ensure user is not currently running another job
+    if user_id in active_roadmap_users:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="System is currently generating another roadmap for you. Please wait for it to complete!"
+        )
+
+    try:
+        #  Lock user state
+        active_roadmap_users.add(user_id)
+
+        #  Execute synchronous roadmap generation using Pydantic fields
+        folder = await roadmap_service(
+            topic=body.topic,
+            folder_name=body.folder_name,
+            user_id=user_id,
+            session=session
+        )
+
+        #  Return full JSON response when complete
+        return success_response(
+            message="Roadmap generated successfully!",
+            data={
+                "folder_id": folder.id,
+                "folder_name": folder.name,
+                "total_files": len(folder.files),
+                "files": [
+                    {
+                        "file_id": f.id,
+                        "title": f.name,
+                        "markdown_content": f.markdown_content
+                    }
+                    for f in folder.files
+                ]
+            }
+        )
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error generating roadmap: {str(e)}"
+        )
+
+    finally:
+        # Always release the active task lock
+        active_roadmap_users.discard(user_id)
 
 
 @router.post("/digest")

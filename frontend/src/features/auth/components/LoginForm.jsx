@@ -49,6 +49,7 @@ export default function LoginForm() {
   };
 
   const googleLogin = useGoogleLogin({
+    response_type: 'id_token',
     onSuccess: async (tokenResponse) => {
       setIsGoogleLoading(true);
       setServerError('');
