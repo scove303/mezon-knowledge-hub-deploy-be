@@ -32,6 +32,9 @@ from app.schemas.auth import (
 )
 from app.schemas.common import error_response, success_response
 
+from jose import jwt
+import time
+
 router = APIRouter()
 SessionDep = Annotated[Session, Depends(get_session)]
 
@@ -41,6 +44,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 # =============================================================
 @router.post("/login")
 def login(data: LoginRequest, session: SessionDep):
+    #Tìm trong database xem có user nào có username mà người dùng vừa nhập hay không
     user = session.exec(select(User).where(User.username == data.username)).first()
     
     if not user or not verify_password(data.password, user.hashed_password):
@@ -76,6 +80,8 @@ def login(data: LoginRequest, session: SessionDep):
 # =============================================================
 @router.post("/google")
 def login_with_google(data: GoogleLoginRequest, session: SessionDep):
+    print("====== GOOGLE LOGIN ======")
+    print(data.id_token)
     token_str = data.id_token.strip() if data.id_token else ""
     google_email = ""
     google_name = "Google User"
@@ -84,6 +90,12 @@ def login_with_google(data: GoogleLoginRequest, session: SessionDep):
     # 1. Xác thực id_token với Google Server (nếu có GOOGLE_CLIENT_ID)
     try:
         if settings.GOOGLE_CLIENT_ID:
+            payload = jwt.get_unverified_claims(token_str)
+
+            print("SERVER TIME:", time.time())
+            print("IAT:", payload.get("iat"))
+            print("NBF:", payload.get("nbf"))   
+            print("EXP:", payload.get("exp"))
             id_info = id_token.verify_oauth2_token(
                 token_str,
                 google_requests.Request(),
