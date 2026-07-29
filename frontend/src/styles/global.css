@@ -1,0 +1,217 @@
+/* ==========================================
+   1. IMPORT TAILWIND V4
+   ========================================== */
+@import "tailwindcss";
+
+/* ==========================================
+   2. KHAI BÁO THEME TẬP TRUNG (@theme)
+   ========================================== */
+@theme {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-lg: var(--radius);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-sm: calc(var(--radius) - 4px);
+
+  /* Biến custom cho Chat Frame */
+  --image-chat-gradient: var(--chat-gradient);
+}
+
+/* ==========================================
+   3. GIÁ TRỊ BIẾN MẶC ĐỊNH (:root - Light Theme)
+   Sử dụng trực tiếp mã màu CSS chuẩn (Hex, HSL hoặc RGB)
+   ========================================== */
+:root {
+  --radius: 0.5rem;
+
+  --background: #ffffff;
+  --foreground: #020817;
+
+  --card: #ffffff;
+  --card-foreground: #020817;
+
+  --popover: #ffffff;
+  --popover-foreground: #020817;
+
+  --primary: #2563eb;
+  --primary-foreground: #f8fafc;
+
+  --secondary: #f1f5f9;
+  --secondary-foreground: #0f172a;
+
+  --muted: #f1f5f9;
+  --muted-foreground: #64748b;
+
+  --accent: #f1f5f9;
+  --accent-foreground: #0f172a;
+
+  --destructive: #ef4444;
+  --destructive-foreground: #f8fafc;
+
+  --border: #e2e8f0;
+  --input: #e2e8f0;
+  --ring: #2563eb;
+
+  --chat-gradient: none;
+}
+
+/* ==========================================
+   4. CÁC THEME MÀU NÂNG CAO
+   ========================================== */
+
+/* DARK THEME */
+[data-theme="dark"],
+.dark {
+  --background: #020817;
+  --foreground: #f8fafc;
+
+  --card: #0b1329;
+  --card-foreground: #f8fafc;
+
+  --popover: #0b1329;
+  --popover-foreground: #f8fafc;
+
+  --primary: #3b82f6;
+  --primary-foreground: #0f172a;
+
+  --secondary: #1e293b;
+  --secondary-foreground: #f8fafc;
+
+  --muted: #1e293b;
+  --muted-foreground: #94a3b8;
+
+  --accent: #1e293b;
+  --accent-foreground: #f8fafc;
+
+  --destructive: #7f1d1d;
+  --destructive-foreground: #f8fafc;
+
+  --border: #1e293b;
+  --input: #1e293b;
+  --ring: #1d4ed8;
+
+  --chat-gradient: none;
+}
+
+/* WARM CREAM THEME */
+[data-theme="warm-cream"] {
+  --background: #fbf9f1;
+  --foreground: #2d2a26;
+  --card: #f2ede1;
+  --card-foreground: #2d2a26;
+  --popover: #f2ede1;
+  --popover-foreground: #2d2a26;
+  --primary: #5c6bc0;
+  --primary-foreground: #ffffff;
+  --secondary: #eae3d2;
+  --secondary-foreground: #2d2a26;
+  --muted: #eae3d2;
+  --muted-foreground: #78716c;
+  --accent: #eae3d2;
+  --accent-foreground: #2d2a26;
+  --destructive: #dc2626;
+  --destructive-foreground: #ffffff;
+  --border: #e6dfcc;
+  --input: #e6dfcc;
+  --ring: #5c6bc0;
+
+  --chat-gradient: linear-gradient(
+    135deg,
+    #fceae1 0%,
+    #f7d6c8 50%,
+    #f3c2b2 100%
+  );
+}
+
+/* SUNSET GRADIENT THEME */
+[data-theme="sunset-gradient"] {
+  --background: #0f0c20;
+  --foreground: #f3f4f6;
+  --card: rgba(255, 255, 255, 0.05);
+  --card-foreground: #ffffff;
+  --popover: #0f0c20;
+  --popover-foreground: #f3f4f6;
+  --primary: #ec4899;
+  --primary-foreground: #ffffff;
+  --secondary: rgba(255, 255, 255, 0.1);
+  --secondary-foreground: #ffffff;
+  --muted: rgba(255, 255, 255, 0.1);
+  --muted-foreground: #9ca3af;
+  --accent: rgba(255, 255, 255, 0.1);
+  --accent-foreground: #ffffff;
+  --destructive: #be123c;
+  --destructive-foreground: #ffffff;
+  --border: rgba(255, 255, 255, 0.1);
+  --input: rgba(255, 255, 255, 0.1);
+  --ring: #ec4899;
+
+  --chat-gradient: linear-gradient(
+    135deg,
+    #4f46e5 0%,
+    #7c3aed 50%,
+    #d946ef 100%
+  );
+}
+
+/* CRIMSON DARK THEME */
+[data-theme="crimson-dark"] {
+  --background: #120305;
+  --foreground: #fce7f3;
+  --card: #1f070a;
+  --card-foreground: #fce7f3;
+  --popover: #1f070a;
+  --popover-foreground: #fce7f3;
+  --primary: #e11d48;
+  --primary-foreground: #ffffff;
+  --secondary: #2e0b10;
+  --secondary-foreground: #fce7f3;
+  --muted: #2e0b10;
+  --muted-foreground: #9f1239;
+  --accent: #2e0b10;
+  --accent-foreground: #fce7f3;
+  --destructive: #9f1239;
+  --destructive-foreground: #ffffff;
+  --border: #3b0d14;
+  --input: #3b0d14;
+  --ring: #e11d48;
+
+  --chat-gradient: linear-gradient(180deg, #3b0d14 0%, #120305 100%);
+}
+
+/* ==========================================
+   5. BASE STYLES
+   ========================================== */
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}

@@ -25,8 +25,9 @@
     "zustand": "^5.0.14"
   },
   "devDependencies": {
+    "@storybook/nextjs": "^10.5.5",
     "@tailwindcss/postcss": "^4",
-    "@types/node": "^26.1.1",
+    "@types/node": "^26.1.2",
     "@types/react": "^19.2.17",
     "@types/react-dom": "^19.2.3",
     "eslint": "^9",
