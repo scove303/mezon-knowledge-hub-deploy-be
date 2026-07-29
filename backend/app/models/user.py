@@ -3,7 +3,7 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from app.models.folder import Folder
+    from app.models.folder import Folder,FolderRoot
 
 
 class User(SQLModel, table=True):
@@ -18,5 +18,8 @@ class User(SQLModel, table=True):
         default_factory=lambda: datetime.now(timezone.utc)
     )
 
+    email: str | None = Field(default=None, unique=True)
+    avatar_url: str | None = Field(default=None)
+    root_link: Optional["FolderRoot"] = Relationship(back_populates="user")
     
     folders: List["Folder"] = Relationship(back_populates="user")
