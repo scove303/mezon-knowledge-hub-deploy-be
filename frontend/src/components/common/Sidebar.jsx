@@ -1,4 +1,5 @@
-import React, { useState, useEffect,useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import {
   Folder,
   FileText,
@@ -20,6 +21,7 @@ import { useAuthStore } from "@/features/auth/store";
 import { useWorkspaceStore } from "@/features/folders/store";
 import { folderService } from "@/features/folders/services";
 import { fileService } from "@/features/files/services";
+import { useToastStore } from "@/stores/toast";
 import { useRouter } from "next/navigation";
 
 // Dữ liệu mock dùng làm dự phòng khi không đăng nhập hoặc backend offline
@@ -85,7 +87,7 @@ export default function Sidebar() {
   const setFolders = useWorkspaceStore((state) => state.setFolders);
 
   const router = useRouter();
-  const { isAuthenticated, clearAuth } = useAuthStore();
+  const { isAuthenticated, clearAuth, user } = useAuthStore();
 
   const folders = store.getFilteredFolders();
   const selectedFolder = store.getSelectedFolder();
@@ -93,9 +95,10 @@ export default function Sidebar() {
   const searchQuery = store.searchQuery;
   const setSearchQuery = store.setSearch;
 
-  // State quản lý việc mở modal xác nhận xóa
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [isLoadingFolders, setIsLoadingFolders] = useState(true);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const selectFolder = (folderId) => {
     store.setSelectedFolder(folderId);
@@ -109,8 +112,10 @@ export default function Sidebar() {
 
   // 2. Sửa lại useCallback: Thay 'store' thành 'setFolders' ở mảng Dependency
   const refreshFolders = useCallback(async () => {
+    setIsLoadingFolders(true);
     if (!isAuthenticated) {
       setFolders(MOCK_FOLDERS);
+      setIsLoadingFolders(false);
       return;
     }
 
@@ -124,13 +129,46 @@ export default function Sidebar() {
         "Lỗi khi tải danh sách thư mục (sử dụng dữ liệu Mock thay thế):",
         err,
       );
-      store.setFolders(MOCK_FOLDERS);
+      setFolders(MOCK_FOLDERS);
+    } finally {
+      setIsLoadingFolders(false);
     }
   }, [isAuthenticated, setFolders]);
 
   useEffect(() => {
-    refreshFolders();
+    Promise.resolve().then(() => {
+      refreshFolders();
+    });
   }, [refreshFolders]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === "Delete" || e.key === "Backspace") {
+        const selFile = selectedFile;
+        const selFolder = selectedFolder;
+        if (selFile) {
+          setItemToDelete({
+            type: "file",
+            folderId: folders.find((f) =>
+              f.files?.some((fl) => fl.id === selFile.id),
+            )?.id,
+            fileId: selFile.id,
+            name: selFile.name,
+          });
+          setDeleteConfirmOpen(true);
+        } else if (selFolder) {
+          setItemToDelete({
+            type: "folder",
+            folderId: selFolder.id,
+            name: selFolder.name,
+          });
+          setDeleteConfirmOpen(true);
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [selectedFile, selectedFolder, folders]);
 
   const createFolder = async (name, type) => {
     if (!isAuthenticated) {
@@ -300,6 +338,67 @@ export default function Sidebar() {
         )}
       </div>
 
+      {isAuthenticated &&
+        user &&
+        (() => {
+          const initial = (user.display_name ||
+            user.username ||
+            "?")[0].toUpperCase();
+          return (
+            <div className="relative">
+              <button
+                onClick={() => setShowUserMenu((p) => !p)}
+                className="w-full px-5 py-3 border-b border-[rgb(var(--color-border))] flex items-center gap-3 hover:bg-[rgb(var(--color-surface-2))]/50 transition-colors"
+              >
+                {user.avatar_url ? (
+                  <Image
+                    src={user.avatar_url}
+                    alt={user.display_name || user.username || "avatar"}
+                    width={32}
+                    height={32}
+                    className="w-8 h-8 rounded-full object-cover border border-[rgb(var(--color-border))]"
+                    unoptimized
+                  />
+                ) : (
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                    {initial}
+                  </div>
+                )}
+                <div className="min-w-0 flex-1 text-left">
+                  <p className="text-sm font-semibold text-[rgb(var(--color-text-primary))] truncate">
+                    {user.display_name || user.username}
+                  </p>
+                  {user.email && (
+                    <p className="text-[10px] text-[rgb(var(--color-text-muted))] truncate">
+                      {user.email}
+                    </p>
+                  )}
+                </div>
+              </button>
+              {showUserMenu && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setShowUserMenu(false)}
+                  />
+                  <div className="absolute left-4 right-4 top-full mt-1 z-50 bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] rounded-xl shadow-xl shadow-black/30 overflow-hidden">
+                    <button
+                      onClick={() => {
+                        setShowUserMenu(false);
+                        handleLogout();
+                      }}
+                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] hover:text-rose-400 transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Đăng xuất
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          );
+        })()}
+
       {/* Search */}
       <div className="p-4">
         <div className="relative">
@@ -361,136 +460,147 @@ export default function Sidebar() {
         )}
 
         {/* Folders List */}
-        <ul className="space-y-1.5">
-          {folders.length === 0 ? (
-            <div className="text-center py-6 text-sm text-[rgb(var(--color-text-muted))]">
-              Không tìm thấy tài liệu nào
-            </div>
-          ) : (
-            folders.map((folder) => {
-              const isExpanded = expandedFolders[folder.id] !== false;
-              const isSelected = selectedFolder?.id === folder.id;
+        {isLoadingFolders ? (
+          <div className="px-4 py-4 space-y-3">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="flex items-center gap-3 animate-pulse">
+                <div className="w-4 h-4 rounded bg-[rgb(var(--color-surface-2))]" />
+                <div className="h-3 rounded bg-[rgb(var(--color-surface-2))] w-3/4" />
+              </div>
+            ))}
+          </div>
+        ) : (
+          <ul className="space-y-1.5">
+            {folders.length === 0 ? (
+              <div className="text-center py-6 text-sm text-[rgb(var(--color-text-muted))]">
+                Không tìm thấy tài liệu nào
+              </div>
+            ) : (
+              folders.map((folder) => {
+                const isExpanded = expandedFolders[folder.id] !== false;
+                const isSelected = selectedFolder?.id === folder.id;
 
-              return (
-                <li
-                  key={folder.id}
-                  className="group/folder rounded-lg overflow-hidden transition-all duration-150"
-                >
-                  {/* Folder Header */}
-                  <div
-                    onClick={() => selectFolder(folder.id)}
-                    className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
-                      isSelected
-                        ? "bg-indigo-600/10 text-indigo-300 border border-indigo-500/20 font-medium"
-                        : "hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))] border border-transparent"
-                    }`}
+                return (
+                  <li
+                    key={folder.id}
+                    className="group/folder rounded-lg overflow-hidden transition-all duration-150"
                   >
-                    <div className="flex items-center space-x-2.5 min-w-0">
-                      <button
-                        onClick={(e) => toggleExpand(folder.id, e)}
-                        className="text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))] p-0.5 rounded transition-colors"
-                      >
-                        {isExpanded ? (
-                          <ChevronDown className="w-3.5 h-3.5" />
-                        ) : (
-                          <ChevronRight className="w-3.5 h-3.5" />
-                        )}
-                      </button>
-                      {getFolderIcon(folder.type)}
-                      <span className="text-sm truncate select-none">
-                        {folder.name}
-                      </span>
+                    {/* Folder Header */}
+                    <div
+                      onClick={() => selectFolder(folder.id)}
+                      className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
+                        isSelected
+                          ? "bg-indigo-600/10 text-indigo-300 border border-indigo-500/20 font-medium"
+                          : "hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))] border border-transparent"
+                      }`}
+                    >
+                      <div className="flex items-center space-x-2.5 min-w-0">
+                        <button
+                          onClick={(e) => toggleExpand(folder.id, e)}
+                          className="text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))] p-0.5 rounded transition-colors"
+                        >
+                          {isExpanded ? (
+                            <ChevronDown className="w-3.5 h-3.5" />
+                          ) : (
+                            <ChevronRight className="w-3.5 h-3.5" />
+                          )}
+                        </button>
+                        {getFolderIcon(folder.type)}
+                        <span className="text-sm truncate select-none">
+                          {folder.name}
+                        </span>
+                      </div>
+
+                      {/* Hover Actions */}
+                      <div className="opacity-0 group-hover/folder:opacity-100 flex items-center space-x-1 transition-opacity">
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            const addToast = useToastStore.getState().addToast;
+                            addToast(
+                              "Tài liệu mới chỉ có thể được tạo tự động bởi AI thông qua khung chat ở trang chính!",
+                              "info",
+                            );
+                          }}
+                          className="text-[rgb(var(--color-text-muted))] hover:text-indigo-400 p-0.5 rounded transition-colors"
+                          title="Tạo file bằng AI"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setItemToDelete({
+                              type: "folder",
+                              folderId: folder.id,
+                              name: folder.name,
+                            });
+                            setDeleteConfirmOpen(true);
+                          }}
+                          className="text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-colors"
+                          title="Xóa thư mục"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
                     </div>
 
-                    {/* Hover Actions */}
-                    <div className="opacity-0 group-hover/folder:opacity-100 flex items-center space-x-1 transition-opacity">
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          alert(
-                            "Tài liệu mới chỉ có thể được tạo tự động bởi AI thông qua Khung chat ở trang chính!",
-                          );
-                        }}
-                        className="text-[rgb(var(--color-text-muted))] hover:text-indigo-400 p-0.5 rounded transition-colors"
-                        title="Tạo file bằng AI"
-                      >
-                        <Plus className="w-3.5 h-3.5" />
-                      </button>
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setItemToDelete({
-                            type: "folder",
-                            folderId: folder.id,
-                            name: folder.name,
-                          });
-                          setDeleteConfirmOpen(true);
-                        }}
-                        className="text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-colors"
-                        title="Xóa thư mục"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
-                  </div>
-
-                  {/* Children Files */}
-                  {isExpanded && (
-                    <ul className="pl-7 pr-1 mt-1 mb-2 space-y-1 border-l border-[rgb(var(--color-border))] ml-4 animate-fade-in">
-                      {/* File Items */}
-                      {folder.files &&
-                        folder.files.map((file) => {
-                          const isFileSelected = selectedFile?.id === file.id;
-                          return (
-                            <li
-                              key={file.id}
-                              onClick={() => selectFile(folder.id, file.id)}
-                              className={`group/file flex items-center justify-between px-3 py-1.5 rounded cursor-pointer transition-colors ${
-                                isFileSelected
-                                  ? "bg-indigo-600/15 text-indigo-400 font-semibold"
-                                  : "hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))]"
-                              }`}
-                            >
-                              <div className="flex items-center space-x-2 min-w-0">
-                                <FileText className="w-3.5 h-3.5 flex-shrink-0" />
-                                <span className="text-xs truncate select-none">
-                                  {file.name}
-                                </span>
-                              </div>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setItemToDelete({
-                                    type: "file",
-                                    folderId: folder.id,
-                                    fileId: file.id,
-                                    name: file.name,
-                                  });
-                                  setDeleteConfirmOpen(true);
-                                }}
-                                className="opacity-0 group-hover/file:opacity-100 text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-all"
+                    {/* Children Files */}
+                    {isExpanded && (
+                      <ul className="pl-7 pr-1 mt-1 mb-2 space-y-1 border-l border-[rgb(var(--color-border))] ml-4 animate-fade-in">
+                        {/* File Items */}
+                        {folder.files &&
+                          folder.files.map((file) => {
+                            const isFileSelected = selectedFile?.id === file.id;
+                            return (
+                              <li
+                                key={file.id}
+                                onClick={() => selectFile(folder.id, file.id)}
+                                className={`group/file flex items-center justify-between px-3 py-1.5 rounded cursor-pointer transition-colors ${
+                                  isFileSelected
+                                    ? "bg-indigo-600/15 text-indigo-400 font-semibold"
+                                    : "hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))]"
+                                }`}
                               >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            </li>
-                          );
-                        })}
+                                <div className="flex items-center space-x-2 min-w-0">
+                                  <FileText className="w-3.5 h-3.5 flex-shrink-0" />
+                                  <span className="text-xs truncate select-none">
+                                    {file.name}
+                                  </span>
+                                </div>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setItemToDelete({
+                                      type: "file",
+                                      folderId: folder.id,
+                                      fileId: file.id,
+                                      name: file.name,
+                                    });
+                                    setDeleteConfirmOpen(true);
+                                  }}
+                                  className="opacity-0 group-hover/file:opacity-100 text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-all"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </li>
+                            );
+                          })}
 
-                      {(!folder.files || folder.files.length === 0) && (
-                        <div className="text-[10px] text-[rgb(var(--color-text-disabled))] px-3 py-1 italic select-none">
-                          Không có file nào
-                        </div>
-                      )}
-                    </ul>
-                  )}
-                </li>
-              );
-            })
-          )}
-        </ul>
+                        {(!folder.files || folder.files.length === 0) && (
+                          <div className="text-[10px] text-[rgb(var(--color-text-disabled))] px-3 py-1 italic select-none">
+                            Không có file nào
+                          </div>
+                        )}
+                      </ul>
+                    )}
+                  </li>
+                );
+              })
+            )}
+          </ul>
+        )}
       </div>
-
-      {/* Modal xác nhận xóa custom thay thế cho confirm() thô sơ của trình duyệt */}
       <Modal
         isOpen={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}

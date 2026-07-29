@@ -23,6 +23,16 @@ export const authService = {
     return data;
   },
 
+  async register(username, password, email, display_name) {
+    const { data } = await axiosInstance.post('/auth/register', {
+      username,
+      password,
+      email,
+      display_name,
+    });
+    return data;
+  },
+
   logout() {
     // State clearing is handled by the store
   },

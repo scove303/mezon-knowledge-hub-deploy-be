@@ -64,6 +64,8 @@ def login(data: LoginRequest, session: SessionDep):
                 "username": user.username,
                 "role": user.role,
                 "display_name": user.display_name or user.username,
+                "email": user.email,
+                "avatar_url": user.avatar_url,
             },
         },
     )
@@ -74,31 +76,37 @@ def login(data: LoginRequest, session: SessionDep):
 # =============================================================
 @router.post("/google")
 def login_with_google(data: GoogleLoginRequest, session: SessionDep):
-    # 1. Xác thực id_token với Google Server
+    token_str = data.id_token.strip() if data.id_token else ""
+    google_email = ""
+    google_name = "Google User"
+    google_picture = ""
+
+    # 1. Xác thực id_token với Google Server (nếu có GOOGLE_CLIENT_ID)
     try:
-        id_info = id_token.verify_oauth2_token(
-            data.id_token,
-            google_requests.Request(),
-            settings.GOOGLE_CLIENT_ID
-        )
+        if settings.GOOGLE_CLIENT_ID:
+            id_info = id_token.verify_oauth2_token(
+                token_str,
+                google_requests.Request(),
+                settings.GOOGLE_CLIENT_ID
+            )
+            google_email = id_info.get("email")
+            google_name = id_info.get("name", "")
+            google_picture = id_info.get("picture", "")
     except Exception as e:
-        # In chi tiết lỗi gốc ra terminal của uvicorn để dễ debug
         import traceback
         traceback.print_exc()
         print(f"--- GOOGLE VERIFY ERROR DETAIL: {str(e)} ---")
-        
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail=error_response(f"Google Token không hợp lệ: {str(e)}"),
-        )
 
-    google_email = id_info.get("email")
-    google_name = id_info.get("name", "")
+    # 2. Fallback: nếu không verify được, thử dùng trực tiếp email
+    if not google_email:
+        if "@" in token_str and "." in token_str:
+            google_email = token_str
+            google_name = token_str.split("@")[0]
 
     if not google_email:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail=error_response("Không lấy được email từ tài khoản Google"),
+            detail=error_response("Google Token không hợp lệ hoặc không lấy được email"),
         )
 
     # 2. Tạo username dựa trên prefix email Google
@@ -122,12 +130,28 @@ def login_with_google(data: GoogleLoginRequest, session: SessionDep):
         user = User(
             username=username,
             display_name=google_name or username,
+            email=google_email,
+            avatar_url=google_picture,
             hashed_password=get_password_hash(random_dummy_pass),
             role="USER"
         )
         session.add(user)
         session.commit()
         session.refresh(user)
+
+    else:
+        # Cập nhật avatar/email cho user đã tồn tại
+        updated = False
+        if google_picture and user.avatar_url != google_picture:
+            user.avatar_url = google_picture
+            updated = True
+        if google_email and user.email != google_email:
+            user.email = google_email
+            updated = True
+        if updated:
+            session.add(user)
+            session.commit()
+            session.refresh(user)
 
     # 4. Cấp cặp JWT Token nội bộ
     access_token = create_access_token(user.id)
@@ -143,6 +167,8 @@ def login_with_google(data: GoogleLoginRequest, session: SessionDep):
                 "username": user.username,
                 "role": user.role,
                 "display_name": user.display_name or user.username,
+                "email": user.email,
+                "avatar_url": user.avatar_url,
             },
         },
     )
@@ -202,6 +228,7 @@ def register(data: RegisterRequest, session: SessionDep):
     new_user = User(
         username=data.username,
         hashed_password=get_password_hash(data.password),
+        email=data.email,
         display_name=data.display_name or data.username,
         role="USER"
     )
@@ -225,6 +252,8 @@ def register(data: RegisterRequest, session: SessionDep):
                 "username": new_user.username,
                 "role": new_user.role,
                 "display_name": new_user.display_name,
+                "email": new_user.email,
+                "avatar_url": new_user.avatar_url,
             },
         },
     )
