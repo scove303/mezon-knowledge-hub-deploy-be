@@ -3,6 +3,7 @@ import { useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import { HardDrive, LogIn, Eye, EyeOff } from "lucide-react";
 import { useGoogleLogin } from "@react-oauth/google";
 
@@ -40,11 +41,19 @@ export default function LoginForm() {
         setServerError(res.message);
       }
     } catch (err) {
-      setServerError(
-        err.response?.data?.message ||
-          err.response?.data?.detail?.message ||
-          "Đăng nhập thất bại. Vui lòng thử lại.",
-      );
+      console.error('[LoginForm] Lỗi đăng nhập:', err);
+      let message = 'Đăng nhập thất bại. Vui lòng thử lại.';
+      if (err.response?.data) {
+        const d = err.response.data;
+        if (d.detail?.message) {
+          message = d.detail.message;
+        } else if (Array.isArray(d.detail)) {
+          message = d.detail.map((e) => e.msg).join('; ');
+        } else if (d.message) {
+          message = d.message;
+        }
+      }
+      setServerError(message);
     }
   };
 
@@ -190,6 +199,15 @@ export default function LoginForm() {
         </form>
       </div>
 
+      <p className="text-center text-sm text-[rgb(var(--color-text-muted))] mt-6">
+        Chưa có tài khoản?{" "}
+        <Link
+          href="/register"
+          className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
+        >
+          Đăng ký
+        </Link>
+      </p>
     </>
   );
 }

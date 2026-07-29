@@ -44,9 +44,15 @@ body {
   50%       { opacity: 0.5; }
 }
 
+@keyframes slideUp {
+  from { transform: translateY(16px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}
+
 .animate-fade-in         { animation: fadeIn 200ms ease forwards; }
 .animate-slide-in-right  { animation: slideInRight 300ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 .animate-slide-in-left   { animation: slideInLeft  300ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+.animate-slide-up        { animation: slideUp     300ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 .animate-pulse           { animation: pulse 2s ease-in-out infinite; }
 
 /* ─── Glowing Border Animation for AI Loading ──────────────────────────────── */

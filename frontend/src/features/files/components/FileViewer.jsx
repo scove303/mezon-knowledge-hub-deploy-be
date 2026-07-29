@@ -12,10 +12,14 @@ import {
   Video,
   Clock,
   Play,
+  Trash2,
 } from "lucide-react";
 import { Button } from "@/components/base-ui/Button";
+import { Modal } from "@/components/base-ui/Modal";
 import { useWorkspaceStore } from "@/features/folders/store";
 import { fileService } from "@/features/files/services";
+import { folderService } from "@/features/folders/services";
+import { useToastStore } from "@/stores/toast";
 
 export default function FileViewer({ file, onSaveContent, folderName }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -23,8 +27,47 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
   const [seekTime, setSeekTime] = useState(0);
   const [playerKey, setPlayerKey] = useState(0);
 
-  // Việc thay đổi giá trị của ref sẽ không làm component render lại (khác với state).
   const iframeRef = useRef(null);
+
+  const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+  const store = useWorkspaceStore();
+
+  const isDirty = isEditing && editedContent !== (file?.content ?? "");
+
+  useEffect(() => {
+    if (isDirty) {
+      const handler = (e) => {
+        e.preventDefault();
+        e.returnValue = '';
+      };
+      window.addEventListener('beforeunload', handler);
+      return () => window.removeEventListener('beforeunload', handler);
+    }
+  }, [isDirty]);
+
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.key === 's' && (e.ctrlKey || e.metaKey) && isEditing) {
+        e.preventDefault();
+        if (isDirty) handleSave();
+      }
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  });
+
+  const handleDelete = async () => {
+    try {
+      await fileService.deleteFile(file.id);
+      useToastStore.getState().addToast('Đã xoá tài liệu thành công', 'success');
+      setDeleteConfirmOpen(false);
+      const foldersRes = await folderService.getFolders();
+      if (foldersRes.success) store.setFolders(foldersRes.data);
+    } catch (err) {
+      useToastStore.getState().addToast('Xoá tài liệu thất bại', 'error');
+    }
+  };
 
   const [prevFile, setPrevFile] = useState(file);
 
@@ -206,15 +249,23 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
         {/* Actions */}
         <div className="flex items-center space-x-2">
           {isEditing ? (
-            <Button
-              id="btn-save-file"
-              variant="success"
-              size="sm"
-              onClick={handleSave}
-            >
-              <Save className="w-3.5 h-3.5" />
-              Lưu
-            </Button>
+            <div className="flex items-center gap-2">
+              {isDirty && (
+                <span className="text-[10px] text-amber-400 font-medium flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
+                  Chưa lưu
+                </span>
+              )}
+              <Button
+                id="btn-save-file"
+                variant="success"
+                size="sm"
+                onClick={handleSave}
+              >
+                <Save className="w-3.5 h-3.5" />
+                Lưu
+              </Button>
+            </div>
           ) : (
             <Button
               id="btn-edit-file"
@@ -243,11 +294,21 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
             size="icon"
             onClick={() => {
               navigator.clipboard.writeText(window.location.href);
-              alert("Đã copy đường dẫn chia sẻ vào clipboard!");
+              useToastStore.getState().addToast('Đã copy đường dẫn chia sẻ vào clipboard!', 'success');
             }}
             title="Chia sẻ link"
           >
             <Share2 className="w-3.5 h-3.5" />
+          </Button>
+
+          <Button
+            id="btn-delete-file"
+            variant="danger"
+            size="icon"
+            onClick={() => setDeleteConfirmOpen(true)}
+            title="Xoá tài liệu"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
           </Button>
         </div>
       </header>
@@ -328,6 +389,27 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
           </div>
         )}
       </div>
+
+      <Modal
+        isOpen={deleteConfirmOpen}
+        onClose={() => setDeleteConfirmOpen(false)}
+        title="Xoá Tài Liệu"
+        size="sm"
+        footer={
+          <div className="flex justify-end gap-2 w-full">
+            <Button variant="ghost" onClick={() => setDeleteConfirmOpen(false)}>
+              Hủy
+            </Button>
+            <Button variant="danger" onClick={handleDelete}>
+              Đồng ý xóa
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-[rgb(var(--color-text-secondary))] leading-relaxed">
+          Bạn có chắc chắn muốn xóa tài liệu "{file?.name}"? Hành động này không thể hoàn tác.
+        </p>
+      </Modal>
     </div>
   );
 }

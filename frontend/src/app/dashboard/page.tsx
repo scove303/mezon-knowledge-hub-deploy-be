@@ -8,6 +8,7 @@ import { useAuthStore } from '@/features/auth/store';
 import { useWorkspaceStore } from '@/features/folders/store';
 import { folderService } from '@/features/folders/services';
 import { aiService } from '@/features/ai/services';
+import { useToastStore } from '@/stores/toast';
 
 export default function DashboardIndex() {
   const router = useRouter();
@@ -77,7 +78,7 @@ export default function DashboardIndex() {
       }
     } catch (error) {
       console.error('Lỗi khi gọi API AI hoặc tạo thư mục:', error);
-      alert('Có lỗi xảy ra trong quá trình xử lý AI. Vui lòng kiểm tra lại kết nối!');
+      useToastStore.getState().addToast('Có lỗi xảy ra trong quá trình xử lý AI. Vui lòng kiểm tra lại kết nối!', 'error');
     } finally {
       setIsLoading(false);
     }

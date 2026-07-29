@@ -1,4 +1,5 @@
-import React, { useState, useEffect,useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
+import Image from "next/image";
 import {
   Folder,
   FileText,
@@ -20,6 +21,7 @@ import { useAuthStore } from "@/features/auth/store";
 import { useWorkspaceStore } from "@/features/folders/store";
 import { folderService } from "@/features/folders/services";
 import { fileService } from "@/features/files/services";
+import { useToastStore } from "@/stores/toast";
 import { useRouter } from "next/navigation";
 
 // Dữ liệu mock dùng làm dự phòng khi không đăng nhập hoặc backend offline
@@ -85,7 +87,7 @@ export default function Sidebar() {
   const setFolders = useWorkspaceStore((state) => state.setFolders);
 
   const router = useRouter();
-  const { isAuthenticated, clearAuth } = useAuthStore();
+  const { isAuthenticated, clearAuth, user } = useAuthStore();
 
   const folders = store.getFilteredFolders();
   const selectedFolder = store.getSelectedFolder();
@@ -93,9 +95,10 @@ export default function Sidebar() {
   const searchQuery = store.searchQuery;
   const setSearchQuery = store.setSearch;
 
-  // State quản lý việc mở modal xác nhận xóa
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [isLoadingFolders, setIsLoadingFolders] = useState(true);
+  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const selectFolder = (folderId) => {
     store.setSelectedFolder(folderId);
@@ -124,7 +127,7 @@ export default function Sidebar() {
         "Lỗi khi tải danh sách thư mục (sử dụng dữ liệu Mock thay thế):",
         err,
       );
-      store.setFolders(MOCK_FOLDERS);
+      setFolders(MOCK_FOLDERS);
     }
   }, [isAuthenticated, setFolders]);
 
@@ -300,6 +303,42 @@ export default function Sidebar() {
         )}
       </div>
 
+      {isAuthenticated &&
+        user &&
+        (() => {
+          const initial = (user.display_name ||
+            user.username ||
+            "?")[0].toUpperCase();
+          return (
+            <div className="px-5 py-3 border-b border-[rgb(var(--color-border))] flex items-center gap-3">
+              {user.avatar_url ? (
+                <Image
+                  src={user.avatar_url}
+                  alt=""
+                  width={32}
+                  height={32}
+                  unoptimized
+                  className="w-8 h-8 rounded-full object-cover border border-[rgb(var(--color-border))]"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
+                  {initial}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="text-sm font-semibold text-[rgb(var(--color-text-primary))] truncate">
+                  {user.display_name || user.username}
+                </p>
+                {user.email && (
+                  <p className="text-[10px] text-[rgb(var(--color-text-muted))] truncate">
+                    {user.email}
+                  </p>
+                )}
+              </div>
+            </div>
+          );
+        })()}
+
       {/* Search */}
       <div className="p-4">
         <div className="relative">
@@ -407,8 +446,10 @@ export default function Sidebar() {
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          alert(
-                            "Tài liệu mới chỉ có thể được tạo tự động bởi AI thông qua Khung chat ở trang chính!",
+                          const addToast = useToastStore.getState().addToast;
+                          addToast(
+                            "Tài liệu mới chỉ có thể được tạo tự động bởi AI thông qua khung chat ở trang chính!",
+                            "info",
                           );
                         }}
                         className="text-[rgb(var(--color-text-muted))] hover:text-indigo-400 p-0.5 rounded transition-colors"
