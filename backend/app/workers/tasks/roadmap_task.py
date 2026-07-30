@@ -61,7 +61,7 @@ async def process_roadmap_task(channel_id: str, content: str, user_id: int) -> N
         channel = await client.channels.fetch(channel_id)
 
         # 4. Tạo chuỗi hoàn chỉnh và gửi (tự động chia nhỏ nếu bài quá dài)
-        full_text = f"✅ **Roadmap Generated for '{content}'!**\n\n{display_msg}"
+        full_text = f"**Roadmap Generated for '{content}'!**\n\n{display_msg}"
         message_chunks = split_text(full_text, max_length=1800)
 
         for chunk in message_chunks:

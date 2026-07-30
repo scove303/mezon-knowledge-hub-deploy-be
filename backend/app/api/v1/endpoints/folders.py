@@ -37,6 +37,7 @@ def create_folder(
     data: FolderCreate, session: SessionDep, current_user: CurrentUser
 ):
     folder = folder_crud.create_folder(session, data, current_user.id)
+    folder_root = folder_crud.create_folder_root(session=session,user_id=current_user.id,folder_id=folder.id)
     return success_response(
         message="Tạo thư mục thành công",
         data={
@@ -47,6 +48,8 @@ def create_folder(
             "files": [],
         },
     )
+
+
 
 
 @router.delete("/{folder_id}")

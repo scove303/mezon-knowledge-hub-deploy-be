@@ -3,7 +3,7 @@ from typing import Optional
 
 from sqlmodel import Session, select
 
-from app.models.folder import Folder
+from app.models.folder import Folder, FolderRoot
 from app.schemas.folder import FolderCreate
 
 
@@ -39,3 +39,23 @@ def delete_folder(session: Session, folder_id: str, user_id: int) -> bool:
     session.delete(folder)
     session.commit()
     return True
+
+
+def create_folder_root(session: Session, user_id: int, folder_id: str) -> FolderRoot:
+
+    existing_root = session.exec(
+        select(FolderRoot).where(FolderRoot.user_id == user_id)
+    ).first()
+
+    if existing_root:
+        return existing_root
+
+    folder_root = FolderRoot(
+        user_id=user_id,
+        folder_id=folder_id,
+    )
+    session.add(folder_root)
+    session.commit()
+    session.refresh(folder_root)
+
+    return folder_root
