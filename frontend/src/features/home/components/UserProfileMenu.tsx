@@ -3,6 +3,7 @@ import { LogOut, ChevronUp } from "lucide-react";
 import { authService } from "@/features/auth/services";
 import { useAuthStore } from "@/features/auth/store";
 import { cn } from "@/utils/formatTailwind";
+import { ThemeToggle } from "@/components/theme/ThemeToggle";
 
 export default function UserProfileMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -104,6 +105,10 @@ export default function UserProfileMenu() {
             >
               {user.email}
             </p>
+          </div>
+
+          <div className={cn("pt-1 px-1")}>
+            <ThemeToggle />
           </div>
 
           {/* Nút Logout */}
