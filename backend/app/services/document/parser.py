@@ -68,7 +68,7 @@ BẮT BUỘC VIẾT THEO CẤU TRÚC SAU (Độ dài tối thiểu 1.000 - 2.000
 """
 
 
-async def parse_context_to_structure(topic: str, tavily_context: str) -> dict:
+async def parse_context_to_structure(topic: str, tavily_context: str,folder_name: str) -> dict:
     """
     Quy trình 2 Bước để tạo ra bộ bài học dày cộp chuẩn W3Schools
     """
@@ -87,7 +87,6 @@ async def parse_context_to_structure(topic: str, tavily_context: str) -> dict:
     )
     
     outline_data = json.loads(outline_res.text)
-    folder_name = outline_data.get("folder_name", f"Lộ trình {topic}")
     lessons_list = outline_data.get("lessons", [])
     
     print(f"  ---> [Bước 1/2] Đã tạo xong Outline gồm {len(lessons_list)} bài. Đang bắt đầu viết chi tiết từng bài...")
