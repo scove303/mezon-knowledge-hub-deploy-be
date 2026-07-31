@@ -1,5 +1,3 @@
-from __future__ import annotations
-
 from typing import Optional, List, TYPE_CHECKING
 from datetime import datetime
 import uuid
@@ -20,7 +18,7 @@ class Folder(SQLModel, table=True):
     user_id: int = Field(foreign_key="users.id", index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    user: Optional[User] = Relationship(back_populates="folders")
+    user: Optional["User"] = Relationship(back_populates="folders")
     files: List["KnowledgeFile"] = Relationship(back_populates="folder")
     root_entry: Optional["FolderRoot"] = Relationship(back_populates="folder")
 
@@ -32,5 +30,5 @@ class FolderRoot(SQLModel,table = True):
     folder_id: str = Field(foreign_key="folders.id", unique=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
-    user: Optional[User] = Relationship(back_populates="root_link")
+    user: Optional["User"] = Relationship(back_populates="root_link")
     folder: Optional[Folder] = Relationship(back_populates="root_entry")

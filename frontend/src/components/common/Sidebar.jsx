@@ -11,7 +11,6 @@ import {
   FileCheck,
   Video,
   HardDrive,
-  LogOut,
   LogIn,
 } from "lucide-react";
 import { Button } from "@/components/base-ui/Button";
@@ -318,15 +317,7 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {isAuthenticated ? (
-          <button
-            onClick={handleLogout}
-            className="p-2 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-rose-400 rounded-lg transition-colors"
-            title="Đăng xuất"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        ) : (
+        {!isAuthenticated && (
           <button
             onClick={handleLoginRedirect}
             className="p-2 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-indigo-400 rounded-lg transition-colors"

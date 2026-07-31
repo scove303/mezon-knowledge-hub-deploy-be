@@ -3,10 +3,12 @@ import axiosInstance from '@/libs/axios';
 export const aiService = {
   // 1. Tạo lộ trình học từ Internet (Prompt-to-Folder)
   async generateRoadmap(topic, folderName) {
-    // API yêu cầu gửi dưới dạng query parameters: /ai/roadmap?topic=...&folder_name=...
-    const { data } = await axiosInstance.post('/ai/roadmap', null, {
-      params: { topic, folder_name: folderName }
-    });
+    // API yêu cầu gửi JSON body: { topic, folder_name }
+    // Backend sinh 10-12 bài học tuần tự bằng Gemini nên có thể mất vài phút → timeout dài
+    const { data } = await axiosInstance.post('/ai/roadmap', {
+      topic,
+      folder_name: folderName
+    }, { timeout: 600000 });
     return data;
   },
 

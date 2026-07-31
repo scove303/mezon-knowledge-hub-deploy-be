@@ -1,14 +1,10 @@
 from tavily import AsyncTavilyClient
-import os
-from dotenv import load_dotenv
-
-load_dotenv()
-
+from app.core.config import settings
 
 
 async def tavily_search(query: str) -> str:
 
-    client = AsyncTavilyClient(os.getenv("TAVILY_API"))
+    client = AsyncTavilyClient(settings.TAVILY_API_KEY)
     response = await client.search(
         query=query,
         search_depth="advanced",

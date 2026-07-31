@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { LogOut, ChevronUp } from "lucide-react";
+import { useRouter } from "next/navigation";
 import { authService } from "@/features/auth/services";
 import { useAuthStore } from "@/features/auth/store";
 import { cn } from "@/utils/formatTailwind";
@@ -8,6 +9,8 @@ import { ThemeToggle } from "@/components/theme/ThemeToggle";
 export default function UserProfileMenu() {
   const [isOpen, setIsOpen] = useState(false);
   const menuRef = useRef(null);
+  const router = useRouter();
+  const clearAuth = useAuthStore((state) => state.clearAuth);
 
   const user = useAuthStore((state) => state.user) || {
     name: "Tester",
@@ -32,6 +35,9 @@ export default function UserProfileMenu() {
       await authService.logout();
     } catch (err) {
       console.error("Logout failed", err);
+    } finally {
+      clearAuth();
+      router.push("/login");
     }
   };
 

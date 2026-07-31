@@ -243,6 +243,32 @@ body {
   --ring: #1d4ed8;
 
   --chat-gradient: none;
+
+  /* Đồng bộ biến màu cũ của app để toàn bộ giao diện đổi theo theme */
+  --color-bg: 2 6 23;
+  --color-surface-1: 15 23 42;
+  --color-surface-2: 30 41 59;
+  --color-surface-3: 51 65 85;
+  --color-text-primary: 248 250 252;
+  --color-text-secondary: 203 213 225;
+  --color-text-muted: 100 116 139;
+  --color-text-disabled: 71 85 105;
+  --color-border: 30 41 59;
+  --color-border-subtle: 15 23 42;
+}
+
+/* LIGHT THEME */
+[data-theme="light"] {
+  --color-bg: 248 250 252;
+  --color-surface-1: 255 255 255;
+  --color-surface-2: 241 245 249;
+  --color-surface-3: 226 232 240;
+  --color-text-primary: 15 23 42;
+  --color-text-secondary: 51 65 85;
+  --color-text-muted: 100 116 139;
+  --color-text-disabled: 148 163 184;
+  --color-border: 226 232 240;
+  --color-border-subtle: 241 245 249;
 }
 
 /* CISHER THEME */
@@ -273,6 +299,18 @@ body {
     #f7d6c8 50%,
     #f3c2b2 100%
   );
+
+  /* Đồng bộ biến màu cũ của app để toàn bộ giao diện đổi theo theme */
+  --color-bg: 251 249 241;
+  --color-surface-1: 242 237 225;
+  --color-surface-2: 234 227 210;
+  --color-surface-3: 226 219 199;
+  --color-text-primary: 45 42 38;
+  --color-text-secondary: 68 64 60;
+  --color-text-muted: 120 113 108;
+  --color-text-disabled: 168 162 158;
+  --color-border: 230 223 204;
+  --color-border-subtle: 242 237 225;
 }
 
 /* SUNSET GRADIENT THEME */
@@ -303,6 +341,18 @@ body {
     #7c3aed 50%,
     #d946ef 100%
   );
+
+  /* Đồng bộ biến màu cũ của app để toàn bộ giao diện đổi theo theme */
+  --color-bg: 15 12 32;
+  --color-surface-1: 23 19 45;
+  --color-surface-2: 31 26 60;
+  --color-surface-3: 43 36 82;
+  --color-text-primary: 243 244 246;
+  --color-text-secondary: 209 213 219;
+  --color-text-muted: 156 163 175;
+  --color-text-disabled: 107 114 128;
+  --color-border: 43 36 82;
+  --color-border-subtle: 31 26 60;
 }
 
 /* CRIMSON DARK THEME */
@@ -328,6 +378,18 @@ body {
   --ring: #e11d48;
 
   --chat-gradient: linear-gradient(180deg, #3b0d14 0%, #120305 100%);
+
+  /* Đồng bộ biến màu cũ của app để toàn bộ giao diện đổi theo theme */
+  --color-bg: 18 3 5;
+  --color-surface-1: 31 7 10;
+  --color-surface-2: 46 11 16;
+  --color-surface-3: 59 13 20;
+  --color-text-primary: 252 231 243;
+  --color-text-secondary: 233 205 220;
+  --color-text-muted: 159 18 57;
+  --color-text-disabled: 127 29 60;
+  --color-border: 59 13 20;
+  --color-border-subtle: 46 11 16;
 }
 
 /* ==========================================
@@ -341,3 +403,4 @@ body {
     @apply bg-background text-foreground;
   }
 }
+/* touch */

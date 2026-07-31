@@ -32,7 +32,7 @@ const themeInitializerScript = `
         document.documentElement.classList.add('dark');
       }
     } catch (err) {
-      console.error('Can't read Theme in localStorage:', err);
+      console.error("Can't read Theme in localStorage:", err);
     }
   })();
 `;
