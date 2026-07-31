@@ -21,6 +21,7 @@ class Settings(BaseSettings):
 
     # Google OAuth2
     GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
 
     # Database
     DB_HOST: str = "127.0.0.1"
@@ -43,8 +44,6 @@ class Settings(BaseSettings):
     MEZON_BOT_TOKEN: str = ""
     MEZON_BOT_ID: str = ""
     TAVILY_API_KEY: str = ""
-    GOOGLE_CLIENT_ID: str = "100832011919-f8ite98k0fnr1k3l1b7umdaqasgt6q1g.apps.googleusercontent.com"
-    GOOGLE_CLIENT_SECRET: str = "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"
 
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]

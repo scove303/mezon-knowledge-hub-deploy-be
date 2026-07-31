@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from typing import Optional, List, TYPE_CHECKING
 from datetime import datetime
 import uuid
