@@ -12,11 +12,16 @@ export default function UserProfileMenu() {
   const router = useRouter();
   const clearAuth = useAuthStore((state) => state.clearAuth);
 
-  const user = useAuthStore((state) => state.user) || {
-    name: "Tester",
-    email: "tester@mezon.io",
-    avatarUrl: "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex",
-  };
+  const user = useAuthStore((state) => state.user) || {};
+
+  // Backend trả về display_name / avatar_url (snake_case) từ Google OAuth.
+  // Fallback cho tài khoản cũ lưu theo camelCase (name / avatarUrl).
+  const displayName = user.display_name || user.name || "Tester";
+  const email = user.email || "tester@mezon.io";
+  const avatarUrl =
+    user.avatar_url ||
+    user.avatarUrl ||
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex";
 
   // Click outside listener
   useEffect(() => {
@@ -53,8 +58,8 @@ export default function UserProfileMenu() {
       >
         <div className={cn("flex items-center space-x-3 min-w-0")}>
           <img
-            src={user.avatarUrl}
-            alt={user.name}
+            src={avatarUrl}
+            alt={displayName}
             className={cn(
               "w-8 h-8 rounded-lg bg-indigo-500/20 flex-shrink-0 object-cover",
             )}
@@ -65,14 +70,14 @@ export default function UserProfileMenu() {
                 "text-xs font-semibold text-[rgb(var(--color-text-primary))] truncate",
               )}
             >
-              {user.name}
+              {displayName}
             </p>
             <p
               className={cn(
                 "text-[10px] text-[rgb(var(--color-text-muted))] truncate",
               )}
             >
-              {user.email}
+              {email}
             </p>
           </div>
         </div>
@@ -102,14 +107,14 @@ export default function UserProfileMenu() {
                 "text-xs font-bold text-[rgb(var(--color-text-primary))] truncate",
               )}
             >
-              {user.name}
+              {displayName}
             </p>
             <p
               className={cn(
                 "text-[11px] text-[rgb(var(--color-text-muted))] truncate",
               )}
             >
-              {user.email}
+              {email}
             </p>
           </div>
 
