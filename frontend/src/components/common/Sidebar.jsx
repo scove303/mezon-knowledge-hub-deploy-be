@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
 import {
   Folder,
   FileText,
@@ -23,6 +22,7 @@ import { folderService } from "@/features/folders/services";
 import { fileService } from "@/features/files/services";
 import { useToastStore } from "@/stores/toast";
 import { useRouter } from "next/navigation";
+import UserProfileMenu from "@/features/home/components/UserProfileMenu";
 
 // Dữ liệu mock dùng làm dự phòng khi không đăng nhập hoặc backend offline
 const MOCK_FOLDERS = [
@@ -87,7 +87,7 @@ export default function Sidebar() {
   const setFolders = useWorkspaceStore((state) => state.setFolders);
 
   const router = useRouter();
-  const { isAuthenticated, clearAuth, user } = useAuthStore();
+  const { isAuthenticated, clearAuth } = useAuthStore();
 
   const folders = store.getFilteredFolders();
   const selectedFolder = store.getSelectedFolder();
@@ -98,7 +98,6 @@ export default function Sidebar() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isLoadingFolders, setIsLoadingFolders] = useState(true);
-  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const selectFolder = (folderId) => {
     store.setSelectedFolder(folderId);
@@ -338,67 +337,6 @@ export default function Sidebar() {
         )}
       </div>
 
-      {isAuthenticated &&
-        user &&
-        (() => {
-          const initial = (user.display_name ||
-            user.username ||
-            "?")[0].toUpperCase();
-          return (
-            <div className="relative">
-              <button
-                onClick={() => setShowUserMenu((p) => !p)}
-                className="w-full px-5 py-3 border-b border-[rgb(var(--color-border))] flex items-center gap-3 hover:bg-[rgb(var(--color-surface-2))]/50 transition-colors"
-              >
-                {user.avatar_url ? (
-                  <Image
-                    src={user.avatar_url}
-                    alt={user.display_name || user.username || "avatar"}
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 rounded-full object-cover border border-[rgb(var(--color-border))]"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                    {initial}
-                  </div>
-                )}
-                <div className="min-w-0 flex-1 text-left">
-                  <p className="text-sm font-semibold text-[rgb(var(--color-text-primary))] truncate">
-                    {user.display_name || user.username}
-                  </p>
-                  {user.email && (
-                    <p className="text-[10px] text-[rgb(var(--color-text-muted))] truncate">
-                      {user.email}
-                    </p>
-                  )}
-                </div>
-              </button>
-              {showUserMenu && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setShowUserMenu(false)}
-                  />
-                  <div className="absolute left-4 right-4 top-full mt-1 z-50 bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] rounded-xl shadow-xl shadow-black/30 overflow-hidden">
-                    <button
-                      onClick={() => {
-                        setShowUserMenu(false);
-                        handleLogout();
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] hover:text-rose-400 transition-colors"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Đăng xuất
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          );
-        })()}
-
       {/* Search */}
       <div className="p-4">
         <div className="relative">
@@ -626,26 +564,8 @@ export default function Sidebar() {
       </Modal>
 
       {/* Footer */}
-      <div className="p-4 bg-[rgb(var(--color-bg))] border-t border-[rgb(var(--color-border))] text-[10px] text-[rgb(var(--color-text-muted))] flex flex-col space-y-1">
-        <div className="flex justify-between">
-          <span>Phiên bản UI</span>
-          <span className="font-semibold text-[rgb(var(--color-text-secondary))]">
-            2.0.0
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span>Kết nối API</span>
-          <span className="flex items-center space-x-1">
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${isAuthenticated ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}
-            />
-            <span
-              className={`${isAuthenticated ? "text-emerald-500" : "text-amber-500"} font-semibold`}
-            >
-              {isAuthenticated ? "Đang kết nối" : "Thử nghiệm (Guest)"}
-            </span>
-          </span>
-        </div>
+      <div className="p-4 bg-[rgb(var(--color-bg))] border-t border-[rgb(var(--color-border))]">
+        <UserProfileMenu />
       </div>
     </aside>
   );
