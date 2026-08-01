@@ -2,7 +2,7 @@ from typing import Optional, List, TYPE_CHECKING
 from datetime import datetime
 import uuid
 
-from sqlmodel import Field, SQLModel, Relationship
+from sqlmodel import Field, SQLModel, Relationship, JSON
 
 if TYPE_CHECKING:
     from app.models.user import User
@@ -21,6 +21,7 @@ class Folder(SQLModel, table=True):
     user: Optional["User"] = Relationship(back_populates="folders")
     files: List["KnowledgeFile"] = Relationship(back_populates="folder")
     root_entry: Optional["FolderRoot"] = Relationship(back_populates="folder")
+    prompt_embedding: Optional[str] = Field(default=None, sa_type=JSON)
 
 class FolderRoot(SQLModel,table = True):
     __tablename__ = "folder_roots"

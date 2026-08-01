@@ -5,10 +5,11 @@ from sqlmodel import Session, select
 
 from app.models.folder import Folder, FolderRoot
 from app.schemas.folder import FolderCreate
+from sqlalchemy.orm import selectinload
 
 
 def get_folders_by_user(session: Session, user_id: int) -> list[Folder]:
-    statement = select(Folder).where(Folder.user_id == user_id)
+    statement = (select(Folder).where(Folder.user_id == user_id).options(selectinload(Folder.files)))
     return list(session.exec(statement).all())
 
 
