@@ -60,3 +60,22 @@ def create_folder_root(session: Session, user_id: int, folder_id: str) -> Folder
     session.refresh(folder_root)
 
     return folder_root
+
+
+def rename_folder(
+    session: Session, folder_id: str, user_id: int, new_name: str
+) -> Optional[Folder]:
+    # 1. Tìm folder theo ID và user_id
+    folder = get_folder(session, folder_id, user_id)
+    if not folder:
+        return None
+
+    # 2. Cập nhật tên mới
+    folder.name = new_name
+    
+    # 3. Lưu vào DB & refresh lại data
+    session.add(folder)
+    session.commit()
+    session.refresh(folder)
+    
+    return folder
