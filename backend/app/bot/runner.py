@@ -1,5 +1,4 @@
 import asyncio
-from mezon import MezonClient
 from app.core.config import settings
 from app.bot.client import client as bot_client
 from app.bot.handlers.messages import handle_message

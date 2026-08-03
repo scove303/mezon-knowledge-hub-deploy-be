@@ -8,6 +8,7 @@ from app.api.deps import CurrentUser
 from app.crud import folder as folder_crud
 from app.schemas.common import error_response, success_response
 from app.schemas.folder import FolderCreate
+from pydantic import BaseModel
 
 router = APIRouter()
 SessionDep = Annotated[Session, Depends(get_session)]
@@ -62,3 +63,25 @@ def delete_folder(
             status_code=404, detail=error_response("Không tìm thấy thư mục")
         )
     return success_response(message="Đã xóa thư mục và các file liên quan thành công")
+
+
+
+class folderName(BaseModel):
+    name: str
+
+
+
+
+@router.put("/{folder_id}")
+def update_file(
+    folder_id: str, folder_name:folderName, session: SessionDep, current_user: CurrentUser
+):
+    folder = folder_crud.rename_folder(session, folder_id, current_user.id,folderName.name,)
+    if not folder:
+        raise HTTPException(
+            status_code=404, detail=error_response("Không tìm thấy folder")
+        )
+    return success_response(
+        message="Đã cập nhật tên folder",
+        data={"id": folder.id, "updated_at":folder.updated_at},
+    )

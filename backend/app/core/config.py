@@ -44,6 +44,7 @@ class Settings(BaseSettings):
     MEZON_BOT_TOKEN: str = ""
     MEZON_BOT_ID: str = ""
     TAVILY_API_KEY: str = ""
+    DEEPSEEK_API_KEY: str = ""
 
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [

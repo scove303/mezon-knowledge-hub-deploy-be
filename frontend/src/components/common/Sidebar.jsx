@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
 import {
   Folder,
+  FolderOpen,
   FileText,
+  FileCode,
+  FileJson,
+  File,
+  Terminal,
   Search,
   Plus,
   Trash2,
@@ -22,6 +27,7 @@ import { fileService } from "@/features/files/services";
 import { useToastStore } from "@/stores/toast";
 import { useRouter } from "next/navigation";
 import UserProfileMenu from "@/features/home/components/UserProfileMenu";
+import { cn } from "@/utils/formatTailwind";
 
 // Dữ liệu mock dùng làm dự phòng khi không đăng nhập hoặc backend offline
 const MOCK_FOLDERS = [
@@ -78,6 +84,53 @@ const MOCK_FOLDERS = [
     ],
   },
 ];
+
+// Hàm trả về icon phù hợp theo tên / phần mở rộng file
+const getFileIcon = (fileName) => {
+  if (!fileName) return <File className="w-4 h-4 text-gray-400 shrink-0" />;
+
+  const lowerName = fileName.toLowerCase();
+  const ext =
+    fileName.includes(".") && fileName.lastIndexOf(".") > 0
+      ? fileName.slice(fileName.lastIndexOf(".") + 1).toLowerCase()
+      : "";
+
+  // Các file cấu hình đặc biệt hoặc tên cố định
+  if (lowerName === "dockerfile" || lowerName.startsWith("dockerfile.")) {
+    return <Terminal className="w-4 h-4 text-cyan-400 shrink-0" />;
+  }
+  if (lowerName === ".gitignore" || lowerName === ".env") {
+    return <FileCode className="w-4 h-4 text-gray-400 shrink-0" />;
+  }
+
+  // Nhận diện theo phần mở rộng
+  switch (ext) {
+    case "py":
+      return <FileCode className="w-4 h-4 text-amber-400 shrink-0" />;
+    case "md":
+      return <FileText className="w-4 h-4 text-blue-400 shrink-0" />;
+    case "json":
+      return <FileJson className="w-4 h-4 text-yellow-300 shrink-0" />;
+    case "yml":
+    case "yaml":
+    case "toml":
+    case "ini":
+      return <FileCode className="w-4 h-4 text-purple-400 shrink-0" />;
+    case "sql":
+      return <FileCode className="w-4 h-4 text-emerald-400 shrink-0" />;
+    case "js":
+    case "jsx":
+    case "ts":
+    case "tsx":
+      return <FileCode className="w-4 h-4 text-yellow-400 shrink-0" />;
+    case "sh":
+    case "bash":
+    case "file":
+      return <Terminal className="w-4 h-4 text-green-400 shrink-0" />;
+    default:
+      return <File className="w-4 h-4 text-gray-400 shrink-0" />;
+  }
+};
 
 export default function Sidebar() {
   const store = useWorkspaceStore();
@@ -288,7 +341,11 @@ export default function Sidebar() {
     router.push("/login");
   };
 
-  const getFolderIcon = (type) => {
+  const getFolderIcon = (type, isExpanded) => {
+    if (isExpanded) {
+      return <FolderOpen className="w-4 h-4 text-amber-300/90 shrink-0" />;
+    }
+
     switch (type) {
       case "roadmap":
         return <Compass className="w-4 h-4 text-emerald-400" />;
@@ -306,7 +363,7 @@ export default function Sidebar() {
       {/* Brand Header */}
       <div className="p-5 border-b border-[rgb(var(--color-border))] flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
             <HardDrive className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -328,6 +385,7 @@ export default function Sidebar() {
         )}
       </div>
 
+      {/* Quick Search Bar */}
       {/* Search */}
       <div className="p-4">
         <div className="relative">
@@ -345,14 +403,18 @@ export default function Sidebar() {
 
       {/* Folder Navigation */}
       <div className="flex-1 overflow-y-auto px-3 space-y-4 pb-4 scrollbar-thin">
+        {/* Header Section Label */}
         <div className="flex items-center justify-between px-2 text-xs font-semibold text-[rgb(var(--color-text-muted))] uppercase tracking-wider">
-          <span>Danh sách Thư Mục {!isAuthenticated && "(Bản thử)"}</span>
+          <span className={cn("truncate")}>
+            Danh sách Thư Mục Của {`<USER>`} {!isAuthenticated && "(Bản thử)"}
+          </span>
           <Button
             id="btn-add-folder"
             variant="ghost"
             size="icon"
             onClick={() => setShowAddFolder(!showAddFolder)}
             title="Tạo thư mục mới"
+            className={cn("h-5 w-5 p-0 hover:bg-[rgb(var(--color-surface-2))]")}
           >
             <Plus className="w-4 h-4" />
           </Button>
@@ -407,7 +469,8 @@ export default function Sidebar() {
             ) : (
               folders.map((folder) => {
                 const isExpanded = expandedFolders[folder.id] !== false;
-                const isSelected = selectedFolder?.id === folder.id;
+                const isSelected =
+                  selectedFolder?.id === folder.id && !selectedFile;
 
                 return (
                   <li
@@ -434,7 +497,7 @@ export default function Sidebar() {
                             <ChevronRight className="w-3.5 h-3.5" />
                           )}
                         </button>
-                        {getFolderIcon(folder.type)}
+                        {getFolderIcon(folder.type, isExpanded)}
                         <span className="text-sm truncate select-none">
                           {folder.name}
                         </span>
@@ -492,7 +555,7 @@ export default function Sidebar() {
                                 }`}
                               >
                                 <div className="flex items-center space-x-2 min-w-0">
-                                  <FileText className="w-3.5 h-3.5 flex-shrink-0" />
+                                  {getFileIcon(file.name)}
                                   <span className="text-xs truncate select-none">
                                     {file.name}
                                   </span>
@@ -530,6 +593,8 @@ export default function Sidebar() {
           </ul>
         )}
       </div>
+
+      {/* Modal Xác Nhận Xóa */}
       <Modal
         isOpen={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}

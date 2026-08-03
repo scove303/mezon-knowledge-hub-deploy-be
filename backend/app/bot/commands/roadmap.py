@@ -17,7 +17,6 @@ async def run_roadmap_service(topic: str, user_id: int, session: Session, folder
                     {
                         "file_id": f.id,
                         "title": f.name,
-                        "markdown_content": f.markdown_content
                     }
                     for f in folder.files
                 ]
