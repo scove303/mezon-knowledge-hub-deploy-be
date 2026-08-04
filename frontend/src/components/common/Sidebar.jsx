@@ -1,8 +1,12 @@
 import React, { useState, useEffect, useCallback } from "react";
-import Image from "next/image";
 import {
   Folder,
+  FolderOpen,
   FileText,
+  FileCode,
+  FileJson,
+  File,
+  Terminal,
   Search,
   Plus,
   Trash2,
@@ -12,7 +16,6 @@ import {
   FileCheck,
   Video,
   HardDrive,
-  LogOut,
   LogIn,
 } from "lucide-react";
 import { Button } from "@/components/base-ui/Button";
@@ -23,6 +26,8 @@ import { folderService } from "@/features/folders/services";
 import { fileService } from "@/features/files/services";
 import { useToastStore } from "@/stores/toast";
 import { useRouter } from "next/navigation";
+import UserProfileMenu from "@/features/home/components/UserProfileMenu";
+import { cn } from "@/utils/formatTailwind";
 
 // Dữ liệu mock dùng làm dự phòng khi không đăng nhập hoặc backend offline
 const MOCK_FOLDERS = [
@@ -80,6 +85,53 @@ const MOCK_FOLDERS = [
   },
 ];
 
+// Hàm trả về icon phù hợp theo tên / phần mở rộng file
+const getFileIcon = (fileName) => {
+  if (!fileName) return <File className="w-4 h-4 text-gray-400 shrink-0" />;
+
+  const lowerName = fileName.toLowerCase();
+  const ext =
+    fileName.includes(".") && fileName.lastIndexOf(".") > 0
+      ? fileName.slice(fileName.lastIndexOf(".") + 1).toLowerCase()
+      : "";
+
+  // Các file cấu hình đặc biệt hoặc tên cố định
+  if (lowerName === "dockerfile" || lowerName.startsWith("dockerfile.")) {
+    return <Terminal className="w-4 h-4 text-cyan-400 shrink-0" />;
+  }
+  if (lowerName === ".gitignore" || lowerName === ".env") {
+    return <FileCode className="w-4 h-4 text-gray-400 shrink-0" />;
+  }
+
+  // Nhận diện theo phần mở rộng
+  switch (ext) {
+    case "py":
+      return <FileCode className="w-4 h-4 text-amber-400 shrink-0" />;
+    case "md":
+      return <FileText className="w-4 h-4 text-blue-400 shrink-0" />;
+    case "json":
+      return <FileJson className="w-4 h-4 text-yellow-300 shrink-0" />;
+    case "yml":
+    case "yaml":
+    case "toml":
+    case "ini":
+      return <FileCode className="w-4 h-4 text-purple-400 shrink-0" />;
+    case "sql":
+      return <FileCode className="w-4 h-4 text-emerald-400 shrink-0" />;
+    case "js":
+    case "jsx":
+    case "ts":
+    case "tsx":
+      return <FileCode className="w-4 h-4 text-yellow-400 shrink-0" />;
+    case "sh":
+    case "bash":
+    case "file":
+      return <Terminal className="w-4 h-4 text-green-400 shrink-0" />;
+    default:
+      return <File className="w-4 h-4 text-gray-400 shrink-0" />;
+  }
+};
+
 export default function Sidebar() {
   const store = useWorkspaceStore();
 
@@ -87,7 +139,7 @@ export default function Sidebar() {
   const setFolders = useWorkspaceStore((state) => state.setFolders);
 
   const router = useRouter();
-  const { isAuthenticated, clearAuth, user } = useAuthStore();
+  const { isAuthenticated, clearAuth } = useAuthStore();
 
   const folders = store.getFilteredFolders();
   const selectedFolder = store.getSelectedFolder();
@@ -98,7 +150,6 @@ export default function Sidebar() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isLoadingFolders, setIsLoadingFolders] = useState(true);
-  const [showUserMenu, setShowUserMenu] = useState(false);
 
   const selectFolder = (folderId) => {
     store.setSelectedFolder(folderId);
@@ -290,7 +341,11 @@ export default function Sidebar() {
     router.push("/login");
   };
 
-  const getFolderIcon = (type) => {
+  const getFolderIcon = (type, isExpanded) => {
+    if (isExpanded) {
+      return <FolderOpen className="w-4 h-4 text-amber-300/90 shrink-0" />;
+    }
+
     switch (type) {
       case "roadmap":
         return <Compass className="w-4 h-4 text-emerald-400" />;
@@ -308,7 +363,7 @@ export default function Sidebar() {
       {/* Brand Header */}
       <div className="p-5 border-b border-[rgb(var(--color-border))] flex items-center justify-between">
         <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+          <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
             <HardDrive className="w-5 h-5 text-white" />
           </div>
           <div>
@@ -319,15 +374,7 @@ export default function Sidebar() {
           </div>
         </div>
 
-        {isAuthenticated ? (
-          <button
-            onClick={handleLogout}
-            className="p-2 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-rose-400 rounded-lg transition-colors"
-            title="Đăng xuất"
-          >
-            <LogOut className="w-4 h-4" />
-          </button>
-        ) : (
+        {!isAuthenticated && (
           <button
             onClick={handleLoginRedirect}
             className="p-2 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-indigo-400 rounded-lg transition-colors"
@@ -338,67 +385,7 @@ export default function Sidebar() {
         )}
       </div>
 
-      {isAuthenticated &&
-        user &&
-        (() => {
-          const initial = (user.display_name ||
-            user.username ||
-            "?")[0].toUpperCase();
-          return (
-            <div className="relative">
-              <button
-                onClick={() => setShowUserMenu((p) => !p)}
-                className="w-full px-5 py-3 border-b border-[rgb(var(--color-border))] flex items-center gap-3 hover:bg-[rgb(var(--color-surface-2))]/50 transition-colors"
-              >
-                {user.avatar_url ? (
-                  <Image
-                    src={user.avatar_url}
-                    alt={user.display_name || user.username || "avatar"}
-                    width={32}
-                    height={32}
-                    className="w-8 h-8 rounded-full object-cover border border-[rgb(var(--color-border))]"
-                    unoptimized
-                  />
-                ) : (
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-500 to-violet-600 flex items-center justify-center text-white text-xs font-bold shrink-0">
-                    {initial}
-                  </div>
-                )}
-                <div className="min-w-0 flex-1 text-left">
-                  <p className="text-sm font-semibold text-[rgb(var(--color-text-primary))] truncate">
-                    {user.display_name || user.username}
-                  </p>
-                  {user.email && (
-                    <p className="text-[10px] text-[rgb(var(--color-text-muted))] truncate">
-                      {user.email}
-                    </p>
-                  )}
-                </div>
-              </button>
-              {showUserMenu && (
-                <>
-                  <div
-                    className="fixed inset-0 z-40"
-                    onClick={() => setShowUserMenu(false)}
-                  />
-                  <div className="absolute left-4 right-4 top-full mt-1 z-50 bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] rounded-xl shadow-xl shadow-black/30 overflow-hidden">
-                    <button
-                      onClick={() => {
-                        setShowUserMenu(false);
-                        handleLogout();
-                      }}
-                      className="w-full flex items-center gap-3 px-4 py-3 text-sm text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] hover:text-rose-400 transition-colors"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      Đăng xuất
-                    </button>
-                  </div>
-                </>
-              )}
-            </div>
-          );
-        })()}
-
+      {/* Quick Search Bar */}
       {/* Search */}
       <div className="p-4">
         <div className="relative">
@@ -416,14 +403,18 @@ export default function Sidebar() {
 
       {/* Folder Navigation */}
       <div className="flex-1 overflow-y-auto px-3 space-y-4 pb-4 scrollbar-thin">
+        {/* Header Section Label */}
         <div className="flex items-center justify-between px-2 text-xs font-semibold text-[rgb(var(--color-text-muted))] uppercase tracking-wider">
-          <span>Danh sách Thư Mục {!isAuthenticated && "(Bản thử)"}</span>
+          <span className={cn("truncate")}>
+            Danh sách Thư Mục Của {`<USER>`} {!isAuthenticated && "(Bản thử)"}
+          </span>
           <Button
             id="btn-add-folder"
             variant="ghost"
             size="icon"
             onClick={() => setShowAddFolder(!showAddFolder)}
             title="Tạo thư mục mới"
+            className={cn("h-5 w-5 p-0 hover:bg-[rgb(var(--color-surface-2))]")}
           >
             <Plus className="w-4 h-4" />
           </Button>
@@ -478,7 +469,8 @@ export default function Sidebar() {
             ) : (
               folders.map((folder) => {
                 const isExpanded = expandedFolders[folder.id] !== false;
-                const isSelected = selectedFolder?.id === folder.id;
+                const isSelected =
+                  selectedFolder?.id === folder.id && !selectedFile;
 
                 return (
                   <li
@@ -505,7 +497,7 @@ export default function Sidebar() {
                             <ChevronRight className="w-3.5 h-3.5" />
                           )}
                         </button>
-                        {getFolderIcon(folder.type)}
+                        {getFolderIcon(folder.type, isExpanded)}
                         <span className="text-sm truncate select-none">
                           {folder.name}
                         </span>
@@ -563,7 +555,7 @@ export default function Sidebar() {
                                 }`}
                               >
                                 <div className="flex items-center space-x-2 min-w-0">
-                                  <FileText className="w-3.5 h-3.5 flex-shrink-0" />
+                                  {getFileIcon(file.name)}
                                   <span className="text-xs truncate select-none">
                                     {file.name}
                                   </span>
@@ -601,6 +593,8 @@ export default function Sidebar() {
           </ul>
         )}
       </div>
+
+      {/* Modal Xác Nhận Xóa */}
       <Modal
         isOpen={deleteConfirmOpen}
         onClose={() => setDeleteConfirmOpen(false)}
@@ -626,26 +620,8 @@ export default function Sidebar() {
       </Modal>
 
       {/* Footer */}
-      <div className="p-4 bg-[rgb(var(--color-bg))] border-t border-[rgb(var(--color-border))] text-[10px] text-[rgb(var(--color-text-muted))] flex flex-col space-y-1">
-        <div className="flex justify-between">
-          <span>Phiên bản UI</span>
-          <span className="font-semibold text-[rgb(var(--color-text-secondary))]">
-            2.0.0
-          </span>
-        </div>
-        <div className="flex justify-between">
-          <span>Kết nối API</span>
-          <span className="flex items-center space-x-1">
-            <span
-              className={`w-1.5 h-1.5 rounded-full ${isAuthenticated ? "bg-emerald-500 animate-pulse" : "bg-amber-500"}`}
-            />
-            <span
-              className={`${isAuthenticated ? "text-emerald-500" : "text-amber-500"} font-semibold`}
-            >
-              {isAuthenticated ? "Đang kết nối" : "Thử nghiệm (Guest)"}
-            </span>
-          </span>
-        </div>
+      <div className="p-4 bg-[rgb(var(--color-bg))] border-t border-[rgb(var(--color-border))]">
+        <UserProfileMenu />
       </div>
     </aside>
   );

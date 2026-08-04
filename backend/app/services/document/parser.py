@@ -1,9 +1,30 @@
+import os
 import json
+import asyncio
+import traceback
 from google import genai
 from google.genai import types
 from app.core.config import settings
 
-client = genai.Client(api_key=settings.GEMINI_API_KEY)
+# 1. Lấy Google API Key từ Config / Env
+api_key = (
+    getattr(settings, "GEMINI_API_KEY", None)
+    or getattr(settings, "GOOGLE_API_KEY", None)
+    or os.getenv("GEMINI_API_KEY")
+    or os.getenv("GOOGLE_API_KEY")
+)
+
+if not api_key:
+    print("❌ [LỖI] Chưa tìm thấy GEMINI_API_KEY hoặc GOOGLE_API_KEY trong cấu hình!")
+
+# 2. Khởi tạo Google GenAI Client
+client = genai.Client(api_key=api_key)
+
+
+MODEL_NAME = "gemini-3.5-flash-lite"
+
+
+SEMAPHORE = asyncio.Semaphore(3)
 
 # =====================================================================
 # PROMPT BƯỚC 1: LẬP CÂY LỘ TRÌNH (OUTLINE)
@@ -25,7 +46,7 @@ YÊU CẦU:
 """
 
 # =====================================================================
-# PROMPT BƯỚC 2: VIẾT CHI TIẾT 1 BÀI HỌC (W3SCHOOLS / DOCUMENTATION STYLE)
+# PROMPT BƯỚC 2: VIẾT CHI TIẾT 1 BÀI HỌC
 # =====================================================================
 LESSON_DETAIL_SYSTEM_PROMPT = """
 Bạn là biên tập viên soạn thảo tài liệu kỹ thuật cao cấp (giống phong cách W3Schools, MDN Web Docs, TutorialsPoint).
@@ -37,7 +58,7 @@ BẮT BUỘC VIẾT THEO CẤU TRÚC SAU (Độ dài tối thiểu 1.000 - 2.000
 
 ## 1. 🎯 Bức tranh toàn cảnh & Bản chất vấn đề
 - Định nghĩa chính xác khái niệm.
-- Vấn đề thực tế là gì và tại sao khái niệm/công cụ này lại đời để giải quyết vấn đề đó?
+- Vấn đề thực tế là gì và tại sao khái niệm/công cụ này ra đời để giải quyết vấn đề đó?
 - So sánh ngắn gọn với các giải pháp khác (nếu có).
 
 ## 2. 📖 Cú pháp chuẩn & Khai phá chi tiết các Khái niệm con
@@ -68,37 +89,13 @@ BẮT BUỘC VIẾT THEO CẤU TRÚC SAU (Độ dài tối thiểu 1.000 - 2.000
 """
 
 
-async def parse_context_to_structure(topic: str, tavily_context: str) -> dict:
-    """
-    Quy trình 2 Bước để tạo ra bộ bài học dày cộp chuẩn W3Schools
-    """
-    print("  ---> [Bước 1/2] Đang lập khung Lộ trình (10-12 Bài)...")
-    
-    # BƯỚC 1: Lấy Outline
-    outline_prompt = f"Chủ đề: {topic}\nNgữ cảnh Tavily:\n{tavily_context}"
-    outline_res = await client.aio.models.generate_content(
-        model="gemini-3.5-flash-lite",
-        contents=outline_prompt,
-        config=types.GenerateContentConfig(
-            system_instruction=OUTLINE_SYSTEM_PROMPT,
-            response_mime_type="application/json",
-            temperature=0.3
-        )
-    )
-    
-    outline_data = json.loads(outline_res.text)
-    folder_name = outline_data.get("folder_name", f"Lộ trình {topic}")
-    lessons_list = outline_data.get("lessons", [])
-    
-    print(f"  ---> [Bước 1/2] Đã tạo xong Outline gồm {len(lessons_list)} bài. Đang bắt đầu viết chi tiết từng bài...")
-
-    # BƯỚC 2: Vòng lặp sinh chi tiết từng bài
-    final_files = []
-    for idx, lesson in enumerate(lessons_list, 1):
+async def generate_single_lesson(topic: str, lesson: dict, tavily_context: str, idx: int, total: int) -> dict:
+    """Sinh chi tiết từng bài học trực tiếp qua Google GenAI SDK (Async)"""
+    async with SEMAPHORE:
         lesson_title = lesson["title"]
         lesson_summary = lesson["summary"]
         
-        print(f"    [+ Processing] ({idx}/{len(lessons_list)}) Đang soạn thảo chi tiết bài: '{lesson_title}'...")
+        print(f"    [+ Processing] ({idx}/{total}) Đang soạn bài với Gemini Flash: '{lesson_title}'...")
 
         detail_prompt = f"""
         Chủ đề tổng thể: {topic}
@@ -111,24 +108,69 @@ async def parse_context_to_structure(topic: str, tavily_context: str) -> dict:
         Hãy soạn thảo bài học này theo phong cách W3Schools siêu chi tiết!
         """
 
-        detail_res = await client.aio.models.generate_content(
-            model="gemini-3.5-flash-lite",
-            contents=detail_prompt,
-            config=types.GenerateContentConfig(
-                system_instruction=LESSON_DETAIL_SYSTEM_PROMPT,
-                temperature=0.4,
-                max_output_tokens=8192
-            )
-        )
+        try:
+            async with asyncio.timeout(120.0):
+                # Gọi API thông qua client.aio (Async Client)
+                response = await client.aio.models.generate_content(
+                    model=MODEL_NAME,
+                    contents=detail_prompt,
+                    config=types.GenerateContentConfig(
+                        system_instruction=LESSON_DETAIL_SYSTEM_PROMPT,
+                        temperature=0.4,
+                    )
+                )
+                
+                text_content = response.text or ""
 
-        final_files.append({
+                if not text_content.strip():
+                    raise ValueError("Google GenAI API trả về nội dung rỗng (Empty content)")
+
+        except Exception as e:
+            print(f"❌ [LỖI Gemini Flash bài '{lesson_title}']: {e}")
+            traceback.print_exc()
+            text_content = f"# {lesson_title}\n\n*Nội dung bài học này đang được bổ sung.*"
+
+        return {
             "title": lesson_title,
-            "text_content": detail_res.text
-        })
+            "text_content": text_content
+        }
+
+
+async def parse_context_to_structure(topic: str, tavily_context: str, folder_name: str) -> dict:
+    """
+    Quy trình 2 Bước Async sử dụng Google GenAI SDK
+    """
+    print("  ---> [Bước 1/2] Đang lập khung Lộ trình với Gemini Flash...")
+    
+    outline_prompt = f"Chủ đề: {topic}\nNgữ cảnh Tavily:\n{tavily_context}"
+    
+    outline_res = await client.aio.models.generate_content(
+        model=MODEL_NAME,
+        contents=outline_prompt,
+        config=types.GenerateContentConfig(
+            system_instruction=OUTLINE_SYSTEM_PROMPT,
+            response_mime_type="application/json",  # Ép trả về JSON chuẩn
+            temperature=0.3,
+        )
+    )
+    
+    raw_json = outline_res.text or "{}"
+    outline_data = json.loads(raw_json)
+    lessons_list = outline_data.get("lessons", [])
+    total_lessons = len(lessons_list)
+    
+    print(f"  ---> [Bước 1/2] Đã tạo xong Outline gồm {total_lessons} bài. Đang bắt đầu viết chi tiết...")
+
+    # BƯỚC 2: Sinh các bài học đồng thời
+    tasks = [
+        generate_single_lesson(topic, lesson, tavily_context, idx, total_lessons)
+        for idx, lesson in enumerate(lessons_list, 1)
+    ]
+    
+    final_files = await asyncio.gather(*tasks)
 
     print("  ---> [Bước 2/2] Hoàn thành toàn bộ bài học siêu chi tiết!")
 
-    # Trả về đúng cấu trúc JSON mong muốn cho database
     return {
         "folder_name": folder_name,
         "files": final_files

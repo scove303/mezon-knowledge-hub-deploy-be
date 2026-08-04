@@ -54,13 +54,12 @@ export default function DashboardIndex() {
         // Tình huống C: Nhập tin nhắn thông thường (Tạo lộ trình học tập)
         const folderName = `🐍 Lộ trình: ${message.slice(0, 20)}${message.length > 20 ? '...' : ''}`;
         
-        // GIẢI PHÁP: Vì Backend xử lý ngầm (background_tasks) và chưa tự động ghi folder vào DB ngay lập tức,
-        // chúng ta sẽ chủ động tạo folder từ phía Frontend trước để người dùng thấy xuất hiện trên Sidebar,
-        // sau đó mới gửi yêu cầu xử lý AI cho folder đó.
-        const folderRes = await folderService.createFolder(folderName, 'roadmap');
-        if (folderRes.success) {
-          targetFolderId = folderRes.data.id;
-          await aiService.generateRoadmap(message, folderName);
+        // Backend tự tạo folder duy nhất khi sinh lộ trình và trả về folder_id trong response.
+        // Không tạo folder trước ở Frontend nữa để tránh tạo ra 2 folder trùng lặp.
+        const roadmapRes = await aiService.generateRoadmap(message, folderName);
+        const folderId = roadmapRes?.data?.folder_id;
+        if (folderId) {
+          targetFolderId = folderId;
         }
       }
 

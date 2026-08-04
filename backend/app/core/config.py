@@ -19,6 +19,10 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
+    # Google OAuth2
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
+
     # Database
     DB_HOST: str = "127.0.0.1"
     DB_PORT: int = 3306
@@ -40,10 +44,7 @@ class Settings(BaseSettings):
     MEZON_BOT_TOKEN: str = ""
     MEZON_BOT_ID: str = ""
     TAVILY_API_KEY: str = ""
-    
-    # Google OAuth2
-    GOOGLE_CLIENT_ID: str = ""
-    GOOGLE_CLIENT_SECRET: str = ""
+    DEEPSEEK_API_KEY: str = ""
 
     # Mezon OAuth2
     MEZON_CLIENT_ID: str = ""
@@ -51,7 +52,12 @@ class Settings(BaseSettings):
     MEZON_REDIRECT_URI: str = ""
     
     # CORS
-    BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
+    BACKEND_CORS_ORIGINS: List[str] = [
+        "http://localhost:3000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3000",
+        "http://127.0.0.1:3001",
+    ]
 
     # Cấu hình Pydantic v2
     model_config = SettingsConfigDict(
