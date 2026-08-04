@@ -5,10 +5,19 @@ import { useThemeStore } from "@/store/useThemeStore";
 import { THEME_OPTIONS, ThemeMode } from "@/types/theme";
 import { Sun, Moon, Palette } from "lucide-react";
 import { cn } from "@/utils/formatTailwind";
+import vn from "../../languages/vn.json";
+import en from "../../languages/en.json";
+
+const translation = {
+  en: en,
+  vn: vn
+}
 
 export const ThemeToggle: React.FC = () => {
   const { theme, setTheme } = useThemeStore();
   const [mounted, setMounted] = useState(false);
+  const [currentLanguage, setCurrentLanguage] = useState("vn"); //UNFINISHED
+  const currentText = translation[currentLanguage];
 
   // Đảm bảo component chỉ render giao diện tương tác sau khi đã mount ở Client
   useEffect(() => {
@@ -30,7 +39,7 @@ export const ThemeToggle: React.FC = () => {
         className={cn("flex items-center gap-1.5 px-2 text-muted-foreground")}
       >
         <Palette className={cn("w-4 h-4")} />
-        <span className={cn("text-xs font-medium")}>Giao diện: </span>
+        <span className={cn("text-xs font-medium")}>{currentText.theme.header}</span>
       </div>
 
       <select

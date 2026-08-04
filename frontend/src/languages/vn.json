@@ -1,0 +1,19 @@
+{
+  "sidebar": {
+    "fileList": {
+      "header": "Danh sách Thư Mục Của",
+      "version": "Bản Thử"
+    }
+  },
+  "searchBar": {
+    "placeholder": "Tìm kếm tài liệu..."
+  },
+  "theme": {
+    "header": "Giao diện: ",
+    "light": "Chủ đề Sáng",
+    "dark": "Chủ đề Tối",
+    "cisher": "Chủ đề Cisher",
+    "sunsetGradient": "Chủ đề Sương tím",
+    "crimsonDark": "Chủ đề Đỏ tối"
+  }
+}

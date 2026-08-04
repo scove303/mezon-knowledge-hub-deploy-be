@@ -1,0 +1,19 @@
+{
+  "sidebar": {
+    "fileList": {
+      "header": "Directory List Of",
+      "version": "Test Version"
+    }
+  },
+  "searchBar": {
+    "placeholder": "Search for documents..."
+  },
+  "theme": {
+    "header": "Theme: ",
+    "light": "Light theme",
+    "dark": "Dark theme",
+    "cisher": "Cisher theme",
+    "sunsetGradient": "Sunset gradient theme",
+    "crimsonDark": "Crimson dark theme"
+  }
+}
