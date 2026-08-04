@@ -61,7 +61,8 @@ async def roadmap_service(
     user_id: int, 
     session: Session, 
     folder_name: str,
-    similarity_threshold: float = 0.88
+    similarity_threshold: float = 0.88,
+    on_event: callable = None,
 ) -> Folder:
     # ---------------------------------------------------------
     # STEP 1: Generate Vector Embedding for incoming prompt
@@ -107,6 +108,8 @@ async def roadmap_service(
     # STEP 3: CACHE MISS — Crawl & Call Gemini AI
     # ---------------------------------------------------------
     print(f"🤖 [CACHE MISS] Calling Tavily & AI to generate new roadmap for: '{topic}'")
+    if on_event:
+        on_event({"type": "status", "message": "Đang tìm kiếm tài liệu trên Internet..."})
     
     tavily_context = ""
     try:
@@ -114,7 +117,7 @@ async def roadmap_service(
     except Exception as e:
         print(f"  ---> [Tavily] Không lấy được ngữ cảnh Internet, tiếp tục với context trống: {e}")
 
-    roadmap_data = await parse_context_to_structure(topic, tavily_context, folder_name=folder_name)
+    roadmap_data = await parse_context_to_structure(topic, tavily_context, folder_name=folder_name, on_event=on_event)
 
     # ---------------------------------------------------------
     # STEP 4: Store New Folder in DB + Save Prompt Embedding

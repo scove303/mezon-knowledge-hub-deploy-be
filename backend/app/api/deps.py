@@ -107,6 +107,11 @@ def merge_guest_into_user(
     for r in roots:
         session.delete(r)
 
+    # Adopt các roadmap job đang chạy của khách sang tài khoản vừa xác thực
+    from app.core.state import adopt_jobs_for_user
+
+    adopt_jobs_for_user(guest_id, user_id)
+
     session.delete(guest)
     session.commit()
     return len(folders)
