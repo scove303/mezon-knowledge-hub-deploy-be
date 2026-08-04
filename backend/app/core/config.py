@@ -19,9 +19,6 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    # Google OAuth2
-    GOOGLE_CLIENT_ID: str = ""
-
     # Database
     DB_HOST: str = "127.0.0.1"
     DB_PORT: int = 3306
@@ -43,9 +40,16 @@ class Settings(BaseSettings):
     MEZON_BOT_TOKEN: str = ""
     MEZON_BOT_ID: str = ""
     TAVILY_API_KEY: str = ""
-    GOOGLE_CLIENT_ID: str = "100832011919-f8ite98k0fnr1k3l1b7umdaqasgt6q1g.apps.googleusercontent.com"
-    GOOGLE_CLIENT_SECRET: str = "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"
+    
+    # Google OAuth2
+    GOOGLE_CLIENT_ID: str = ""
+    GOOGLE_CLIENT_SECRET: str = ""
 
+    # Mezon OAuth2
+    MEZON_CLIENT_ID: str = ""
+    MEZON_CLIENT_SECRET: str = ""
+    MEZON_REDIRECT_URI: str = ""
+    
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = ["http://localhost:3000"]
 

@@ -1,7 +1,7 @@
 import uuid
-import uuid
+
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status, Query
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from jose import JWTError
@@ -18,17 +18,13 @@ from app.core.security import (
     get_password_hash,
 )
 from app.models.user import User
+
 from app.schemas.auth import (
     LoginRequest,
     GoogleLoginRequest,
     RefreshRequest,
     RegisterRequest,
-)
-from app.schemas.auth import (
-    LoginRequest,
-    GoogleLoginRequest,
-    RefreshRequest,
-    RegisterRequest,
+    MezonLoginRequest,
 )
 from app.schemas.common import error_response, success_response
 
@@ -185,9 +181,128 @@ def login_with_google(data: GoogleLoginRequest, session: SessionDep):
         },
     )
 
-
 # =============================================================
-# 3. LÀM MỚI TOKEN (REFRESH TOKEN)
+# 3. ĐĂNG NHẬP MEZON OAUTH2
+# =============================================================
+@router.post("/mezon")
+def login_with_mezon(data: MezonLoginRequest, session: SessionDep):
+    token_endpoint = "https://oauth2.mezon.ai/oauth2/token"
+    payload = {
+        "grant_type": "authorization_code",
+        "code": data.code,
+        "state": data.state,
+        "client_id": settings.MEZON_CLIENT_ID,
+        "client_secret": settings.MEZON_CLIENT_SECRET,
+        "redirect_uri": settings.MEZON_REDIRECT_URI,
+    }
+    headers = {
+        "Content-Type": "application/x-www-form-urlencoded"
+    }
+
+    try:
+        response = requests.post(token_endpoint, data=payload, headers=headers)
+        response.raise_for_status()
+        token_data = response.json()
+    except requests.exceptions.RequestException as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response(f"Xác thực với Mezon thất bại: {str(e)}"),
+        )
+
+    mezon_access_token = token_data.get("access_token")
+    if not mezon_access_token:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response("Không nhận được access_token từ Mezon"),
+        )
+
+    userinfo_endpoint = "https://oauth2.mezon.ai/userinfo"
+    userinfo_headers = {
+        "Authorization": f"Bearer {mezon_access_token}"
+    }
+
+    try:
+        userinfo_res = requests.get(userinfo_endpoint, headers=userinfo_headers)
+        userinfo_res.raise_for_status()
+        user_info = userinfo_res.json()
+    except requests.exceptions.RequestException:
+        user_info = {}
+
+    mezon_email = user_info.get("email") or f"user_{uuid.uuid4().hex[:8]}@mezon.ai"
+    mezon_name = user_info.get("name") or "Mezon User"
+    mezon_picture = user_info.get("picture") or ""
+
+    base_username = mezon_email.split("@")[0]
+    user = session.exec(select(User).where(User.username == base_username)).first()
+
+    if not user:
+        username = base_username
+        existing_user = session.exec(select(User).where(User.username == username)).first()
+        if existing_user:
+            username = f"{base_username}_{uuid.uuid4().hex[:4]}"
+
+        random_dummy_pass = uuid.uuid4().hex
+        user = User(
+            username=username,
+            display_name=mezon_name,
+            email=mezon_email,
+            avatar_url=mezon_picture,
+            hashed_password=get_password_hash(random_dummy_pass),
+            role="USER"
+        )
+        session.add(user)
+        session.commit()
+        session.refresh(user)
+    else:
+        updated = False
+        if mezon_picture and user.avatar_url != mezon_picture:
+            user.avatar_url = mezon_picture
+            updated = True
+        if mezon_email and user.email != mezon_email:
+            user.email = mezon_email
+            updated = True
+        if updated:
+            session.add(user)
+            session.commit()
+            session.refresh(user)
+
+    access_token = create_access_token(user.id)
+    refresh_token = create_refresh_token(user.id)
+
+    return success_response(
+        message="Đăng nhập Mezon thành công",
+        data={
+            "accessToken": access_token,
+            "refreshToken": refresh_token,
+            "user": {
+                "id": user.id,
+                "username": user.username,
+                "role": user.role,
+                "display_name": user.display_name or user.username,
+                "email": user.email,
+                "avatar_url": user.avatar_url,
+            },
+        },
+    )
+    
+# =============================================================
+# 3.1. MEZON OAUTH2 CALLBACK (Dùng để test trực tiếp backend)
+# =============================================================
+@router.get("/mezon/callback")
+def mezon_callback(code: str = Query(...)):
+    """
+    Endpoint nhận mã code chuyển hướng từ Mezon OAuth2 server,
+    giúp bạn test lấy code trực tiếp mà không cần bật Frontend.
+    """
+    return success_response(
+        message="Nhận mã Mezon code thành công!",
+        data={
+            "code": code
+        }
+    )
+    
+# =============================================================
+# 4. LÀM MỚI TOKEN (REFRESH TOKEN)
 # =============================================================
 @router.post("/refresh")
 def refresh_token(data: RefreshRequest, session: SessionDep):
@@ -224,7 +339,7 @@ def refresh_token(data: RefreshRequest, session: SessionDep):
 
 
 # =============================================================
-# 4. ĐĂNG KÝ TÀI KHOẢN
+# 5. ĐĂNG KÝ TÀI KHOẢN
 # =============================================================
 @router.post("/register")
 def register(data: RegisterRequest, session: SessionDep):
