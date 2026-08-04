@@ -89,6 +89,34 @@ BẮT BUỘC VIẾT THEO CẤU TRÚC SAU (Độ dài tối thiểu 1.000 - 2.000
 """
 
 
+async def _generate_content_with_retry(
+    prompt: str,
+    config,
+    retries: int = 3,
+    base_delay: float = 5.0,
+):
+    """Gọi Gemini kèm retry khi gặp lỗi thoáng qua (503 high demand)."""
+    last_exc = None
+    for attempt in range(retries):
+        try:
+            return await client.aio.models.generate_content(
+                model=MODEL_NAME,
+                contents=prompt,
+                config=config,
+            )
+        except Exception as e:
+            last_exc = e
+            code = getattr(e, "code", None)
+            is_503 = code == 503 or "503" in str(e) or "UNAVAILABLE" in str(e)
+            if is_503:
+                print(f"⚠️ [Gemini 503] Thử lại lần {attempt + 1}/{retries} sau {base_delay}s...")
+                await asyncio.sleep(base_delay)
+                base_delay *= 2
+            else:
+                raise
+    raise last_exc
+
+
 async def generate_single_lesson(topic: str, lesson: dict, tavily_context: str, idx: int, total: int) -> dict:
     """Sinh chi tiết từng bài học trực tiếp qua Google GenAI SDK (Async)"""
     async with SEMAPHORE:
@@ -109,15 +137,14 @@ async def generate_single_lesson(topic: str, lesson: dict, tavily_context: str, 
         """
 
         try:
-            async with asyncio.timeout(120.0):
-                # Gọi API thông qua client.aio (Async Client)
-                response = await client.aio.models.generate_content(
-                    model=MODEL_NAME,
-                    contents=detail_prompt,
-                    config=types.GenerateContentConfig(
+            async with asyncio.timeout(180.0):
+                # Gọi API thông qua client.aio (Async Client) kèm retry 503
+                response = await _generate_content_with_retry(
+                    detail_prompt,
+                    types.GenerateContentConfig(
                         system_instruction=LESSON_DETAIL_SYSTEM_PROMPT,
                         temperature=0.4,
-                    )
+                    ),
                 )
                 
                 text_content = response.text or ""
@@ -144,14 +171,13 @@ async def parse_context_to_structure(topic: str, tavily_context: str, folder_nam
     
     outline_prompt = f"Chủ đề: {topic}\nNgữ cảnh Tavily:\n{tavily_context}"
     
-    outline_res = await client.aio.models.generate_content(
-        model=MODEL_NAME,
-        contents=outline_prompt,
-        config=types.GenerateContentConfig(
+    outline_res = await _generate_content_with_retry(
+        outline_prompt,
+        types.GenerateContentConfig(
             system_instruction=OUTLINE_SYSTEM_PROMPT,
             response_mime_type="application/json",  # Ép trả về JSON chuẩn
             temperature=0.3,
-        )
+        ),
     )
     
     raw_json = outline_res.text or "{}"
