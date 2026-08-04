@@ -2,18 +2,32 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 import Greeting from '@/components/chat/Greeting';
 import ChatInput from '@/components/chat/ChatInput';
-import { useAuthStore } from '@/features/auth/store';
 import { useWorkspaceStore } from '@/features/folders/store';
 import { folderService } from '@/features/folders/services';
 import { aiService } from '@/features/ai/services';
 import { useToastStore } from '@/stores/toast';
+import { useAuthStore } from '@/features/auth/store';
+
+function GuestBanner() {
+  const isAuthenticated = useAuthStore((s: any) => s.isAuthenticated);
+  if (isAuthenticated) return null;
+  return (
+    <div className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300">
+      <span>Bạn đang dùng chế độ Khách. Dữ liệu sẽ được tự động chuyển sang tài khoản khi bạn</span>
+      <Link href="/login" className="font-semibold underline hover:text-indigo-200">
+        đăng nhập
+      </Link>
+      .
+    </div>
+  );
+}
 
 export default function DashboardIndex() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-  const { isAuthenticated } = useAuthStore() as any;
   const { setFolders } = useWorkspaceStore() as any;
 
   // Kiểm tra chuỗi nhập có phải đường link YouTube không
@@ -24,14 +38,7 @@ export default function DashboardIndex() {
   const handleSubmit = async (message: string, file?: File | null) => {
     setIsLoading(true);
     try {
-      // ─── CHẾ ĐỘ THỬ NGHIỆM (GUEST) ───
-      if (!isAuthenticated) {
-        const folderId = `mock-folder-${Date.now()}`;
-        router.push(`/dashboard/folders/${folderId}`);
-        return;
-      }
-
-      // ─── CHẾ ĐỘ ĐĂNG NHẬP THẬT ───
+      // Guest và user đều dùng chung luồng API (backend định danh bằng X-Guest-Id)
       let targetFolderId = '';
 
       if (file) {
@@ -86,6 +93,7 @@ export default function DashboardIndex() {
   return (
     <div className="flex flex-col items-center justify-center h-full w-full p-4 md:p-8 overflow-y-auto">
       <div className="w-full max-w-4xl flex flex-col items-center gap-8 mt-[-10vh]">
+        <GuestBanner />
         <Greeting />
         <div className="w-full">
           <ChatInput 

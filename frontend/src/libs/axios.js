@@ -27,12 +27,35 @@ const getTokens = () => {
   return { accessToken: null, refreshToken: null };
 };
 
+const getGuestId = () => {
+  if (typeof window === "undefined") return null;
+  try {
+    let guestId = localStorage.getItem("mezon-guest-id");
+    if (!guestId) {
+      guestId =
+        (crypto.randomUUID && crypto.randomUUID()) ||
+        `guest-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      localStorage.setItem("mezon-guest-id", guestId);
+    }
+    return guestId;
+  } catch (e) {
+    console.error("Lỗi đọc guest id:", e);
+    return null;
+  }
+};
+
 // ─── Request Interceptor ─────────────────────────────────────────────────────
 axiosInstance.interceptors.request.use(
   (config) => {
     const { accessToken } = getTokens();
     if (accessToken) {
       config.headers.Authorization = `Bearer ${accessToken}`;
+    } else {
+      // Chưa đăng nhập → định danh bằng Guest ID để backend merge dữ liệu sau khi login
+      const guestId = getGuestId();
+      if (guestId) {
+        config.headers["X-Guest-Id"] = guestId;
+      }
     }
     return config;
   },

@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from "react";
-import { LogOut, ChevronUp } from "lucide-react";
+import { LogOut, ChevronUp, LogIn } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/features/auth/services";
 import { useAuthStore } from "@/features/auth/store";
@@ -11,17 +11,23 @@ export default function UserProfileMenu() {
   const menuRef = useRef(null);
   const router = useRouter();
   const clearAuth = useAuthStore((state) => state.clearAuth);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   const user = useAuthStore((state) => state.user) || {};
 
   // Backend trả về display_name / avatar_url (snake_case) từ Google OAuth.
   // Fallback cho tài khoản cũ lưu theo camelCase (name / avatarUrl).
-  const displayName = user.display_name || user.name || "Tester";
-  const email = user.email || "tester@mezon.io";
-  const avatarUrl =
-    user.avatar_url ||
-    user.avatarUrl ||
-    "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex";
+  const displayName = isAuthenticated
+    ? user.display_name || user.name || "Tester"
+    : "Khách";
+  const email = isAuthenticated
+    ? user.email || "tester@mezon.io"
+    : "Dữ liệu tạm sẽ được chuyển sang tài khoản khi bạn đăng nhập";
+  const avatarUrl = isAuthenticated
+    ? user.avatar_url ||
+      user.avatarUrl ||
+      "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex"
+    : "https://api.dicebear.com/7.x/avataaars/svg?seed=guest";
 
   // Click outside listener
   useEffect(() => {
@@ -122,17 +128,31 @@ export default function UserProfileMenu() {
             <ThemeToggle />
           </div>
 
-          {/* Nút Logout */}
+          {/* Nút Logout / Đăng nhập */}
           <div className="pt-1 px-1">
-            <button
-              onClick={handleLogout}
-              className={cn(
-                "w-full flex items-center space-x-2.5 px-2.5 py-1.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors",
-              )}
-            >
-              <LogOut className="w-3.5 h-3.5" />
-              <span className={cn("font-medium")}>Đăng xuất</span>
-            </button>
+            {isAuthenticated ? (
+              <button
+                onClick={handleLogout}
+                className={cn(
+                  "w-full flex items-center space-x-2.5 px-2.5 py-1.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors",
+                )}
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span className={cn("font-medium")}>Đăng xuất</span>
+              </button>
+            ) : (
+              <button
+                onClick={() => router.push("/login")}
+                className={cn(
+                  "w-full flex items-center space-x-2.5 px-2.5 py-1.5 text-xs text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition-colors",
+                )}
+              >
+                <LogIn className="w-3.5 h-3.5" />
+                <span className={cn("font-medium")}>
+                  Đăng nhập để lưu dữ liệu
+                </span>
+              </button>
+            )}
           </div>
         </div>
       )}

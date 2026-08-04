@@ -1,7 +1,6 @@
 import uuid
-import uuid
 from typing import Annotated
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, Header, HTTPException, status
 from google.oauth2 import id_token
 from google.auth.transport import requests as google_requests
 from jose import JWTError
@@ -15,15 +14,9 @@ from app.core.security import (
     decode_token,
     verify_password,
     get_password_hash,
-    get_password_hash,
 )
+from app.api.deps import merge_guest_into_user
 from app.models.user import User
-from app.schemas.auth import (
-    LoginRequest,
-    GoogleLoginRequest,
-    RefreshRequest,
-    RegisterRequest,
-)
 from app.schemas.auth import (
     LoginRequest,
     GoogleLoginRequest,
@@ -43,7 +36,11 @@ SessionDep = Annotated[Session, Depends(get_session)]
 # 1. ĐĂNG NHẬP USERNAME / PASSWORD
 # =============================================================
 @router.post("/login")
-def login(data: LoginRequest, session: SessionDep):
+def login(
+    data: LoginRequest,
+    session: SessionDep,
+    x_guest_id: str | None = Header(default=None),
+):
     #Tìm trong database xem có user nào có username mà người dùng vừa nhập hay không
     user = session.exec(select(User).where(User.username == data.username)).first()
     
@@ -53,6 +50,14 @@ def login(data: LoginRequest, session: SessionDep):
             detail=error_response("Tên đăng nhập hoặc mật khẩu không đúng"),
         )
     
+    # Gộp dữ liệu khách vãng lai vào tài khoản vừa đăng nhập (adopt-all)
+    merged_count = 0
+    if x_guest_id:
+        guest = session.exec(
+            select(User).where(User.username == f"guest_{x_guest_id.strip()}")
+        ).first()
+        if guest:
+            merged_count = merge_guest_into_user(session, guest.id, user.id)
     
     access_token = create_access_token(user.id)
     refresh_token = create_refresh_token(user.id)
@@ -63,6 +68,7 @@ def login(data: LoginRequest, session: SessionDep):
         data={
             "accessToken": access_token,
             "refreshToken": refresh_token,
+            "merged_count": merged_count,
             "user": {
                 "id": user.id,
                 "username": user.username,
@@ -79,7 +85,11 @@ def login(data: LoginRequest, session: SessionDep):
 # 2. ĐĂNG NHẬP GOOGLE OAUTH2
 # =============================================================
 @router.post("/google")
-def login_with_google(data: GoogleLoginRequest, session: SessionDep):
+def login_with_google(
+    data: GoogleLoginRequest,
+    session: SessionDep,
+    x_guest_id: str | None = Header(default=None),
+):
     print("====== GOOGLE LOGIN ======")
     print(data.id_token)
     token_str = data.id_token.strip() if data.id_token else ""
@@ -165,7 +175,16 @@ def login_with_google(data: GoogleLoginRequest, session: SessionDep):
             session.commit()
             session.refresh(user)
 
-    # 4. Cấp cặp JWT Token nội bộ
+    # 4. Gộp dữ liệu khách vãng lai vào tài khoản (adopt-all)
+    merged_count = 0
+    if x_guest_id:
+        guest = session.exec(
+            select(User).where(User.username == f"guest_{x_guest_id.strip()}")
+        ).first()
+        if guest:
+            merged_count = merge_guest_into_user(session, guest.id, user.id)
+
+    # 5. Cấp cặp JWT Token nội bộ
     access_token = create_access_token(user.id)
     refresh_token = create_refresh_token(user.id)
 
@@ -174,6 +193,7 @@ def login_with_google(data: GoogleLoginRequest, session: SessionDep):
         data={
             "accessToken": access_token,
             "refreshToken": refresh_token,
+            "merged_count": merged_count,
             "user": {
                 "id": user.id,
                 "username": user.username,
@@ -227,7 +247,11 @@ def refresh_token(data: RefreshRequest, session: SessionDep):
 # 4. ĐĂNG KÝ TÀI KHOẢN
 # =============================================================
 @router.post("/register")
-def register(data: RegisterRequest, session: SessionDep):
+def register(
+    data: RegisterRequest,
+    session: SessionDep,
+    x_guest_id: str | None = Header(default=None),
+):
     # 1. Kiểm tra xem username đã tồn tại chưa
     existing_user = session.exec(select(User).where(User.username == data.username)).first()
     if existing_user:
@@ -250,7 +274,16 @@ def register(data: RegisterRequest, session: SessionDep):
     session.commit()
     session.refresh(new_user)
 
-    # 4. Tự động cấp Token đăng nhập
+    # 4. Gộp dữ liệu khách vãng lai vào tài khoản mới (adopt-all)
+    merged_count = 0
+    if x_guest_id:
+        guest = session.exec(
+            select(User).where(User.username == f"guest_{x_guest_id.strip()}")
+        ).first()
+        if guest:
+            merged_count = merge_guest_into_user(session, guest.id, new_user.id)
+
+    # 5. Tự động cấp Token đăng nhập
     access_token = create_access_token(new_user.id)
     refresh_token = create_refresh_token(new_user.id)
 
@@ -259,6 +292,7 @@ def register(data: RegisterRequest, session: SessionDep):
         data={
             "accessToken": access_token,
             "refreshToken": refresh_token,
+            "merged_count": merged_count,
             "user": {
                 "id": new_user.id,
                 "username": new_user.username,

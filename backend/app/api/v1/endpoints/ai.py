@@ -5,10 +5,10 @@ from fastapi import APIRouter, Depends, File, Form, UploadFile, BackgroundTasks
 from sqlmodel import Session
 
 from app.core.database import get_session
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentActor
 from app.schemas.common import success_response
 from fastapi import APIRouter, HTTPException, status
-from app.api.deps import SessionDep, CurrentUser
+from app.api.deps import SessionDep, CurrentActor
 from app.core.state import active_roadmap_users
 from app.services.knowledge.roadmap import roadmap_service
 from app.schemas.common import success_response
@@ -30,7 +30,7 @@ def process_heavy_job(job_id: str, payload: dict):
 async def generate_roadmap(
     body: RoadmapCreateRequest,
     session: SessionDep,
-    current_user: CurrentUser,
+    current_user: CurrentActor,
 ):
 
     user_id = current_user.id
@@ -86,7 +86,7 @@ async def generate_roadmap(
 @router.post("/digest")
 async def digest_document(
     session: SessionDep,
-    current_user: CurrentUser,
+    current_user: CurrentActor,
     folder_id: str = Form(...),
     file: UploadFile = File(...),
 ):
@@ -105,7 +105,7 @@ async def summarize_youtube(
     url: str,
     folder_id: str,
     session: SessionDep,
-    current_user: CurrentUser,
+    current_user: CurrentActor,
 ):
     """
     Tóm tắt video YouTube + trích xuất timestamps.
