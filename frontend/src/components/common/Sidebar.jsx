@@ -127,8 +127,15 @@ export default function Sidebar() {
     });
   }, [refreshFolders]);
 
+  // Xử lý phím tắt Xóa (Có kiểm tra tránh kích hoạt khi người dùng đang gõ văn bản)
   useEffect(() => {
     const handler = (e) => {
+      const isInputting =
+        ["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName) ||
+        document.activeElement?.isContentEditable;
+
+      if (isInputting) return;
+
       if (e.key === "Delete" || e.key === "Backspace") {
         const selFile = selectedFile;
         const selFolder = selectedFolder;
