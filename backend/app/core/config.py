@@ -46,6 +46,11 @@ class Settings(BaseSettings):
     TAVILY_API_KEY: str = ""
     DEEPSEEK_API_KEY: str = ""
 
+    # Mezon OAuth2
+    MEZON_CLIENT_ID: str = ""
+    MEZON_CLIENT_SECRET: str = ""
+    MEZON_REDIRECT_URI: str = ""
+    
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [
         "http://localhost:3000",
