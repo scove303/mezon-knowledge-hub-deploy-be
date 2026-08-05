@@ -1,3 +1,4 @@
+import { useLanguage } from '@/languages/LanguageContext';
 import vn from "../languages/vn.json";
 import en from "../languages/en.json";
 import {useState} from "react";
@@ -24,7 +25,7 @@ export interface ThemeOption {
   colorPreview: string; // Mã màu đại diện để hiển thị trên menu chọn
 }
 
-export const THEME_OPTIONS: ThemeOption[] = [
+export const getThemeOptions = (currentText: any): ThemeOption[] => [
   { id: "light", label: currentText.theme.light, colorPreview: "#2563eb" },
   { id: "dark", label: currentText.theme.dark, colorPreview: "#3b82f6" },
   { id: "cisher", label: currentText.theme.cisher, colorPreview: "#5c6bc0" },

@@ -2,6 +2,7 @@ import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import React from "react";
 import Providers from "@/components/layout/Providers";
+import { LanguageProvider } from "@/languages/LanguageContext";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -53,21 +54,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="vi"
-      suppressHydrationWarning
-      className={`${geistSans.variable} ${geistMono.variable} h-full`}
-    >
-      <head>
-        {/* Nhúng đoạn script chống nhấp nháy giao diện */}
-        <script
-          dangerouslySetInnerHTML={{ __html: themeInitializerScript }}
-        ></script>
-      </head>
+      <LanguageProvider>
+        <html
+          lang="vi"
+          suppressHydrationWarning
+          className={`${geistSans.variable} ${geistMono.variable} h-full`}
+        >
+          <head>
+            {/* Nhúng đoạn script chống nhấp nháy giao diện */}
+            <script
+              dangerouslySetInnerHTML={{ __html: themeInitializerScript }}
+            ></script>
+          </head>
 
-      <body className="h-full antialiased" suppressHydrationWarning>
-        <Providers>{children}</Providers>
-      </body>
-    </html>
+          <body className="h-full antialiased" suppressHydrationWarning>
+            <Providers>{children}</Providers>
+          </body>
+        </html>
+      </LanguageProvider>
   );
 }

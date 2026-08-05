@@ -2,9 +2,11 @@
 
 import React, { useEffect, useState } from "react";
 import { useThemeStore } from "@/store/useThemeStore";
-import { THEME_OPTIONS, ThemeMode } from "@/types/theme";
+import { getThemeOptions, ThemeMode } from "@/types/theme";
 import { Sun, Moon, Palette } from "lucide-react";
 import { cn } from "@/utils/formatTailwind";
+
+import { useLanguage } from '@/languages/LanguageContext';
 import vn from "../../languages/vn.json";
 import en from "../../languages/en.json";
 
@@ -16,7 +18,7 @@ const translation = {
 export const ThemeToggle: React.FC = () => {
   const { theme, setTheme } = useThemeStore();
   const [mounted, setMounted] = useState(false);
-  const [currentLanguage, setCurrentLanguage] = useState("vn"); //UNFINISHED
+  const {currentLanguage, setCurrentLanguage} = useLanguage(); //UNFINISHED
   const currentText = translation[currentLanguage];
 
   // Đảm bảo component chỉ render giao diện tương tác sau khi đã mount ở Client
@@ -30,31 +32,31 @@ export const ThemeToggle: React.FC = () => {
   }
 
   return (
-    <div
-      className={cn(
-        "flex items-center gap-2 p-1.5 bg-card border border-border rounded-lg shadow-sm",
-      )}
-    >
       <div
-        className={cn("flex items-center gap-1.5 px-2 text-muted-foreground")}
-      >
-        <Palette className={cn("w-4 h-4")} />
-        <span className={cn("text-xs font-medium")}>{currentText.theme.header}</span>
-      </div>
-
-      <select
-        value={theme}
-        onChange={(e) => setTheme(e.target.value as ThemeMode)}
         className={cn(
-          "bg-background text-foreground text-xs font-medium border border-border rounded-md px-2 py-1 outline-none focus:ring-2 focus:ring-ring cursor-pointer transition-colors",
+          "flex items-center gap-2 p-1.5 bg-card border border-border rounded-lg shadow-sm",
         )}
       >
-        {THEME_OPTIONS.map((opt) => (
-          <option key={opt.id} value={opt.id}>
-            {opt.label}
-          </option>
-        ))}
-      </select>
-    </div>
+        <div
+          className={cn("flex items-center gap-1.5 px-2 text-muted-foreground")}
+        >
+          <Palette className={cn("w-4 h-4")} />
+          <span className={cn("text-xs font-medium")}>{currentText.theme.header}</span>
+        </div>
+
+        <select
+          value={theme}
+          onChange={(e) => setTheme(e.target.value as ThemeMode)}
+          className={cn(
+            "bg-background text-foreground text-xs font-medium border border-border rounded-md px-2 py-1 outline-none focus:ring-2 focus:ring-ring cursor-pointer transition-colors",
+          )}
+        >
+          {getThemeOptions(currentText).map((opt) => (
+            <option key={opt.id} value={opt.id}>
+              {opt.label}
+            </option>
+          ))}
+        </select>
+      </div>
   );
 };

@@ -28,6 +28,8 @@ import { useToastStore } from "@/stores/toast";
 import { useRouter } from "next/navigation";
 import UserProfileMenu from "@/features/home/components/UserProfileMenu";
 import { cn } from "@/utils/formatTailwind";
+
+import { useLanguage } from '@/languages/LanguageContext';
 import vn from "../../languages/vn.json";
 import en from "../../languages/en.json";
 
@@ -157,7 +159,7 @@ export default function Sidebar() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isLoadingFolders, setIsLoadingFolders] = useState(true);
-  const [currentLanguage, setCurrentLanguage] = useState('vn'); //UNFINISHED
+  const {currentLanguage, setCurrentLanguage} = useLanguage();
   const currentText = translation[currentLanguage];
 
   const selectFolder = (folderId) => {
