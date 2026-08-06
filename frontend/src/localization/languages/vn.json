@@ -15,5 +15,10 @@
     "cisher": "Chủ đề Cisher",
     "sunsetGradient": "Chủ đề Sương tím",
     "crimsonDark": "Chủ đề Đỏ tối"
+  },
+  "language": {
+    "header": "Ngôn ngữ",
+    "english": "Tiếng Anh",
+    "vietnamese": "Tiếng Việt"
   }
 }

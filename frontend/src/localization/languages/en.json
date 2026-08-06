@@ -15,5 +15,10 @@
     "cisher": "Cisher theme",
     "sunsetGradient": "Sunset gradient theme",
     "crimsonDark": "Crimson dark theme"
+  },
+  "language": {
+    "header": "language",
+    "english": "English",
+    "vietnamese": "Vietnamese"
   }
 }

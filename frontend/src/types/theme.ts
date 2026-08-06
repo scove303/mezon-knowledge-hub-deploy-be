@@ -1,6 +1,6 @@
-import { useLanguage } from '@/languages/LanguageContext';
-import vn from "../languages/vn.json";
-import en from "../languages/en.json";
+import { useLanguage } from '@/localization/LanguageContext';
+import vn from "@/localization/languages/vn.json";
+import en from "@/localization/languages/en.json";
 import {useState} from "react";
 
 const translation = {

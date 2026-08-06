@@ -6,9 +6,9 @@ import { getThemeOptions, ThemeMode } from "@/types/theme";
 import { Sun, Moon, Palette } from "lucide-react";
 import { cn } from "@/utils/formatTailwind";
 
-import { useLanguage } from '@/languages/LanguageContext';
-import vn from "../../languages/vn.json";
-import en from "../../languages/en.json";
+import { useLanguage } from '@/localization/LanguageContext';
+import vn from "@/localization/languages/vn.json";
+import en from "@/localization/languages/en.json";
 
 const translation = {
   en: en,
@@ -18,7 +18,7 @@ const translation = {
 export const ThemeToggle: React.FC = () => {
   const { theme, setTheme } = useThemeStore();
   const [mounted, setMounted] = useState(false);
-  const {currentLanguage, setCurrentLanguage} = useLanguage(); //UNFINISHED
+  const {currentLanguage} = useLanguage();
   const currentText = translation[currentLanguage];
 
   // Đảm bảo component chỉ render giao diện tương tác sau khi đã mount ở Client
