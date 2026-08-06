@@ -11,7 +11,6 @@ import ChatHistory from '@/components/chat/ChatHistory';
 import ChatInput from '@/components/chat/ChatInput';
 import { MessageProps } from '@/components/chat/ChatMessage';
 import { PanelRightClose, PanelRight } from 'lucide-react';
-import { useAuthStore } from '@/features/auth/store';
 
 export default function FolderPage({
   params,
@@ -22,7 +21,6 @@ export default function FolderPage({
   const folderId = resolvedParams.folderId;
   const router = useRouter();
 
-  const { isAuthenticated } = useAuthStore() as any;
   const {
     folders,
     selectedFileId,
@@ -63,17 +61,6 @@ export default function FolderPage({
         return;
       }
 
-      // Nếu là Guest (Chưa đăng nhập), dùng dữ liệu offline từ State
-      if (!isAuthenticated || selectedFileId.startsWith("mock-")) {
-        const activeFolder = folders.find((f: any) => f.id === folderId);
-        const activeFile = activeFolder?.files?.find(
-          (f: any) => f.id === selectedFileId,
-        );
-        setFileDetails(activeFile || null);
-        setDocumentSideOpen(true);
-        return;
-      }
-
       try {
         const res = await fileService.getFile(selectedFileId);
         if (res.success) {
@@ -85,31 +72,11 @@ export default function FolderPage({
       }
     }
     loadFile();
-  }, [selectedFileId, folders, folderId, isAuthenticated, setDocumentSideOpen]);
+  }, [selectedFileId, setDocumentSideOpen]);
 
   // Lưu nội dung sau khi chỉnh sửa
   const handleSaveContent = async (newContent: string) => {
     if (!selectedFileId) return;
-
-    if (!isAuthenticated || selectedFileId.startsWith("mock-")) {
-      // Mock lưu local cho Guest
-      const updatedFolders = folders.map((f: any) => {
-        if (f.id === folderId) {
-          return {
-            ...f,
-            files: f.files.map((file: any) => {
-              if (file.id === selectedFileId) {
-                return { ...file, content: newContent };
-              }
-              return file;
-            }),
-          };
-        }
-        return f;
-      });
-      setFolders(updatedFolders);
-      return;
-    }
 
     try {
       const res = await fileService.updateFile(selectedFileId, newContent);
@@ -139,23 +106,7 @@ export default function FolderPage({
     setIsLoading(true);
 
     try {
-      // ─── CHẾ ĐỘ THỬ NGHIỆM (GUEST) ───
-      if (!isAuthenticated) {
-        setTimeout(() => {
-          const botMsg: MessageProps = {
-            id: `msg-${Date.now() + 1}`,
-            role: "bot",
-            content:
-              "Tính năng AI thật yêu cầu kết nối Backend. Ở chế độ Guest, hệ thống chỉ mô phỏng phản hồi!",
-            isStatus: true,
-          };
-          setMessages((prev) => [...prev, botMsg]);
-          setIsLoading(false);
-        }, 1000);
-        return;
-      }
-
-      // ─── CHẾ ĐỘ THỰC TẾ (API KẾT NỐI BACKEND) ───
+      // ─── GỬI QUA API BACKEND (Guest cũng dùng chung luồng này) ───
       if (file) {
         // Tình huống A: Tải file mới lên thư mục hiện tại
         const res = await aiService.digestDocument(file, folderId);

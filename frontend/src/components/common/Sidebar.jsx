@@ -29,62 +29,6 @@ import { useRouter } from "next/navigation";
 import UserProfileMenu from "@/features/home/components/UserProfileMenu";
 import { cn } from "@/utils/formatTailwind";
 
-// Dữ liệu mock dùng làm dự phòng khi không đăng nhập hoặc backend offline
-const MOCK_FOLDERS = [
-  {
-    id: "mock-folder-1",
-    name: "🐍 Lộ trình Python cho người mới",
-    type: "roadmap",
-    files: [
-      {
-        id: "mock-file-1",
-        name: "Tong_quan.md",
-        createdAt: "23/07/2026",
-        content:
-          "# Lộ Trình Học Python\n\nChào mừng bạn đến với lộ trình học Python! Dưới đây là các chủ đề chính:\n\n- [x] Cú pháp cơ bản\n- [ ] Lập trình hướng đối tượng (OOP)\n- [ ] Xử lý file và ngoại lệ\n- [ ] Làm việc với cơ sở dữ liệu MySQL",
-      },
-    ],
-  },
-  {
-    id: "mock-folder-2",
-    name: "📄 Nghiên cứu AI Agents",
-    type: "document",
-    files: [
-      {
-        id: "mock-file-2",
-        name: "Action_Items.md",
-        createdAt: "23/07/2026",
-        content:
-          "# Kế hoạch hành động AI Agents\n\nTập trung nghiên cứu các framework chính:\n\n1. LangChain / LangGraph\n2. Autogen\n3. CrewAI\n\n*Mục tiêu: Đưa ra so sánh chi tiết giữa các framework trong tháng này.*",
-      },
-    ],
-  },
-  {
-    id: "mock-folder-3",
-    name: "🎥 Video System Design",
-    type: "video",
-    files: [
-      {
-        id: "mock-file-3",
-        name: "Video_Summary.md",
-        createdAt: "23/07/2026",
-        content:
-          "# Tóm tắt Video Kiến trúc Hệ thống\n\nCác nội dung chính kèm mốc thời gian:\n\n- [00:00](timestamp://0) : Giới thiệu tổng quan\n- [03:15](timestamp://195) : Phân biệt Monolith và Microservices\n- [08:45](timestamp://525) : Thiết kế cơ sở dữ liệu phân tán",
-        videoUrl: "https://www.youtube.com/watch?v=xpDnVSmNFX0",
-        timestamps: [
-          { time: "00:00", seconds: 0, text: "Giới thiệu tổng quan" },
-          { time: "03:15", seconds: 195, text: "Monolith vs Microservices" },
-          {
-            time: "08:45",
-            seconds: 525,
-            text: "Thiết kế cơ sở dữ liệu phân tán",
-          },
-        ],
-      },
-    ],
-  },
-];
-
 // Hàm trả về icon phù hợp theo tên / phần mở rộng file
 const getFileIcon = (fileName) => {
   if (!fileName) return <File className="w-4 h-4 text-gray-400 shrink-0" />;
@@ -164,27 +108,18 @@ export default function Sidebar() {
   // 2. Sửa lại useCallback: Thay 'store' thành 'setFolders' ở mảng Dependency
   const refreshFolders = useCallback(async () => {
     setIsLoadingFolders(true);
-    if (!isAuthenticated) {
-      setFolders(MOCK_FOLDERS);
-      setIsLoadingFolders(false);
-      return;
-    }
-
     try {
       const res = await folderService.getFolders();
       if (res.success) {
         setFolders(res.data);
       }
     } catch (err) {
-      console.error(
-        "Lỗi khi tải danh sách thư mục (sử dụng dữ liệu Mock thay thế):",
-        err,
-      );
-      setFolders(MOCK_FOLDERS);
+      console.error("Lỗi khi tải danh sách thư mục:", err);
+      setFolders([]);
     } finally {
       setIsLoadingFolders(false);
     }
-  }, [isAuthenticated, setFolders]);
+  }, [setFolders]);
 
   useEffect(() => {
     Promise.resolve().then(() => {
@@ -192,8 +127,15 @@ export default function Sidebar() {
     });
   }, [refreshFolders]);
 
+  // Xử lý phím tắt Xóa (Có kiểm tra tránh kích hoạt khi người dùng đang gõ văn bản)
   useEffect(() => {
     const handler = (e) => {
+      const isInputting =
+        ["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName) ||
+        document.activeElement?.isContentEditable;
+
+      if (isInputting) return;
+
       if (e.key === "Delete" || e.key === "Backspace") {
         const selFile = selectedFile;
         const selFolder = selectedFolder;
@@ -222,17 +164,6 @@ export default function Sidebar() {
   }, [selectedFile, selectedFolder, folders]);
 
   const createFolder = async (name, type) => {
-    if (!isAuthenticated) {
-      const newMockFolder = {
-        id: `mock-folder-${Date.now()}`,
-        name,
-        type,
-        files: [],
-      };
-      store.setFolders([...store.folders, newMockFolder]);
-      return;
-    }
-
     try {
       const res = await folderService.createFolder(name, type);
       if (res.success) {
@@ -251,16 +182,6 @@ export default function Sidebar() {
     setDeleteConfirmOpen(false);
 
     if (type === "folder") {
-      if (!isAuthenticated || folderId.startsWith("mock-")) {
-        const updated = store.folders.filter((f) => f.id !== folderId);
-        store.setFolders(updated);
-        if (store.selectedFolderId === folderId) {
-          store.setSelectedFolder(null);
-          router.push("/dashboard");
-        }
-        return;
-      }
-
       try {
         const res = await folderService.deleteFolder(folderId);
         if (res.success) {
@@ -274,23 +195,6 @@ export default function Sidebar() {
         console.error("Lỗi khi xóa thư mục:", err);
       }
     } else if (type === "file") {
-      if (!isAuthenticated || fileId.startsWith("mock-")) {
-        const updated = store.folders.map((f) => {
-          if (f.id === folderId) {
-            return {
-              ...f,
-              files: f.files.filter((file) => file.id !== fileId),
-            };
-          }
-          return f;
-        });
-        store.setFolders(updated);
-        if (store.selectedFileId === fileId) {
-          store.setSelectedFile(null);
-        }
-        return;
-      }
-
       try {
         const res = await fileService.deleteFile(fileId);
         if (res.success) {
@@ -406,7 +310,7 @@ export default function Sidebar() {
         {/* Header Section Label */}
         <div className="flex items-center justify-between px-2 text-xs font-semibold text-[rgb(var(--color-text-muted))] uppercase tracking-wider">
           <span className={cn("truncate")}>
-            Danh sách Thư Mục Của {`<USER>`} {!isAuthenticated && "(Bản thử)"}
+            Danh sách Thư Mục Của {`<USER>`}
           </span>
           <Button
             id="btn-add-folder"

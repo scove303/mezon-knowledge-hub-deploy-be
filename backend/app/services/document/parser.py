@@ -89,6 +89,34 @@ BẮT BUỘC VIẾT THEO CẤU TRÚC SAU (Độ dài tối thiểu 1.000 - 2.000
 """
 
 
+async def _generate_content_with_retry(
+    prompt: str,
+    config,
+    retries: int = 3,
+    base_delay: float = 5.0,
+):
+    """Gọi Gemini kèm retry khi gặp lỗi thoáng qua (503 high demand)."""
+    last_exc = None
+    for attempt in range(retries):
+        try:
+            return await client.aio.models.generate_content(
+                model=MODEL_NAME,
+                contents=prompt,
+                config=config,
+            )
+        except Exception as e:
+            last_exc = e
+            code = getattr(e, "code", None)
+            is_503 = code == 503 or "503" in str(e) or "UNAVAILABLE" in str(e)
+            if is_503:
+                print(f"⚠️ [Gemini 503] Thử lại lần {attempt + 1}/{retries} sau {base_delay}s...")
+                await asyncio.sleep(base_delay)
+                base_delay *= 2
+            else:
+                raise
+    raise last_exc
+
+
 async def generate_single_lesson(topic: str, lesson: dict, tavily_context: str, idx: int, total: int) -> dict:
     """Sinh chi tiết từng bài học trực tiếp qua Google GenAI SDK (Async)"""
     async with SEMAPHORE:
@@ -109,15 +137,14 @@ async def generate_single_lesson(topic: str, lesson: dict, tavily_context: str, 
         """
 
         try:
-            async with asyncio.timeout(120.0):
-                # Gọi API thông qua client.aio (Async Client)
-                response = await client.aio.models.generate_content(
-                    model=MODEL_NAME,
-                    contents=detail_prompt,
-                    config=types.GenerateContentConfig(
+            async with asyncio.timeout(180.0):
+                # Gọi API thông qua client.aio (Async Client) kèm retry 503
+                response = await _generate_content_with_retry(
+                    detail_prompt,
+                    types.GenerateContentConfig(
                         system_instruction=LESSON_DETAIL_SYSTEM_PROMPT,
                         temperature=0.4,
-                    )
+                    ),
                 )
                 
                 text_content = response.text or ""
@@ -136,42 +163,71 @@ async def generate_single_lesson(topic: str, lesson: dict, tavily_context: str, 
         }
 
 
-async def parse_context_to_structure(topic: str, tavily_context: str, folder_name: str) -> dict:
+async def parse_context_to_structure(
+    topic: str,
+    tavily_context: str,
+    folder_name: str,
+    on_event: callable = None,
+) -> dict:
     """
-    Quy trình 2 Bước Async sử dụng Google GenAI SDK
+    Quy trình 2 Bước Async sử dụng Google GenAI SDK.
+    on_event: callback nhận dict sự kiện để stream tiến trình ra ngoài (SSE).
     """
     print("  ---> [Bước 1/2] Đang lập khung Lộ trình với Gemini Flash...")
-    
+    if on_event:
+        on_event({"type": "status", "message": "Đang lập khung lộ trình với Gemini..."})
+
     outline_prompt = f"Chủ đề: {topic}\nNgữ cảnh Tavily:\n{tavily_context}"
-    
-    outline_res = await client.aio.models.generate_content(
-        model=MODEL_NAME,
-        contents=outline_prompt,
-        config=types.GenerateContentConfig(
+
+    outline_res = await _generate_content_with_retry(
+        outline_prompt,
+        types.GenerateContentConfig(
             system_instruction=OUTLINE_SYSTEM_PROMPT,
             response_mime_type="application/json",  # Ép trả về JSON chuẩn
             temperature=0.3,
-        )
+        ),
     )
-    
+
     raw_json = outline_res.text or "{}"
     outline_data = json.loads(raw_json)
     lessons_list = outline_data.get("lessons", [])
     total_lessons = len(lessons_list)
-    
-    print(f"  ---> [Bước 1/2] Đã tạo xong Outline gồm {total_lessons} bài. Đang bắt đầu viết chi tiết...")
 
-    # BƯỚC 2: Sinh các bài học đồng thời
-    tasks = [
-        generate_single_lesson(topic, lesson, tavily_context, idx, total_lessons)
-        for idx, lesson in enumerate(lessons_list, 1)
-    ]
-    
-    final_files = await asyncio.gather(*tasks)
+    print(f"  ---> [Bước 1/2] Đã tạo xong Outline gồm {total_lessons} bài. Đang bắt đầu viết chi tiết...")
+    if on_event:
+        on_event({"type": "outline", "total": total_lessons})
+
+    # BƯỚC 2: Sinh các bài học đồng thời — phát sự kiện ngay khi từng bài hoàn thành
+    # (dùng done-callback thay vì as_completed: as_completed trả coroutine, không phải task)
+    final_files = [None] * total_lessons
+    lesson_tasks: dict = {}
+
+    def _on_lesson_done(task):
+        idx, title = lesson_tasks[task]
+        result = task.result()
+        final_files[idx - 1] = result
+        print(f"    [Event] Bài {idx}/{total_lessons} xong: '{title}'")
+        if on_event:
+            on_event({
+                "type": "lesson",
+                "idx": idx,
+                "total": total_lessons,
+                "title": title,
+                "content": result.get("text_content", ""),
+            })
+
+    for idx, lesson in enumerate(lessons_list, 1):
+        task = asyncio.create_task(
+            generate_single_lesson(topic, lesson, tavily_context, idx, total_lessons)
+        )
+        lesson_tasks[task] = (idx, lesson.get("title", f"Bài {idx}"))
+        task.add_done_callback(_on_lesson_done)
+
+    await asyncio.gather(*lesson_tasks.keys(), return_exceptions=True)
 
     print("  ---> [Bước 2/2] Hoàn thành toàn bộ bài học siêu chi tiết!")
 
     return {
         "folder_name": folder_name,
-        "files": final_files
+        "files": final_files,
     }

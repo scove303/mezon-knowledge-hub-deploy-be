@@ -1,19 +1,22 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React from "react";
+import { useSyncExternalStore } from "react";
 import { useThemeStore } from "@/store/useThemeStore";
 import { THEME_OPTIONS, ThemeMode } from "@/types/theme";
 import { Sun, Moon, Palette } from "lucide-react";
 import { cn } from "@/utils/formatTailwind";
 
+const emptySubscribe = () => () => {};
+
 export const ThemeToggle: React.FC = () => {
   const { theme, setTheme } = useThemeStore();
-  const [mounted, setMounted] = useState(false);
-
-  // Đảm bảo component chỉ render giao diện tương tác sau khi đã mount ở Client
-  useEffect(() => {
-    setMounted(true);
-  }, []);
+  // Guard chống lệch Hydration giữa Server và Client (client snapshot = true)
+  const mounted = useSyncExternalStore(
+    emptySubscribe,
+    () => true,
+    () => false,
+  );
 
   if (!mounted) {
     // Trả về khung hiển thị trống tạm thời để tránh lệch Hydration giữa Server và Client
