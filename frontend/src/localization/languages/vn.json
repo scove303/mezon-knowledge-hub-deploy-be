@@ -20,5 +20,10 @@
     "header": "Ngôn ngữ",
     "english": "Tiếng Anh",
     "vietnamese": "Tiếng Việt"
+  },
+  "dashboard": {
+    "title": "Xin chào, bạn muốn học gì hôm nay?",
+    "subtitle": "Khám phá Mezon Knowledge Hub",
+    "placeholder": "Hỏi một câu hỏi, dán link youtube, hay tải lên tài liệu..."
   }
 }

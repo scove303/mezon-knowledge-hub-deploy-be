@@ -10,11 +10,23 @@ import { folderService } from '@/features/folders/services';
 import { aiService } from '@/features/ai/services';
 import { useToastStore } from '@/stores/toast';
 
+import { useLanguage } from '@/localization/LanguageContext';
+import vn from "@/localization/languages/vn.json";
+import en from "@/localization/languages/en.json";
+
+const translation = {
+  en: en,
+  vn: vn
+}
+
 export default function DashboardIndex() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const { isAuthenticated } = useAuthStore() as any;
   const { setFolders } = useWorkspaceStore() as any;
+
+  const {currentLanguage, setCurrentLanguage} = useLanguage();
+  const currentText = translation[currentLanguage];
 
   // Kiểm tra chuỗi nhập có phải đường link YouTube không
   const isYoutubeUrl = (text: string) => {
@@ -91,7 +103,7 @@ export default function DashboardIndex() {
           <ChatInput 
             onSubmit={handleSubmit} 
             isLoading={isLoading} 
-            placeholder="Ask a question, paste a YouTube link, or upload a document..."
+            placeholder={currentText.dashboard.placeholder}
           />
         </div>
       </div>

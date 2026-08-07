@@ -20,5 +20,10 @@
     "header": "language",
     "english": "English",
     "vietnamese": "Vietnamese"
+  },
+  "dashboard": {
+    "title": "Hello, what do you want to learn today?",
+    "subtitle": "Explore the Mezon Knowledge Hub",
+    "placeholder": "Ask a question, paste a YouTube link, or upload a document..."
   }
 }
