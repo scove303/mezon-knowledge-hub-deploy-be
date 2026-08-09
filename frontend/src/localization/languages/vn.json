@@ -25,5 +25,36 @@
     "title": "Xin chào, bạn muốn học gì hôm nay?",
     "subtitle": "Khám phá Mezon Knowledge Hub",
     "placeholder": "Hỏi một câu hỏi, dán link youtube, hay tải lên tài liệu..."
+  },
+  "login": {
+    "header": "Đăng nhập vào không gian tri thức của bạn",
+    "username": "Tên đăng nhập",
+    "username_placeholder": "Nhập tên đăng nhập",
+    "password": "Mật khẩu",
+    "password_placeholder": "Nhập tên mật khẩu",
+    "new_account": "Chưa có tài khoản?",
+    "sign_up": "Đăng ký",
+    "login": "Đăng nhập",
+    "or": "Hoặc"
+  },
+  "register": {
+    "header": "Tạo tài khoản mới",
+    "username": "Tên đăng nhập",
+    "username_placeholder": "Nhập tên đăng nhập...",
+    "email": "Email (Không bắt buộc)",
+    "email_placeholder": "Nhập email...",
+    "display_name": "Tên hiển thị (Không bắt buộc)",
+    "display_name_placeholder": "Nhập tên hiển thị...",
+    "password": "Mật khẩu",
+    "password_placeholder": "Nhập mật khẩu...",
+    "confirm_password": "Xác nhận mật khẩu",
+    "confirm_password_placeholder": "Nhập lại mật khẩu...",
+    "had_account": "Đã có tài khoản?",
+    "login": "Đăng nhập",
+    "sign_up": "Đăng ký"
+  },
+  "error": {
+    "try_again": "Thử lại",
+    "home": "Quay lại trang chủ"
   }
 }

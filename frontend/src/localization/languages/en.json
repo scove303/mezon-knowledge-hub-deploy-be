@@ -25,5 +25,36 @@
     "title": "Hello, what do you want to learn today?",
     "subtitle": "Explore the Mezon Knowledge Hub",
     "placeholder": "Ask a question, paste a YouTube link, or upload a document..."
+  },
+  "login": {
+    "header": "Login into your knowledge zone",
+    "username": "Account name",
+    "username_placeholder": "Enter your account name...",
+    "password": "Password",
+    "password_placeholder": "Enter your password...",
+    "no_account": "Don't have an account yet?",
+    "register": "Register",
+    "login": "Login",
+    "or": "Or"
+  },
+  "register": {
+    "header": "Make a new account",
+    "username": "Account name",
+    "username_placeholder": "Enter your account name...",
+    "email": "Email (Not mandatory)",
+    "email_placeholder": "Enter your email...",
+    "display_name": "Username (Not mandatory)",
+    "display_name_placeholder": "Enter your username...",
+    "password": "Password",
+    "password_placeholder": "Enter your password...",
+    "confirm_password": "Password confirmation",
+    "confirm_password_placeholder": "Confirm your password...",
+    "had_account": "Already got an account?",
+    "login": "Login",
+    "register": "Register"
+  },
+  "error": {
+    "try_again": "Try again",
+    "home": "Home"
   }
 }
