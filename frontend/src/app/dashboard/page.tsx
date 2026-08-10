@@ -11,6 +11,14 @@ import { useWorkspaceStore } from '@/features/folders/store';
 import { folderService } from '@/features/folders/services';
 import { aiService } from '@/features/ai/services';
 import { useAuthStore } from '@/features/auth/store';
+import { useLanguage } from '@/localization/LanguageContext';
+import vn from "@/localization/languages/vn.json";
+import en from "@/localization/languages/en.json";
+
+const translation = {
+  en: en,
+  vn: vn
+}
 
 function GuestBanner() {
   const isAuthenticated = useAuthStore((s: any) => s.isAuthenticated);
@@ -39,9 +47,14 @@ interface ChatThread {
   error: string;
 }
 
+
+
 export default function DashboardIndex() {
   const router = useRouter();
   const { setFolders } = useWorkspaceStore() as any;
+
+  const {currentLanguage, setCurrentLanguage} = useLanguage();
+  const currentText = translation[currentLanguage];
   const [threads, setThreads] = useState<ChatThread[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const bottomRef = useRef<HTMLDivElement>(null);

@@ -3,6 +3,15 @@
 import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 
+import { useLanguage } from '@/localization/LanguageContext';
+import vn from "@/localization/languages/vn.json";
+import en from "@/localization/languages/en.json";
+
+const translation = {
+    en: en,
+    vn: vn
+}
+
 export default function ErrorBoundary({
   error,
   reset,
@@ -11,6 +20,9 @@ export default function ErrorBoundary({
   reset: () => void;
 }) {
   const router = useRouter();
+
+  const {currentLanguage, setCurrentLanguage} = useLanguage();
+  const currentText = translation[currentLanguage];
 
   useEffect(() => {
     console.error(error);
@@ -27,13 +39,13 @@ export default function ErrorBoundary({
           onClick={() => reset()}
           className="px-4 py-2 bg-[rgb(var(--color-primary))] text-white rounded hover:opacity-90"
         >
-          Thử lại
+            {currentText.error.try_again}
         </button>
         <button
           onClick={() => router.push('/')}
           className="px-4 py-2 bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-primary))] rounded hover:opacity-90"
         >
-          Về trang chủ
+            {currentText.error.home}
         </button>
       </div>
     </div>

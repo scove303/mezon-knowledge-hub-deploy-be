@@ -29,6 +29,71 @@ import { useRouter } from "next/navigation";
 import UserProfileMenu from "@/features/home/components/UserProfileMenu";
 import { cn } from "@/utils/formatTailwind";
 
+import { useLanguage } from '@/localization/LanguageContext';
+import vn from "@/localization/languages/vn.json";
+import en from "@/localization/languages/en.json";
+
+const translation = {
+  en: en,
+  vn: vn
+}
+
+// Dữ liệu mock dùng làm dự phòng khi không đăng nhập hoặc backend offline
+const MOCK_FOLDERS = [
+  {
+    id: "mock-folder-1",
+    name: "🐍 Lộ trình Python cho người mới",
+    type: "roadmap",
+    files: [
+      {
+        id: "mock-file-1",
+        name: "Tong_quan.md",
+        createdAt: "23/07/2026",
+        content:
+          "# Lộ Trình Học Python\n\nChào mừng bạn đến với lộ trình học Python! Dưới đây là các chủ đề chính:\n\n- [x] Cú pháp cơ bản\n- [ ] Lập trình hướng đối tượng (OOP)\n- [ ] Xử lý file và ngoại lệ\n- [ ] Làm việc với cơ sở dữ liệu MySQL",
+      },
+    ],
+  },
+  {
+    id: "mock-folder-2",
+    name: "📄 Nghiên cứu AI Agents",
+    type: "document",
+    files: [
+      {
+        id: "mock-file-2",
+        name: "Action_Items.md",
+        createdAt: "23/07/2026",
+        content:
+          "# Kế hoạch hành động AI Agents\n\nTập trung nghiên cứu các framework chính:\n\n1. LangChain / LangGraph\n2. Autogen\n3. CrewAI\n\n*Mục tiêu: Đưa ra so sánh chi tiết giữa các framework trong tháng này.*",
+      },
+    ],
+  },
+  {
+    id: "mock-folder-3",
+    name: "🎥 Video System Design",
+    type: "video",
+    files: [
+      {
+        id: "mock-file-3",
+        name: "Video_Summary.md",
+        createdAt: "23/07/2026",
+        content:
+          "# Tóm tắt Video Kiến trúc Hệ thống\n\nCác nội dung chính kèm mốc thời gian:\n\n- [00:00](timestamp://0) : Giới thiệu tổng quan\n- [03:15](timestamp://195) : Phân biệt Monolith và Microservices\n- [08:45](timestamp://525) : Thiết kế cơ sở dữ liệu phân tán",
+        videoUrl: "https://www.youtube.com/watch?v=xpDnVSmNFX0",
+        timestamps: [
+          { time: "00:00", seconds: 0, text: "Giới thiệu tổng quan" },
+          { time: "03:15", seconds: 195, text: "Monolith vs Microservices" },
+          {
+            time: "08:45",
+            seconds: 525,
+            text: "Thiết kế cơ sở dữ liệu phân tán",
+          },
+        ],
+      },
+    ],
+  },
+];
+
 // Hàm trả về icon phù hợp theo tên / phần mở rộng file
 const getFileIcon = (fileName) => {
   if (!fileName) return <File className="w-4 h-4 text-gray-400 shrink-0" />;
@@ -94,6 +159,8 @@ export default function Sidebar() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isLoadingFolders, setIsLoadingFolders] = useState(true);
+  const {currentLanguage, setCurrentLanguage} = useLanguage();
+  const currentText = translation[currentLanguage];
 
   const selectFolder = (folderId) => {
     store.setSelectedFolder(folderId);
@@ -296,7 +363,7 @@ export default function Sidebar() {
           <input
             id="sidebar-search"
             type="text"
-            placeholder="Tìm kiếm tài liệu..."
+            placeholder={currentText.searchBar.placeholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[rgb(var(--color-bg))] border border-[rgb(var(--color-border))] focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/50 rounded-lg pl-10 pr-4 py-2 text-sm text-[rgb(var(--color-text-primary))] placeholder:text-[rgb(var(--color-text-muted))] outline-none transition-all"

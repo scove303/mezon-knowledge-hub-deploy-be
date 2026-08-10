@@ -14,12 +14,24 @@ import { LoginSchema } from "@/lib/validations/auth.schema";
 import { authService } from "@/features/auth/services";
 import { useAuthStore } from "@/features/auth/store";
 
+import { useLanguage } from '@/localization/LanguageContext';
+import vn from "@/localization/languages/vn.json";
+import en from "@/localization/languages/en.json";
+
+const translation = {
+  en: en,
+  vn: vn
+}
+
 export default function LoginForm() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
   const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState("");
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+
+  const {currentLanguage, setCurrentLanguage} = useLanguage();
+  const currentText = translation[currentLanguage];
 
   const {
     register,
@@ -77,7 +89,7 @@ export default function LoginForm() {
             Mezon MindFolder
           </h1>
           <p className="text-sm text-[rgb(var(--color-text-muted))] mt-1">
-            Đăng nhập vào không gian tri thức của bạn
+            {currentText.login.header}
           </p>
         </div>
       </div>
@@ -90,8 +102,8 @@ export default function LoginForm() {
         >
           <Input
             id="username"
-            label="Tên đăng nhập"
-            placeholder="Nhập tên đăng nhập..."
+            label={currentText.login.username}
+            placeholder={currentText.login.username_placeholder}
             autoComplete="username"
             error={errors.username?.message}
             {...register("username")}
@@ -100,9 +112,9 @@ export default function LoginForm() {
           <div className="relative">
             <Input
               id="password"
-              label="Mật khẩu"
+              label={currentText.login.password}
               type={showPassword ? "text" : "password"}
-              placeholder="Nhập mật khẩu..."
+              placeholder={currentText.login.password_placeholder}
               autoComplete="current-password"
               error={errors.password?.message}
               {...register("password")}
@@ -133,13 +145,13 @@ export default function LoginForm() {
             loading={isSubmitting}
           >
             <LogIn className="w-4 h-4" />
-            Đăng nhập
+            {currentText.login.login}
           </Button>
 
           <div className="relative flex py-2 items-center">
             <div className="flex-grow border-t border-[rgb(var(--color-border))]"></div>
             <span className="flex-shrink mx-4 text-xs text-[rgb(var(--color-text-muted))]">
-              Hoặc
+              {currentText.login.or}
             </span>
             <div className="flex-grow border-t border-[rgb(var(--color-border))]"></div>
           </div>
@@ -179,12 +191,12 @@ export default function LoginForm() {
       </div>
 
       <p className="text-center text-sm text-[rgb(var(--color-text-muted))] mt-6">
-        Chưa có tài khoản?{" "}
+        {currentText.login.no_account}{" "}
         <Link
           href="/register"
           className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
         >
-          Đăng ký
+          {currentText.login.register}
         </Link>
       </p>
     </>
