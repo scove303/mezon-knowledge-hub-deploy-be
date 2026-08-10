@@ -1,34 +1,18 @@
 "use client";
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { HardDrive, LogIn, Eye, EyeOff } from "lucide-react";
-import { GoogleLogin } from "@react-oauth/google";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { HardDrive, MessageSquare } from "lucide-react";
 
 import { Button } from "@/components/base-ui/Button";
-import { Input } from "@/components/base-ui/Input";
-import { Modal } from "@/components/base-ui/Modal";
-import { LoginSchema } from "@/lib/validations/auth.schema";
 import { authService } from "@/features/auth/services";
 import { useAuthStore } from "@/features/auth/store";
 
-export default function LoginForm() {
+function LoginFormInner() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
-  const [showPassword, setShowPassword] = useState(false);
   const [serverError, setServerError] = useState("");
-  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-
-  const {
-    register,
-    handleSubmit,
-    formState: { errors, isSubmitting },
-  } = useForm({
-    resolver: zodResolver(LoginSchema),
-    defaultValues: { username: "", password: "" },
-  });
+  const [isLoading, setIsLoading] = useState(false);
 
   const clearGuestId = () => {
     if (typeof window !== "undefined") {
@@ -36,35 +20,83 @@ export default function LoginForm() {
     }
   };
 
-  const onSubmit = async (values) => {
-    setServerError("");
-    try {
-      const res = await authService.login(values.username, values.password);
-      if (res.success) {
-        clearGuestId();
-        setAuth(res.data.user, res.data.accessToken, res.data.refreshToken);
-        router.push("/dashboard");
-      } else {
-        setServerError(res.message);
+  const getErrorMessage = (err) => {
+    let message = "Đăng nhập thất bại. Vui lòng thử lại.";
+    if (err.response?.data) {
+      const d = err.response.data;
+      if (d.detail?.message) {
+        message = d.detail.message;
+      } else if (Array.isArray(d.detail)) {
+        message = d.detail.map((e) => e.msg).join("; ");
+      } else if (d.message) {
+        message = d.message;
       }
-    } catch (err) {
-      console.error('[LoginForm] Lỗi đăng nhập:', err);
-      let message = 'Đăng nhập thất bại. Vui lòng thử lại.';
-      if (err.response?.data) {
-        const d = err.response.data;
-        if (d.detail?.message) {
-          message = d.detail.message;
-        } else if (Array.isArray(d.detail)) {
-          message = d.detail.map((e) => e.msg).join('; ');
-        } else if (d.message) {
-          message = d.message;
-        }
-      }
-      setServerError(message);
     }
+    return message;
   };
 
-  
+  // Xử lý callback từ Mezon: ?code=...&state=... (hoặc ?error=...)
+  useEffect(() => {
+    const code = searchParams.get("code");
+    const state = searchParams.get("state");
+    const error = searchParams.get("error");
+
+    if (!code && !state && !error) return;
+
+    (async () => {
+      setIsLoading(true);
+      setServerError("");
+
+      if (error) {
+        setServerError(
+          error === "access_denied"
+            ? "Bạn đã hủy đăng nhập Mezon."
+            : "Đăng nhập Mezon thất bại. Vui lòng thử lại."
+        );
+        setIsLoading(false);
+        router.replace("/login");
+        return;
+      }
+
+      try {
+        const res = await authService.mezonLogin(code, state);
+        if (res.success) {
+          clearGuestId();
+          setAuth(res.data.user, res.data.accessToken, res.data.refreshToken);
+          router.replace("/dashboard");
+        } else {
+          setServerError(res.message);
+          router.replace("/login");
+        }
+      } catch (err) {
+        console.error("[LoginForm] Lỗi đăng nhập Mezon:", err);
+        setServerError(getErrorMessage(err));
+        router.replace("/login");
+      } finally {
+        setIsLoading(false);
+      }
+    })();
+  }, [searchParams, router, setAuth]);
+
+  const handleMezonLogin = async () => {
+    setServerError("");
+    setIsLoading(true);
+    try {
+      const res = await authService.mezonAuthorize();
+      if (res.success && res.data?.authorizeUrl) {
+        window.location.href = res.data.authorizeUrl;
+      } else {
+        setServerError(
+          "Không tạo được liên kết đăng nhập Mezon. Vui lòng thử lại."
+        );
+        setIsLoading(false);
+      }
+    } catch (err) {
+      console.error("[LoginForm] Lỗi tạo liên kết Mezon:", err);
+      setServerError("Không kết nối được máy chủ. Vui lòng thử lại.");
+      setIsLoading(false);
+    }
+  };
 
   return (
     <>
@@ -83,110 +115,42 @@ export default function LoginForm() {
       </div>
 
       <div className="bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] rounded-2xl p-6 shadow-xl shadow-black/20 mt-8">
-        <form
-          onSubmit={handleSubmit(onSubmit)}
-          className="space-y-4"
-          noValidate
+        {serverError && (
+          <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5 mb-4">
+            {serverError}
+          </div>
+        )}
+
+        {isLoading && (
+          <p className="text-xs text-[rgb(var(--color-text-muted))] text-center mb-4">
+            Đang xử lý đăng nhập...
+          </p>
+        )}
+
+        <Button
+          type="button"
+          variant="secondary"
+          size="lg"
+          className="w-full"
+          loading={isLoading}
+          onClick={handleMezonLogin}
         >
-          <Input
-            id="username"
-            label="Tên đăng nhập"
-            placeholder="Nhập tên đăng nhập..."
-            autoComplete="username"
-            error={errors.username?.message}
-            {...register("username")}
-          />
+          <MessageSquare className="w-4 h-4" />
+          Đăng nhập bằng Mezon
+        </Button>
 
-          <div className="relative">
-            <Input
-              id="password"
-              label="Mật khẩu"
-              type={showPassword ? "text" : "password"}
-              placeholder="Nhập mật khẩu..."
-              autoComplete="current-password"
-              error={errors.password?.message}
-              {...register("password")}
-            />
-            <button
-              type="button"
-              onClick={() => setShowPassword((p) => !p)}
-              className="absolute right-3 top-[34px] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))] transition-colors p-1"
-            >
-              {showPassword ? (
-                <EyeOff className="w-4 h-4" />
-              ) : (
-                <Eye className="w-4 h-4" />
-              )}
-            </button>
-          </div>
-
-          {serverError && (
-            <div className="text-xs text-red-400 bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2.5">
-              {serverError}
-            </div>
-          )}
-
-          <Button
-            type="submit"
-            variant="primary"
-            className="w-full mt-2"
-            loading={isSubmitting}
-          >
-            <LogIn className="w-4 h-4" />
-            Đăng nhập
-          </Button>
-
-          <div className="relative flex py-2 items-center">
-            <div className="flex-grow border-t border-[rgb(var(--color-border))]"></div>
-            <span className="flex-shrink mx-4 text-xs text-[rgb(var(--color-text-muted))]">
-              Hoặc
-            </span>
-            <div className="flex-grow border-t border-[rgb(var(--color-border))]"></div>
-          </div>
-
-          <GoogleLogin
-                onSuccess={async (credentialResponse) => {
-                  setServerError("");
-
-                  try {
-                    const res = await authService.googleLogin(
-                      credentialResponse.credential
-                    );
-
-                    if (res.success) {
-                      clearGuestId();
-                      setAuth(
-                        res.data.user,
-                        res.data.accessToken,
-                        res.data.refreshToken
-                      );
-                      router.push("/dashboard");
-                    } else {
-                      setServerError(res.message);
-                    }
-                  } catch (err) {
-                    setServerError(
-                      err.response?.data?.message ||
-                      "Đăng nhập Google thất bại."
-                    );
-                  }
-                }}
-                onError={() => {
-                  setServerError("Đăng nhập Google thất bại.");
-                }}
-              />
-        </form>
+        <p className="text-[11px] text-[rgb(var(--color-text-muted))] text-center mt-4">
+          Tài khoản của bạn sẽ được tạo tự động bằng tài khoản Mezon
+        </p>
       </div>
-
-      <p className="text-center text-sm text-[rgb(var(--color-text-muted))] mt-6">
-        Chưa có tài khoản?{" "}
-        <Link
-          href="/register"
-          className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
-        >
-          Đăng ký
-        </Link>
-      </p>
     </>
+  );
+}
+
+export default function LoginForm() {
+  return (
+    <Suspense>
+      <LoginFormInner />
+    </Suspense>
   );
 }

@@ -46,6 +46,11 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
     }
   }, [isDirty]);
 
+  const handleSave = () => {
+    onSaveContent(editedContent);
+    setIsEditing(false);
+  };
+
   useEffect(() => {
     const handler = (e) => {
       if (e.key === 's' && (e.ctrlKey || e.metaKey) && isEditing) {
@@ -96,11 +101,6 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
       </div>
     );
   }
-
-  const handleSave = () => {
-    onSaveContent(editedContent);
-    setIsEditing(false);
-  };
 
   const getYoutubeId = (url) => {
     if (!url) return null;
@@ -407,7 +407,7 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
         }
       >
         <p className="text-sm text-[rgb(var(--color-text-secondary))] leading-relaxed">
-          Bạn có chắc chắn muốn xóa tài liệu "{file?.name}"? Hành động này không thể hoàn tác.
+          Bạn có chắc chắn muốn xóa tài liệu &quot;{file?.name}&quot;? Hành động này không thể hoàn tác.
         </p>
       </Modal>
     </div>

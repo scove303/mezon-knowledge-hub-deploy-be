@@ -22,7 +22,10 @@ def get_or_create_user(sender_id: str) -> int:
     """Helper đệm xử lý lấy hoặc tạo mới User trong DB."""
     with Session(engine) as session:
         db_user = session.exec(
-            select(User).where(User.username == sender_id)
+            select(User).where(
+                (User.username == sender_id)
+                | (User.mezon_id == sender_id)
+            )
         ).first()
 
         if not db_user:
@@ -31,11 +34,17 @@ def get_or_create_user(sender_id: str) -> int:
                 username=sender_id,
                 hashed_password=get_password_hash("default_pass_123"),
                 display_name=sender_id,
+                mezon_id=sender_id,
                 role="USER",
             )
             session.add(db_user)
             session.commit()
             session.refresh(db_user)
+        elif db_user.mezon_id != sender_id:
+            # Link tài khoản Mezon cho user đã tồn tại
+            db_user.mezon_id = sender_id
+            session.add(db_user)
+            session.commit()
 
         return db_user.id
 

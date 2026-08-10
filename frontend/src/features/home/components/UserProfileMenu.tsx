@@ -15,7 +15,7 @@ export default function UserProfileMenu() {
 
   const user = useAuthStore((state) => state.user) || {};
 
-  // Backend trả về display_name / avatar_url (snake_case) từ Google OAuth.
+  // Backend trả về display_name / avatar_url (snake_case).
   // Fallback cho tài khoản cũ lưu theo camelCase (name / avatarUrl).
   const displayName = isAuthenticated
     ? user.display_name || user.name || "Tester"
