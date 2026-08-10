@@ -42,11 +42,18 @@ export default function LoginForm() {
     defaultValues: { username: "", password: "" },
   });
 
+  const clearGuestId = () => {
+    if (typeof window !== "undefined") {
+      localStorage.removeItem("mezon-guest-id");
+    }
+  };
+
   const onSubmit = async (values) => {
     setServerError("");
     try {
       const res = await authService.login(values.username, values.password);
       if (res.success) {
+        clearGuestId();
         setAuth(res.data.user, res.data.accessToken, res.data.refreshToken);
         router.push("/dashboard");
       } else {
@@ -159,6 +166,7 @@ export default function LoginForm() {
                     );
 
                     if (res.success) {
+                      clearGuestId();
                       setAuth(
                         res.data.user,
                         res.data.accessToken,

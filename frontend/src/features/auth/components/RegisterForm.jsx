@@ -50,6 +50,9 @@ export default function RegisterForm() {
         values.display_name || undefined,
       );
       if (res.success) {
+        if (typeof window !== "undefined") {
+          localStorage.removeItem("mezon-guest-id");
+        }
         setAuth(res.data.user, res.data.accessToken, res.data.refreshToken);
         router.push("/dashboard");
       } else {

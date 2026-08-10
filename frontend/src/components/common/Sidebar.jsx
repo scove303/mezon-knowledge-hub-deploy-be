@@ -175,27 +175,18 @@ export default function Sidebar() {
   // 2. Sửa lại useCallback: Thay 'store' thành 'setFolders' ở mảng Dependency
   const refreshFolders = useCallback(async () => {
     setIsLoadingFolders(true);
-    if (!isAuthenticated) {
-      setFolders(MOCK_FOLDERS);
-      setIsLoadingFolders(false);
-      return;
-    }
-
     try {
       const res = await folderService.getFolders();
       if (res.success) {
         setFolders(res.data);
       }
     } catch (err) {
-      console.error(
-        "Lỗi khi tải danh sách thư mục (sử dụng dữ liệu Mock thay thế):",
-        err,
-      );
-      setFolders(MOCK_FOLDERS);
+      console.error("Lỗi khi tải danh sách thư mục:", err);
+      setFolders([]);
     } finally {
       setIsLoadingFolders(false);
     }
-  }, [isAuthenticated, setFolders]);
+  }, [setFolders]);
 
   useEffect(() => {
     Promise.resolve().then(() => {
@@ -203,8 +194,15 @@ export default function Sidebar() {
     });
   }, [refreshFolders]);
 
+  // Xử lý phím tắt Xóa (Có kiểm tra tránh kích hoạt khi người dùng đang gõ văn bản)
   useEffect(() => {
     const handler = (e) => {
+      const isInputting =
+        ["INPUT", "TEXTAREA"].includes(document.activeElement?.tagName) ||
+        document.activeElement?.isContentEditable;
+
+      if (isInputting) return;
+
       if (e.key === "Delete" || e.key === "Backspace") {
         const selFile = selectedFile;
         const selFolder = selectedFolder;
@@ -233,17 +231,6 @@ export default function Sidebar() {
   }, [selectedFile, selectedFolder, folders]);
 
   const createFolder = async (name, type) => {
-    if (!isAuthenticated) {
-      const newMockFolder = {
-        id: `mock-folder-${Date.now()}`,
-        name,
-        type,
-        files: [],
-      };
-      store.setFolders([...store.folders, newMockFolder]);
-      return;
-    }
-
     try {
       const res = await folderService.createFolder(name, type);
       if (res.success) {
@@ -262,16 +249,6 @@ export default function Sidebar() {
     setDeleteConfirmOpen(false);
 
     if (type === "folder") {
-      if (!isAuthenticated || folderId.startsWith("mock-")) {
-        const updated = store.folders.filter((f) => f.id !== folderId);
-        store.setFolders(updated);
-        if (store.selectedFolderId === folderId) {
-          store.setSelectedFolder(null);
-          router.push("/dashboard");
-        }
-        return;
-      }
-
       try {
         const res = await folderService.deleteFolder(folderId);
         if (res.success) {
@@ -285,23 +262,6 @@ export default function Sidebar() {
         console.error("Lỗi khi xóa thư mục:", err);
       }
     } else if (type === "file") {
-      if (!isAuthenticated || fileId.startsWith("mock-")) {
-        const updated = store.folders.map((f) => {
-          if (f.id === folderId) {
-            return {
-              ...f,
-              files: f.files.filter((file) => file.id !== fileId),
-            };
-          }
-          return f;
-        });
-        store.setFolders(updated);
-        if (store.selectedFileId === fileId) {
-          store.setSelectedFile(null);
-        }
-        return;
-      }
-
       try {
         const res = await fileService.deleteFile(fileId);
         if (res.success) {
@@ -417,7 +377,7 @@ export default function Sidebar() {
         {/* Header Section Label */}
         <div className="flex items-center justify-between px-2 text-xs font-semibold text-[rgb(var(--color-text-muted))] uppercase tracking-wider">
           <span className={cn("truncate")}>
-            {currentText.sidebar.fileList.header} {`<USER>`} {!isAuthenticated && currentText.sidebar.fileList.version}
+            Danh sách Thư Mục Của {`<USER>`}
           </span>
           <Button
             id="btn-add-folder"

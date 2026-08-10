@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
 from app.core.database import get_session
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentActor
 from app.crud import file as file_crud
 from app.schemas.common import error_response, success_response
 from app.schemas.file import FileUpdate
@@ -14,7 +14,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 
 @router.get("/{file_id}")
-def get_file(file_id: str, session: SessionDep, current_user: CurrentUser):
+def get_file(file_id: str, session: SessionDep, current_user: CurrentActor):
     file = file_crud.get_file(session, file_id)
     if not file:
         raise HTTPException(
@@ -36,7 +36,7 @@ def get_file(file_id: str, session: SessionDep, current_user: CurrentUser):
 
 @router.put("/{file_id}")
 def update_file(
-    file_id: str, data: FileUpdate, session: SessionDep, current_user: CurrentUser
+    file_id: str, data: FileUpdate, session: SessionDep, current_user: CurrentActor
 ):
     file = file_crud.update_file(session, file_id, data)
     if not file:
@@ -50,7 +50,7 @@ def update_file(
 
 
 @router.delete("/{file_id}")
-def delete_file(file_id: str, session: SessionDep, current_user: CurrentUser):
+def delete_file(file_id: str, session: SessionDep, current_user: CurrentActor):
     deleted = file_crud.delete_file(session, file_id)
     if not deleted:
         raise HTTPException(

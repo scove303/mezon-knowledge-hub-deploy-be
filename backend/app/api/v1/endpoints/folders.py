@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 
 from app.core.database import get_session
-from app.api.deps import CurrentUser
+from app.api.deps import CurrentActor
 from app.crud import folder as folder_crud
 from app.schemas.common import error_response, success_response
 from app.schemas.folder import FolderCreate
@@ -15,7 +15,7 @@ SessionDep = Annotated[Session, Depends(get_session)]
 
 
 @router.get("")
-def get_folders(session: SessionDep, current_user: CurrentUser):
+def get_folders(session: SessionDep, current_user: CurrentActor):
     folders = folder_crud.get_folders_by_user(session, current_user.id)
     result = [
         {
@@ -35,7 +35,7 @@ def get_folders(session: SessionDep, current_user: CurrentUser):
 
 @router.post("", status_code=201)
 def create_folder(
-    data: FolderCreate, session: SessionDep, current_user: CurrentUser
+    data: FolderCreate, session: SessionDep, current_user: CurrentActor
 ):
     folder = folder_crud.create_folder(session, data, current_user.id)
     folder_root = folder_crud.create_folder_root(session=session,user_id=current_user.id,folder_id=folder.id)
@@ -55,7 +55,7 @@ def create_folder(
 
 @router.delete("/{folder_id}")
 def delete_folder(
-    folder_id: str, session: SessionDep, current_user: CurrentUser
+    folder_id: str, session: SessionDep, current_user: CurrentActor
 ):
     deleted = folder_crud.delete_folder(session, folder_id, current_user.id)
     if not deleted:
@@ -74,7 +74,7 @@ class folderName(BaseModel):
 
 @router.put("/{folder_id}")
 def update_file(
-    folder_id: str, folder_name:folderName, session: SessionDep, current_user: CurrentUser
+    folder_id: str, folder_name:folderName, session: SessionDep, current_user: CurrentActor
 ):
     folder = folder_crud.rename_folder(session, folder_id, current_user.id,folderName.name,)
     if not folder:
