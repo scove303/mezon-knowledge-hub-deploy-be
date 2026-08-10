@@ -12,12 +12,24 @@ import { RegisterSchema } from "@/lib/validations/auth.schema";
 import { authService } from "@/features/auth/services";
 import { useAuthStore } from "@/features/auth/store";
 
+import { useLanguage } from '@/localization/LanguageContext';
+import vn from "@/localization/languages/vn.json";
+import en from "@/localization/languages/en.json";
+
+const translation = {
+  en: en,
+  vn: vn
+}
+
 export default function RegisterForm() {
   const router = useRouter();
   const setAuth = useAuthStore((s) => s.setAuth);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [serverError, setServerError] = useState("");
+
+  const {currentLanguage, setCurrentLanguage} = useLanguage();
+  const currentText = translation[currentLanguage];
 
   const {
     register,
@@ -72,7 +84,7 @@ export default function RegisterForm() {
             Mezon MindFolder
           </h1>
           <p className="text-sm text-[rgb(var(--color-text-muted))] mt-1">
-            Tạo tài khoản mới
+            {currentText.register.header}
           </p>
         </div>
       </div>
@@ -85,8 +97,8 @@ export default function RegisterForm() {
         >
           <Input
             id="username"
-            label="Tên đăng nhập"
-            placeholder="Nhập tên đăng nhập..."
+            label={currentText.register.name}
+            placeholder={currentText.register.name_placeholder}
             autoComplete="username"
             error={errors.username?.message}
             {...register("username")}
@@ -94,9 +106,9 @@ export default function RegisterForm() {
 
           <Input
             id="email"
-            label="Email (không bắt buộc)"
+            label={currentText.register.email}
             type="email"
-            placeholder="Nhập email..."
+            placeholder={currentText.register.email_placeholder}
             autoComplete="email"
             error={errors.email?.message}
             {...register("email")}
@@ -104,8 +116,8 @@ export default function RegisterForm() {
 
           <Input
             id="display_name"
-            label="Tên hiển thị (không bắt buộc)"
-            placeholder="Nhập tên hiển thị..."
+            label={currentText.register.display_name}
+            placeholder={currentText.register.display_name_placeholder}
             error={errors.display_name?.message}
             {...register("display_name")}
           />
@@ -113,9 +125,9 @@ export default function RegisterForm() {
           <div className="relative">
             <Input
               id="password"
-              label="Mật khẩu"
+              label={currentText.register.password}
               type={showPassword ? "text" : "password"}
-              placeholder="Nhập mật khẩu..."
+              placeholder={currentText.register.password_placeholder}
               autoComplete="new-password"
               error={errors.password?.message}
               {...register("password")}
@@ -136,9 +148,9 @@ export default function RegisterForm() {
           <div className="relative">
             <Input
               id="confirmPassword"
-              label="Xác nhận mật khẩu"
+              label={currentText.register.confirm_password}
               type={showConfirmPassword ? "text" : "password"}
-              placeholder="Nhập lại mật khẩu..."
+              placeholder={currentText.register.confirm_password_placeholder}
               autoComplete="new-password"
               error={errors.confirmPassword?.message}
               {...register("confirmPassword")}
@@ -169,18 +181,18 @@ export default function RegisterForm() {
             loading={isSubmitting}
           >
             <UserPlus className="w-4 h-4" />
-            Đăng ký
+            {currentText.register.register}
           </Button>
         </form>
       </div>
 
       <p className="text-center text-sm text-[rgb(var(--color-text-muted))]">
-        Đã có tài khoản?{" "}
+        {currentText.register.had_account}{" "}
         <Link
           href="/login"
           className="text-indigo-400 hover:text-indigo-300 font-medium transition-colors"
         >
-          Đăng nhập
+          {currentText.register.login}
         </Link>
       </p>
 

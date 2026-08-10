@@ -5,6 +5,7 @@ import { authService } from "@/features/auth/services";
 import { useAuthStore } from "@/features/auth/store";
 import { cn } from "@/utils/formatTailwind";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
+import { LanguageToggle } from "@/components/language/LanguageToggle";
 
 export default function UserProfileMenu() {
   const [isOpen, setIsOpen] = useState(false);
@@ -116,6 +117,10 @@ export default function UserProfileMenu() {
             >
               {email}
             </p>
+          </div>
+
+          <div className={cn("pt-1 px-1")}>
+            <LanguageToggle />
           </div>
 
           <div className={cn("pt-1 px-1")}>

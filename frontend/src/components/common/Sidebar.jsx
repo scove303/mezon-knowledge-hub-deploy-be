@@ -29,6 +29,15 @@ import { useRouter } from "next/navigation";
 import UserProfileMenu from "@/features/home/components/UserProfileMenu";
 import { cn } from "@/utils/formatTailwind";
 
+import { useLanguage } from '@/localization/LanguageContext';
+import vn from "@/localization/languages/vn.json";
+import en from "@/localization/languages/en.json";
+
+const translation = {
+  en: en,
+  vn: vn
+}
+
 // Dữ liệu mock dùng làm dự phòng khi không đăng nhập hoặc backend offline
 const MOCK_FOLDERS = [
   {
@@ -150,6 +159,8 @@ export default function Sidebar() {
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
   const [isLoadingFolders, setIsLoadingFolders] = useState(true);
+  const {currentLanguage, setCurrentLanguage} = useLanguage();
+  const currentText = translation[currentLanguage];
 
   const selectFolder = (folderId) => {
     store.setSelectedFolder(folderId);
@@ -392,7 +403,7 @@ export default function Sidebar() {
           <input
             id="sidebar-search"
             type="text"
-            placeholder="Tìm kiếm tài liệu..."
+            placeholder={currentText.searchBar.placeholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="w-full bg-[rgb(var(--color-bg))] border border-[rgb(var(--color-border))] focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/50 rounded-lg pl-10 pr-4 py-2 text-sm text-[rgb(var(--color-text-primary))] placeholder:text-[rgb(var(--color-text-muted))] outline-none transition-all"
@@ -406,7 +417,7 @@ export default function Sidebar() {
         {/* Header Section Label */}
         <div className="flex items-center justify-between px-2 text-xs font-semibold text-[rgb(var(--color-text-muted))] uppercase tracking-wider">
           <span className={cn("truncate")}>
-            Danh sách Thư Mục Của {`<USER>`} {!isAuthenticated && "(Bản thử)"}
+            {currentText.sidebar.fileList.header} {`<USER>`} {!isAuthenticated && currentText.sidebar.fileList.version}
           </span>
           <Button
             id="btn-add-folder"
