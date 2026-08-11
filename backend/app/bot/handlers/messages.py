@@ -1,8 +1,8 @@
 import json
 import asyncio
 from sqlmodel import Session, select
-from mezon.models import ChannelMessageContent
-from mezon.protobuf.api import api_pb2
+from mezon_sdk.models import ChannelMessageContent
+from mezon_sdk.protobuf.api import api_pb2
 
 from app.bot.client import client
 from app.core.database import engine

@@ -2,53 +2,24 @@ import asyncio
 import logging
 from typing import Any, Dict
 
-from mezon import MezonClient
-from mezon.api.mezon_api import MezonApi
-from mezon.api.utils import build_body, build_headers, parse_url_components
-from mezon.managers.channel import ChannelManager
-from mezon.managers.session import SessionManager
-from mezon.managers.socket import SocketManager
-from mezon.models import ApiAccountApp, ApiAuthenticateRequest
-from mezon.session import Session
+from mezon_sdk import MezonClient
+from mezon_sdk.api.mezon_api import MezonApi
+from mezon_sdk.api.utils import build_body, build_headers, build_url, parse_url_components
+from mezon_sdk.managers.channel import ChannelManager
+from mezon_sdk.managers.session import SessionManager
+from mezon_sdk.managers.socket import SocketManager
+from mezon_sdk.models import ApiAccountApp, ApiAuthenticateRequest, ApiSession
+from mezon_sdk.session import Session
 
-from app.bot.mezon_api import PatchedMezonApi
-from app.bot.tcp_adapter import AbridgedTcpAdapter
+from app.bot.mezon_api import SpacedMezonApi
 from app.core.config import settings
 
 AUTHENTICATE_PATH = "/v2/apps/authenticate/token"
 
 
-def parse_tcp_url(url: str) -> tuple:
-    """Parse "host:port" or bare hostname from the session tcp_url."""
-    host = url.strip()
-    port = "443"
-    if host.startswith(("http://", "https://")):
-        host = host.split("://", 1)[1]
-    if ":" in host:
-        maybe_host, maybe_port = host.rsplit(":", 1)
-        if maybe_port.isdigit():
-            host, port = maybe_host, maybe_port
-    return host, port
-
-
-class _RawApiSession:
-    """Shim of the ApiSession fields plus ws_url (dropped by the SDK 1.4.1 model)."""
-
-    def __init__(self, data: Dict[str, Any]):
-        self.token = data.get("token")
-        self.refresh_token = data.get("refresh_token")
-        self.user_id = data.get("user_id")
-        self.api_url = data.get("api_url")
-        self.ws_url = data.get("ws_url")
-
-
 class MezonBotClient(MezonClient):
-    """
-    mezon-sdk 1.4.1 bug workaround: the authenticate response carries both
-    api_url (https://api.mezon.ai) and ws_url (sock.mezon.ai), but the SDK
-    keeps only api_url and uses it for the socket host as well, which makes
-    the WebSocket upgrade fail with HTTP 404. Keep REST on api_url and
-    connect the socket to ws_url instead.
+    """MezonClient wired for the current Mezon server:
+    WebSocket (protobuf) socket transport plus protobuf-RPC HTTP with rate-limit spacing.
     """
 
     async def get_session(self) -> Session:
@@ -66,50 +37,49 @@ class MezonBotClient(MezonClient):
             query_params={},
             body=build_body(
                 ApiAuthenticateRequest(
-                    account=ApiAccountApp(appid=self.client_id, token=self.api_key)
+                    account=ApiAccountApp(
+                        appid=str(self.client_id), token=self.api_key
+                    )
                 )
             ),
             headers=build_headers(basic_auth=(self.client_id, self.api_key)),
         )
-        sock_session = Session(_RawApiSession(raw))
-        sock_session.ws_url = raw.get("ws_url")
-        sock_session.tcp_url = raw.get("tcp_url")
+        sock_session = Session(ApiSession.model_validate(raw))
+        sock_session.tcp_url = raw.get("tcp_url") or raw.get("ws_url")
         return sock_session
 
     async def initialize_managers(self, sock_session: Session) -> None:
-        url_components = parse_url_components(sock_session.api_url)
-        self.api_client = PatchedMezonApi(
+        url_components = parse_url_components(sock_session.api_url, use_ssl=self.use_ssl)
+        self.api_client = SpacedMezonApi(
             self.client_id,
             self.api_key,
-            f"{url_components['scheme']}://{url_components['hostname']}:{url_components['port']}",
+            build_url(
+                url_components["scheme"],
+                url_components["hostname"],
+                url_components["port"],
+            ),
             self.timeout_ms,
         )
 
-        ws_components = url_components
-        tcp_url = getattr(sock_session, "tcp_url", None) or getattr(sock_session, "ws_url", None)
-        if tcp_url:
-            tcp_host, tcp_port = parse_tcp_url(tcp_url)
-            ws_components = {
-                "hostname": tcp_host,
-                "port": tcp_port,
-                "use_ssl": True,
-            }
+        ws_url = getattr(sock_session, "tcp_url", None) or sock_session.ws_url
+        ws_host = ws_url.split("://", 1)[-1].split(":", 1)[0]
 
-        self.socket_manager = SocketManager(
-            host=ws_components["hostname"],
-            port=ws_components["port"],
-            use_ssl=ws_components["use_ssl"],
-            api_client=self.api_client,
-            event_manager=self.event_manager,
-            message_queue=self.message_queue,
-            mezon_client=self,
-            message_db=self.message_db,
-        )
-        self.socket_manager.socket.adapter = AbridgedTcpAdapter()
+        if not hasattr(self, "socket_manager"):
+            self.socket_manager = SocketManager(
+                ws_url=ws_host,
+                use_ssl=True,
+                api_client=self.api_client,
+                event_manager=self.event_manager,
+                mezon_client=self,
+                message_db=self.message_db,
+            )
+        else:
+            self.socket_manager.api_client = self.api_client
+
         self.session_manager = SessionManager(
             api_client=self.api_client, session=sock_session
         )
-        self.chanel_manager = ChannelManager(
+        self.channel_manager = ChannelManager(
             api_client=self.api_client,
             socket_manager=self.socket_manager,
             session_manager=self.session_manager,
@@ -120,8 +90,20 @@ class MezonBotClient(MezonClient):
         if sock_session.token:
             await asyncio.gather(
                 self.socket_manager.connect_socket(sock_session.token),
-                self.chanel_manager.init_all_dm_channels(sock_session.token),
+                self.channel_manager.init_all_dm_channels(sock_session.token),
             )
+
+    async def login(self, enable_auto_reconnect: bool = True) -> None:
+        """Authenticate and start the socket, skipping MMN/ZK blockchain steps."""
+        session = await self.get_session()
+        await self.initialize_managers(session)
+
+        self._enable_auto_reconnect = enable_auto_reconnect
+        self._is_hard_disconnect = False
+        self._reconnect_task = None
+
+        if enable_auto_reconnect:
+            self._setup_reconnect_handlers()
 
 
 client = MezonBotClient(
