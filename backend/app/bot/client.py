@@ -11,9 +11,24 @@ from mezon.managers.socket import SocketManager
 from mezon.models import ApiAccountApp, ApiAuthenticateRequest
 from mezon.session import Session
 
+from app.bot.mezon_api import PatchedMezonApi
+from app.bot.tcp_adapter import AbridgedTcpAdapter
 from app.core.config import settings
 
 AUTHENTICATE_PATH = "/v2/apps/authenticate/token"
+
+
+def parse_tcp_url(url: str) -> tuple:
+    """Parse "host:port" or bare hostname from the session tcp_url."""
+    host = url.strip()
+    port = "443"
+    if host.startswith(("http://", "https://")):
+        host = host.split("://", 1)[1]
+    if ":" in host:
+        maybe_host, maybe_port = host.rsplit(":", 1)
+        if maybe_port.isdigit():
+            host, port = maybe_host, maybe_port
+    return host, port
 
 
 class _RawApiSession:
@@ -58,11 +73,12 @@ class MezonBotClient(MezonClient):
         )
         sock_session = Session(_RawApiSession(raw))
         sock_session.ws_url = raw.get("ws_url")
+        sock_session.tcp_url = raw.get("tcp_url")
         return sock_session
 
     async def initialize_managers(self, sock_session: Session) -> None:
         url_components = parse_url_components(sock_session.api_url)
-        self.api_client = MezonApi(
+        self.api_client = PatchedMezonApi(
             self.client_id,
             self.api_key,
             f"{url_components['scheme']}://{url_components['hostname']}:{url_components['port']}",
@@ -70,12 +86,14 @@ class MezonBotClient(MezonClient):
         )
 
         ws_components = url_components
-        ws_url = getattr(sock_session, "ws_url", None)
-        if ws_url:
-            # parse_url_components only understands https/wss schemes
-            ws_components = parse_url_components(
-                ws_url if ws_url.startswith(("http://", "https://")) else f"https://{ws_url}"
-            )
+        tcp_url = getattr(sock_session, "tcp_url", None) or getattr(sock_session, "ws_url", None)
+        if tcp_url:
+            tcp_host, tcp_port = parse_tcp_url(tcp_url)
+            ws_components = {
+                "hostname": tcp_host,
+                "port": tcp_port,
+                "use_ssl": True,
+            }
 
         self.socket_manager = SocketManager(
             host=ws_components["hostname"],
@@ -87,6 +105,7 @@ class MezonBotClient(MezonClient):
             mezon_client=self,
             message_db=self.message_db,
         )
+        self.socket_manager.socket.adapter = AbridgedTcpAdapter()
         self.session_manager = SessionManager(
             api_client=self.api_client, session=sock_session
         )
