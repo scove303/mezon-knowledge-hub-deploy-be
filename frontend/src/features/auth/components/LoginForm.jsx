@@ -1,11 +1,19 @@
 "use client";
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { HardDrive, MessageSquare } from "lucide-react";
 
 import { Button } from "@/components/base-ui/Button";
 import { authService } from "@/features/auth/services";
 import { useAuthStore } from "@/features/auth/store";
+import { useLanguage } from "@/localization/LanguageContext";
+import vn from "@/localization/languages/vn.json";
+import en from "@/localization/languages/en.json";
+
+const translation = {
+  en: en,
+  vn: vn,
+};
 
 function LoginFormInner() {
   const router = useRouter();
@@ -14,26 +22,32 @@ function LoginFormInner() {
   const [serverError, setServerError] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
+  const { currentLanguage } = useLanguage();
+  const currentText = translation[currentLanguage];
+
   const clearGuestId = () => {
     if (typeof window !== "undefined") {
       localStorage.removeItem("mezon-guest-id");
     }
   };
 
-  const getErrorMessage = (err) => {
-    let message = "Đăng nhập thất bại. Vui lòng thử lại.";
-    if (err.response?.data) {
-      const d = err.response.data;
-      if (d.detail?.message) {
-        message = d.detail.message;
-      } else if (Array.isArray(d.detail)) {
-        message = d.detail.map((e) => e.msg).join("; ");
-      } else if (d.message) {
-        message = d.message;
+  const getErrorMessage = useCallback(
+    (err) => {
+      let message = currentText.login.failed;
+      if (err.response?.data) {
+        const d = err.response.data;
+        if (d.detail?.message) {
+          message = d.detail.message;
+        } else if (Array.isArray(d.detail)) {
+          message = d.detail.map((e) => e.msg).join("; ");
+        } else if (d.message) {
+          message = d.message;
+        }
       }
-    }
-    return message;
-  };
+      return message;
+    },
+    [currentText.login.failed]
+  );
 
   // Xử lý callback từ Mezon: ?code=...&state=... (hoặc ?error=...)
   useEffect(() => {
@@ -50,8 +64,8 @@ function LoginFormInner() {
       if (error) {
         setServerError(
           error === "access_denied"
-            ? "Bạn đã hủy đăng nhập Mezon."
-            : "Đăng nhập Mezon thất bại. Vui lòng thử lại."
+            ? currentText.login.access_denied
+            : currentText.login.failed
         );
         setIsLoading(false);
         router.replace("/login");
@@ -76,7 +90,14 @@ function LoginFormInner() {
         setIsLoading(false);
       }
     })();
-  }, [searchParams, router, setAuth]);
+  }, [
+    searchParams,
+    router,
+    setAuth,
+    currentText.login.access_denied,
+    currentText.login.failed,
+    getErrorMessage,
+  ]);
 
   const handleMezonLogin = async () => {
     setServerError("");
@@ -86,14 +107,12 @@ function LoginFormInner() {
       if (res.success && res.data?.authorizeUrl) {
         window.location.href = res.data.authorizeUrl;
       } else {
-        setServerError(
-          "Không tạo được liên kết đăng nhập Mezon. Vui lòng thử lại."
-        );
+        setServerError(currentText.login.link_error);
         setIsLoading(false);
       }
     } catch (err) {
       console.error("[LoginForm] Lỗi tạo liên kết Mezon:", err);
-      setServerError("Không kết nối được máy chủ. Vui lòng thử lại.");
+      setServerError(currentText.login.server_error);
       setIsLoading(false);
     }
   };
@@ -109,7 +128,7 @@ function LoginFormInner() {
             Mezon MindFolder
           </h1>
           <p className="text-sm text-[rgb(var(--color-text-muted))] mt-1">
-            Đăng nhập vào không gian tri thức của bạn
+            {currentText.login.header}
           </p>
         </div>
       </div>
@@ -123,7 +142,7 @@ function LoginFormInner() {
 
         {isLoading && (
           <p className="text-xs text-[rgb(var(--color-text-muted))] text-center mb-4">
-            Đang xử lý đăng nhập...
+            {currentText.login.processing}
           </p>
         )}
 
@@ -136,11 +155,11 @@ function LoginFormInner() {
           onClick={handleMezonLogin}
         >
           <MessageSquare className="w-4 h-4" />
-          Đăng nhập bằng Mezon
+          {currentText.login.mezon}
         </Button>
 
         <p className="text-[11px] text-[rgb(var(--color-text-muted))] text-center mt-4">
-          Tài khoản của bạn sẽ được tạo tự động bằng tài khoản Mezon
+          {currentText.login.mezon_note}
         </p>
       </div>
     </>

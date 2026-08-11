@@ -1,3 +1,17 @@
+import { useLanguage } from '@/localization/LanguageContext';
+import vn from "@/localization/languages/vn.json";
+import en from "@/localization/languages/en.json";
+import {useState} from "react";
+
+const translation = {
+  en: en,
+  vn: vn
+}
+
+
+const currentLanguage = "vn"; //UNFINISHED
+const currentText = translation[currentLanguage];
+
 export type ThemeMode =
   | "light"
   | "dark"
@@ -11,10 +25,10 @@ export interface ThemeOption {
   colorPreview: string; // Mã màu đại diện để hiển thị trên menu chọn
 }
 
-export const THEME_OPTIONS: ThemeOption[] = [
-  { id: "light", label: "Chủ đề Sáng", colorPreview: "#2563eb" },
-  { id: "dark", label: "Chủ đề Tối", colorPreview: "#3b82f6" },
-  { id: "cisher", label: "Chủ đề Cisher", colorPreview: "#5c6bc0" },
-  { id: "sunset-gradient", label: "Chủ đề Sương tím", colorPreview: "#ec4899" },
-  { id: "crimson-dark", label: "Chủ đề Đỏ tối", colorPreview: "#e11d48" },
+export const getThemeOptions = (currentText: any): ThemeOption[] => [
+  { id: "light", label: currentText.theme.light, colorPreview: "#2563eb" },
+  { id: "dark", label: currentText.theme.dark, colorPreview: "#3b82f6" },
+  { id: "cisher", label: currentText.theme.cisher, colorPreview: "#5c6bc0" },
+  { id: "sunset-gradient", label: currentText.theme.sunsetGradient, colorPreview: "#ec4899" },
+  { id: "crimson-dark", label: currentText.theme.crimsonDark, colorPreview: "#e11d48" },
 ];

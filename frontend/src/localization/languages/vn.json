@@ -1,0 +1,67 @@
+{
+  "sidebar": {
+    "fileList": {
+      "header": "Danh sách Thư Mục Của",
+      "version": "Bản Thử"
+    }
+  },
+  "searchBar": {
+    "placeholder": "Tìm kếm tài liệu..."
+  },
+  "theme": {
+    "header": "Giao diện: ",
+    "light": "Chủ đề Sáng",
+    "dark": "Chủ đề Tối",
+    "cisher": "Chủ đề Cisher",
+    "sunsetGradient": "Chủ đề Sương tím",
+    "crimsonDark": "Chủ đề Đỏ tối"
+  },
+  "language": {
+    "header": "Ngôn ngữ",
+    "english": "Tiếng Anh",
+    "vietnamese": "Tiếng Việt"
+  },
+  "dashboard": {
+    "title": "Xin chào, bạn muốn học gì hôm nay?",
+    "subtitle": "Khám phá Mezon Knowledge Hub",
+    "placeholder": "Hỏi một câu hỏi, dán link youtube, hay tải lên tài liệu..."
+  },
+  "login": {
+    "header": "Đăng nhập vào không gian tri thức của bạn",
+    "username": "Tên đăng nhập",
+    "username_placeholder": "Nhập tên đăng nhập",
+    "password": "Mật khẩu",
+    "password_placeholder": "Nhập tên mật khẩu",
+    "new_account": "Chưa có tài khoản?",
+    "sign_up": "Đăng ký",
+    "login": "Đăng nhập",
+    "or": "Hoặc",
+    "mezon": "Đăng nhập bằng Mezon",
+    "mezon_note": "Tài khoản của bạn sẽ được tạo tự động bằng tài khoản Mezon",
+    "processing": "Đang xử lý đăng nhập...",
+    "access_denied": "Bạn đã hủy đăng nhập Mezon.",
+    "failed": "Đăng nhập Mezon thất bại. Vui lòng thử lại.",
+    "link_error": "Không tạo được liên kết đăng nhập Mezon. Vui lòng thử lại.",
+    "server_error": "Không kết nối được máy chủ. Vui lòng thử lại."
+  },
+  "register": {
+    "header": "Tạo tài khoản mới",
+    "username": "Tên đăng nhập",
+    "username_placeholder": "Nhập tên đăng nhập...",
+    "email": "Email (Không bắt buộc)",
+    "email_placeholder": "Nhập email...",
+    "display_name": "Tên hiển thị (Không bắt buộc)",
+    "display_name_placeholder": "Nhập tên hiển thị...",
+    "password": "Mật khẩu",
+    "password_placeholder": "Nhập mật khẩu...",
+    "confirm_password": "Xác nhận mật khẩu",
+    "confirm_password_placeholder": "Nhập lại mật khẩu...",
+    "had_account": "Đã có tài khoản?",
+    "login": "Đăng nhập",
+    "sign_up": "Đăng ký"
+  },
+  "error": {
+    "try_again": "Thử lại",
+    "home": "Quay lại trang chủ"
+  }
+}
