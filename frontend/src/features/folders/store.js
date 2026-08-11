@@ -1,5 +1,24 @@
 import { create } from "zustand";
 
+// Đọc kích thước panel đã lưu (nếu có), nếu không dùng mặc định
+const readStored = (key, fallback) => {
+  if (typeof window === "undefined") return fallback;
+  try {
+    const val = parseFloat(localStorage.getItem(key));
+    return Number.isFinite(val) && val > 0 ? val : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+export const SIDEBAR_WIDTH_MIN = 240;
+export const SIDEBAR_WIDTH_MAX = 480;
+export const SIDEBAR_WIDTH_DEFAULT = 320;
+
+export const CHAT_PANE_WIDTH_MIN = 320;
+export const CHAT_PANE_WIDTH_MAX = 900;
+export const CHAT_PANE_WIDTH_DEFAULT = 520;
+
 export const useWorkspaceStore = create((set, get) => ({
   folders: [],
   selectedFolderId: null,
@@ -11,6 +30,8 @@ export const useWorkspaceStore = create((set, get) => ({
   // Layout State
   isSidebarOpen: false,
   isDocumentSideOpen: false,
+  sidebarWidth: readStored("mf-sidebar-width", SIDEBAR_WIDTH_DEFAULT),
+  chatPaneWidth: readStored("mf-chatpane-width", CHAT_PANE_WIDTH_DEFAULT),
 
   // Setters
   setFolders: (folders) => set({ folders }),
@@ -28,6 +49,30 @@ export const useWorkspaceStore = create((set, get) => ({
   toggleDocumentSide: () =>
     set((state) => ({ isDocumentSideOpen: !state.isDocumentSideOpen })),
   setDocumentSideOpen: (isOpen) => set({ isDocumentSideOpen: isOpen }),
+
+  // Resize panel setters (kèm clamp min/max + persist)
+  setSidebarWidth: (width) =>
+    set(() => {
+      const clamped = Math.min(
+        SIDEBAR_WIDTH_MAX,
+        Math.max(SIDEBAR_WIDTH_MIN, width),
+      );
+      try {
+        localStorage.setItem("mf-sidebar-width", String(clamped));
+      } catch { /* ignore */ }
+      return { sidebarWidth: clamped };
+    }),
+  setChatPaneWidth: (width) =>
+    set(() => {
+      const clamped = Math.min(
+        CHAT_PANE_WIDTH_MAX,
+        Math.max(CHAT_PANE_WIDTH_MIN, width),
+      );
+      try {
+        localStorage.setItem("mf-chatpane-width", String(clamped));
+      } catch { /* ignore */ }
+      return { chatPaneWidth: clamped };
+    }),
 
   // Derived getters
   getSelectedFolder: () => {

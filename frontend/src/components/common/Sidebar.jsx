@@ -330,7 +330,7 @@ export default function Sidebar() {
   };
 
   return (
-    <aside className="w-80 bg-[rgb(var(--color-surface-1))] border-r border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] flex flex-col h-full select-none">
+    <aside className="w-full bg-[rgb(var(--color-surface-1))] border-r border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] flex flex-col h-full select-none">
       {/* Brand Header */}
       <div className="p-5 border-b border-[rgb(var(--color-border))] flex items-center justify-between">
         <div className="flex items-center space-x-3">

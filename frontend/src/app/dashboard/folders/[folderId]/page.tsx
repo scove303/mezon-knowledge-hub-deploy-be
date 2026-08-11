@@ -1,11 +1,12 @@
 "use client"; // Bắt buộc khi sử dụng React hooks
 
-import { useWorkspaceStore } from '@/features/folders/store';
+import { useWorkspaceStore, CHAT_PANE_WIDTH_DEFAULT } from '@/features/folders/store';
 import { fileService } from '@/features/files/services';
 import { folderService } from '@/features/folders/services';
 import { aiService } from '@/features/ai/services';
 import FileViewer from '@/features/files/components/FileViewer';
-import { useEffect, useState, use } from 'react';
+import ResizeHandle from '@/components/common/ResizeHandle';
+import { useEffect, useState, use, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import ChatHistory from '@/components/chat/ChatHistory';
 import ChatInput from '@/components/chat/ChatInput';
@@ -29,10 +30,13 @@ export default function FolderPage({
     setDocumentSideOpen,
     toggleDocumentSide,
     setFolders,
+    chatPaneWidth,
+    setChatPaneWidth,
   } = useWorkspaceStore() as any;
 
   const [fileDetails, setFileDetails] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const statusMsgId = useRef<string | null>(null);
   const [messages, setMessages] = useState<MessageProps[]>([
     {
       id: "msg-1",
@@ -93,6 +97,30 @@ export default function FolderPage({
     return text.includes("youtube.com/") || text.includes("youtu.be/");
   };
 
+  // Cập nhật tin nhắn trạng thái (status) thay vì thêm mới mỗi lần
+  const setStatusMessage = (content: string) => {
+    if (statusMsgId.current) {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === statusMsgId.current ? { ...m, content } : m))
+      );
+    } else {
+      const id = `msg-${Date.now()}`;
+      statusMsgId.current = id;
+      setMessages((prev) => [...prev, { id, role: "bot", content, isStatus: true }]);
+    }
+  };
+
+  const clearStatusMessage = () => {
+    statusMsgId.current = null;
+  };
+
+  const appendBotMessage = (content: string, isStatus?: boolean) => {
+    setMessages((prev) => [
+      ...prev,
+      { id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, role: "bot", content, isStatus },
+    ]);
+  };
+
   // Gửi tin nhắn mới hoặc tải file mới lên thư mục hiện tại
   const handleSendMessage = async (message: string, file?: File | null) => {
     // 1. Thêm tin nhắn của User vào ô chat
@@ -136,15 +164,35 @@ export default function FolderPage({
           if (foldersRes.success) setFolders(foldersRes.data);
         }
       } else {
-        // Tình huống C: Hội thoại thường.
-        // Do API backend chưa hỗ trợ nói chuyện tiếp nối cho từng Folder, chúng ta tạm thời phản hồi giả lập
-        // và lưu vết tin nhắn để hiển thị lịch sử chat cho trực quan.
-        const botMsg: MessageProps = {
-          id: `msg-${Date.now() + 1}`,
-          role: "bot",
-          content: `Backend hiện chưa hỗ trợ API hội thoại tiếp diễn (Chỉ hỗ trợ tạo Lộ trình mới bằng cách gõ lệnh từ Trang chủ). Tin nhắn của bạn: "${message}"`,
-        };
-        setMessages((prev) => [...prev, botMsg]);
+        // Tình huống C: Hội thoại tiếp diễn / hỏi & chỉnh sửa nội dung cũ trong folder.
+        // Giữ nguyên conversation_id = folderId để AI có ngữ cảnh của folder tài liệu này.
+        const followUpRes = await aiService.followUpRoadmap(folderId, message);
+        const jobId = followUpRes?.data?.job_id;
+        if (!jobId) throw new Error("Backend không trả về job_id");
+
+        await aiService.streamFollowUp(jobId, {
+          onStatus: (msg: string) => setStatusMessage(msg),
+          onAnswer: (text: string) => {
+            clearStatusMessage();
+            appendBotMessage(text);
+          },
+          onEdit: (evt: any) => {
+            clearStatusMessage();
+            appendBotMessage(
+              `Đã chỉnh sửa bài học: ${evt.title}\n(File: ${evt.file_id})`
+            );
+          },
+          onDone: async () => {
+            clearStatusMessage();
+            // Re-fetch folders để đồng bộ nội dung bài học đã chỉnh sửa
+            const foldersRes = await folderService.getFolders();
+            if (foldersRes.success) setFolders(foldersRes.data);
+          },
+          onError: (msg: string) => {
+            clearStatusMessage();
+            appendBotMessage(msg, true);
+          },
+        });
       }
     } catch (err) {
       console.error("Lỗi gửi tin nhắn đến AI:", err);
@@ -162,14 +210,21 @@ export default function FolderPage({
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-[rgb(var(--color-bg))]">
-      {/* Left Pane: Chat Interface */}
+      {/* Left Pane: Chat Interface (resizable) */}
       <div
-        className={`flex flex-col shrink-0 transition-all duration-300 ease-in-out h-full ${
-          isDocumentSideOpen
-            ? "w-full lg:w-1/3 xl:w-2/5 border-r border-[rgb(var(--color-border))]"
-            : "w-full"
+        className={`relative flex flex-col shrink-0 h-full ${
+          isDocumentSideOpen ? "border-r border-[rgb(var(--color-border))]" : ""
         }`}
+        style={{ width: isDocumentSideOpen ? chatPaneWidth : "100%" }}
       >
+        {isDocumentSideOpen && (
+          <ResizeHandle
+            onResize={(delta) => setChatPaneWidth(chatPaneWidth + delta)}
+            onResizeEnd={() => setChatPaneWidth(CHAT_PANE_WIDTH_DEFAULT)}
+            className="right-0 -mr-1"
+          />
+        )}
+
         <div className="p-4 border-b border-[rgb(var(--color-border))] flex items-center justify-between pl-16">
           <h2 className="font-semibold text-lg text-[rgb(var(--color-text-primary))] truncate">
             {folder?.name || "Chat Session"}
