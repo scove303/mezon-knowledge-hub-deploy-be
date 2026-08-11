@@ -1,7 +1,8 @@
 "use client";
 
 import Sidebar from "@/components/common/Sidebar";
-import { useWorkspaceStore } from "@/features/folders/store";
+import ResizeHandle from "@/components/common/ResizeHandle";
+import { useWorkspaceStore, SIDEBAR_WIDTH_DEFAULT } from "@/features/folders/store";
 import { PanelLeft, PanelLeftClose } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { useEffect } from "react";
@@ -11,8 +12,13 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  const { isSidebarOpen, toggleSidebar, setSidebarOpen } =
-    useWorkspaceStore() as any;
+  const {
+    isSidebarOpen,
+    toggleSidebar,
+    setSidebarOpen,
+    sidebarWidth,
+    setSidebarWidth,
+  } = useWorkspaceStore() as any;
   const pathname = usePathname();
 
   useEffect(() => {
@@ -23,19 +29,29 @@ export default function DashboardLayout({
 
   return (
     <div className="flex h-screen bg-[rgb(var(--color-bg))] overflow-hidden">
-      {/* Sidebar - transitions its width */}
+      {/* Sidebar - resizable width */}
       <div
-        className={`flex-shrink-0 transition-all duration-300 ease-in-out h-full ${
+        className={`relative flex-shrink-0 h-full overflow-hidden ${
           isSidebarOpen
-            ? "w-80 border-r border-[rgb(var(--color-border))] opacity-100"
-            : "w-0 border-r-0 opacity-0 overflow-hidden"
+            ? "opacity-100 border-r border-[rgb(var(--color-border))]"
+            : "w-0 border-r-0 opacity-0"
         }`}
+        style={{ width: isSidebarOpen ? sidebarWidth : 0 }}
       >
         <Sidebar />
+
+        {isSidebarOpen && (
+          <ResizeHandle
+            onResize={(delta) => setSidebarWidth(sidebarWidth + delta)}
+            onResizeStart={() => setSidebarOpen(true)}
+            onResizeEnd={() => setSidebarWidth(SIDEBAR_WIDTH_DEFAULT)}
+            className="right-0 -mr-1"
+          />
+        )}
       </div>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 h-full relative transition-all duration-300">
+      <div className="flex-1 flex flex-col min-w-0 h-full relative">
         <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
           <button
             onClick={toggleSidebar}

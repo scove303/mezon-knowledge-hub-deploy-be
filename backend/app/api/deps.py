@@ -11,7 +11,7 @@ from app.models.folder import FolderRoot
 from app.models.user import User
 
 oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/api/v1/auth/login", auto_error=False
+    tokenUrl="/api/v1/auth/mezon", auto_error=False
 )
 
 SessionDep = Annotated[Session, Depends(get_session)]

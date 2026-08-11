@@ -1,7 +1,7 @@
 import json
 import re
 from sqlmodel import Session
-from mezon.models import ChannelMessageContent
+from mezon_sdk.models import ChannelMessageContent
 
 from app.core.database import engine
 from app.bot.client import client

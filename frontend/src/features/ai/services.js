@@ -113,5 +113,77 @@ export const aiService = {
       headers: { 'Content-Type': 'multipart/form-data' }
     });
     return data;
+  },
+
+  // 4. Prompt hỏi tiếp / chỉnh sửa nội dung cũ (giữ conversation_id = folder_id cũ)
+  async followUpRoadmap(conversationId, topic, folderName) {
+    const { data } = await axiosInstance.post('/ai/roadmap/followup', {
+      conversation_id: conversationId,
+      topic,
+      folder_name: folderName || undefined,
+    }, { timeout: 20000 });
+    return data;
+  },
+
+  // 4b. Stream kết quả follow-up (answer / edit) qua SSE
+  async streamFollowUp(jobId, callbacks = {}) {
+    const { onStatus, onAnswer, onEdit, onDone, onError } = callbacks;
+    const headers = buildAuthHeaders();
+
+    const res = await fetch(`${BASE_URL}/ai/roadmap/${jobId}/stream`, { headers });
+
+    if (!res.ok) {
+      let detail = `HTTP ${res.status}`;
+      try {
+        const body = await res.json();
+        detail = body.detail?.message || body.detail || detail;
+      } catch { /* ignore */ }
+      throw new Error(detail);
+    }
+
+    if (!res.body) throw new Error("Trình duyệt không hỗ trợ streaming");
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let buffer = "";
+
+    while (true) {
+      const { value, done } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      let sepIdx;
+      while ((sepIdx = buffer.indexOf("\n\n")) !== -1) {
+        const rawEvent = buffer.slice(0, sepIdx);
+        buffer = buffer.slice(sepIdx + 2);
+        const dataLine = rawEvent.split("\n").find((l) => l.startsWith("data:"));
+        if (!dataLine) continue;
+
+        let event;
+        try {
+          event = JSON.parse(dataLine.slice(5).trim());
+        } catch {
+          continue;
+        }
+
+        switch (event.type) {
+          case "status":
+            onStatus?.(event.message);
+            break;
+          case "answer":
+            onAnswer?.(event.text);
+            break;
+          case "edit":
+            onEdit?.(event);
+            break;
+          case "done":
+            onDone?.(event);
+            return;
+          case "error":
+            onError?.(event.message);
+            return;
+        }
+      }
+    }
   }
 };
