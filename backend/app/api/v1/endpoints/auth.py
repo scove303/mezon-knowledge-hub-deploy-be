@@ -90,6 +90,7 @@ def mezon_authorize():
         "response_type": "code",
         "scope": "openid offline",
         "state": state,
+        "prompt": "login",
     }
 
     authorize_url = (
