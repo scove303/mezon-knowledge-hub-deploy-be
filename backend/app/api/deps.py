@@ -23,24 +23,36 @@ def get_current_user(
 ) -> User:
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail={"success": False, "message": "Không thể xác thực thông tin đăng nhập", "data": None},
+        detail={
+            "success": False,
+            "message": "Không thể xác thực thông tin đăng nhập",
+            "data": None,
+        },
         headers={"WWW-Authenticate": "Bearer"},
     )
+
     if not token:
         raise credentials_exception
+
     try:
         payload = decode_token(token)
+
         if payload.get("type") != "access":
             raise credentials_exception
+
         user_id: str = payload.get("sub")
+
         if user_id is None:
             raise credentials_exception
+
     except JWTError:
         raise credentials_exception
 
     user = session.get(User, int(user_id))
+
     if user is None:
         raise credentials_exception
+
     return user
 
 
@@ -51,14 +63,17 @@ def get_current_actor(
 ) -> User:
     """Trả về user đã đăng nhập, hoặc get-or-create một user khách vãng lai
     định danh qua header X-Guest-Id (UUID do frontend sinh ra)."""
+
     if token:
         return get_current_user(token, session)
 
     if x_guest_id and x_guest_id.strip():
         guest_username = f"guest_{x_guest_id.strip()}"
+
         user = session.exec(
             select(User).where(User.username == guest_username)
         ).first()
+
         if user:
             return user
 
@@ -70,27 +85,37 @@ def get_current_actor(
             hashed_password=get_password_hash(uuid.uuid4().hex),
             role="GUEST",
         )
+
         session.add(guest)
         session.commit()
         session.refresh(guest)
+
         return guest
 
     raise HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
-        detail={"success": False, "message": "Vui lòng đăng nhập hoặc cung cấp mã khách (X-Guest-Id)", "data": None},
+        detail={
+            "success": False,
+            "message": "Vui lòng đăng nhập hoặc cung cấp mã khách (X-Guest-Id)",
+            "data": None,
+        },
         headers={"WWW-Authenticate": "Bearer"},
     )
 
 
 def merge_guest_into_user(
-    session: Session, guest_id: int, user_id: int
+    session: Session,
+    guest_id: int,
+    user_id: int,
 ) -> int:
     """Adopt-all: chuyển toàn bộ folder của khách sang tài khoản vừa xác thực,
     xóa folder_root của khách (unique per user) và xóa luôn user khách.
     Trả về số folder đã gộp."""
+
     from app.models.folder import Folder
 
     guest = session.get(User, guest_id)
+
     if not guest or guest.role != "GUEST":
         return 0
 
@@ -104,6 +129,7 @@ def merge_guest_into_user(
     roots = session.exec(
         select(FolderRoot).where(FolderRoot.user_id == guest_id)
     ).all()
+
     for r in roots:
         session.delete(r)
 
@@ -114,6 +140,7 @@ def merge_guest_into_user(
 
     session.delete(guest)
     session.commit()
+
     return len(folders)
 
 

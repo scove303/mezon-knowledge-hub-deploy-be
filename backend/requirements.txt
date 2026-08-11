@@ -17,5 +17,7 @@ python-docx>=1.1.0
 httpx>=0.27.0
 websockets>=12.0
 cryptography>=42.0.0
-# Optional: b?t semantic-cache cho roadmap (n?ng, k�m torch). Thi?u th� t? fallback.
+mezon-sdk>=1.4.1
+
+# Optional: bật semantic-cache cho roadmap (nặng, kèm torch). Thiếu thì tự fallback.
 # sentence-transformers>=3.0.0
