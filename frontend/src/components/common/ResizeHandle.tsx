@@ -49,8 +49,7 @@ export default function ResizeHandle({
     dragging.current = false;
     document.body.style.cursor = "";
     document.body.style.userSelect = "";
-    onResizeEnd?.();
-  }, [onResizeEnd]);
+  }, []);
 
   return (
     <div
@@ -61,6 +60,7 @@ export default function ResizeHandle({
       onPointerUp={stopDragging}
       onPointerCancel={stopDragging}
       onDoubleClick={onResizeEnd}
+      title="Double-click để đặt lại kích thước mặc định"
       className={`group absolute top-0 bottom-0 z-30 w-2 -ml-1 cursor-col-resize touch-none ${className}`}
     >
       <div className="absolute inset-y-0 left-1/2 -translate-x-1/2 w-[3px] rounded-full bg-transparent transition-colors duration-150 group-hover:bg-[rgb(var(--color-border))] group-active:bg-indigo-500/70" />

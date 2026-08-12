@@ -23,6 +23,7 @@ import { fileService } from "@/features/files/services";
 import { folderService } from "@/features/folders/services";
 import { useToastStore } from "@/stores/toast";
 import { speakText, stopSpeech } from "src/utils/speech";
+import { cn } from "@/utils/formatTailwind";
 
 export default function FileViewer({ file, onSaveContent, folderName }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -33,6 +34,8 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
   const iframeRef = useRef(null);
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const store = useWorkspaceStore();
 
@@ -81,12 +84,20 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
 
   const [prevFile, setPrevFile] = useState(file);
 
+  // Tắt giọng đọc khi chuyển file hoặc unmount
+  useEffect(() => {
+    return () => {
+      stopSpeech();
+    };
+  }, [file?.id]);
+
   if (file !== prevFile) {
     setPrevFile(file); // Cập nhật lại file cũ để không bị lặp lại ở lần render sau
     if (file) {
       setEditedContent(file.content); // Khởi tạo nội dung tương ứng với file mới
       setIsEditing(false); // Tắt chế độ chỉnh sửa
       setSeekTime(0); // Trả thời gian video về 0
+      setIsSpeaking(false); // Tắt giọng đọc khi đổi file
     }
   }
 
@@ -229,14 +240,6 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
   };
 
   // Phần Tích hợp Text-to-Speech (TTS)
-  const [isSpeaking, setIsSpeaking] = useState(false);
-
-  // Tắt giọng đọc khi chuyển file hoặc unmount
-  useEffect(() => {
-    stopSpeech();
-    setIsSpeaking(false);
-  }, [file?.id]);
-
   const handleToggleSpeech = () => {
     if (isSpeaking) {
       stopSpeech();

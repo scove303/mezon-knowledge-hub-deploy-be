@@ -10,14 +10,19 @@ import {
   Search,
   Plus,
   Trash2,
-  ChevronDown,
-  ChevronRight,
+  ChevronsUpDown,
   Compass,
   FileCheck,
   Video,
   HardDrive,
   LogIn,
 } from "lucide-react";
+import {
+  Tree,
+  File as TreeFile,
+  Folder as TreeFolder,
+  CollapseButton,
+} from "@/components/ui/file-tree";
 import { Button } from "@/components/base-ui/Button";
 import { Modal } from "@/components/base-ui/Modal";
 import { useAuthStore } from "@/features/auth/store";
@@ -172,6 +177,18 @@ export default function Sidebar() {
     router.push(`/dashboard/folders/${folderId}`);
   };
 
+  // Cấu trúc cây cho Tree / CollapseButton (expand tất cả / thu gọn tất cả)
+  const treeElements = folders.map((folder) => ({
+    id: folder.id,
+    isSelectable: true,
+    name: folder.name,
+    children: (folder.files || []).map((file) => ({
+      id: file.id,
+      isSelectable: true,
+      name: file.name,
+    })),
+  }));
+
   // 2. Sửa lại useCallback: Thay 'store' thành 'setFolders' ở mảng Dependency
   const refreshFolders = useCallback(async () => {
     setIsLoadingFolders(true);
@@ -186,7 +203,7 @@ export default function Sidebar() {
     } finally {
       setIsLoadingFolders(false);
     }
-  }, [setFolders]);
+  }, [setFolders, setIsLoadingFolders]);
 
   useEffect(() => {
     Promise.resolve().then(() => {
@@ -276,14 +293,8 @@ export default function Sidebar() {
     }
   };
 
-  const [expandedFolders, setExpandedFolders] = useState({});
   const [newFolderName, setNewFolderName] = useState("");
   const [showAddFolder, setShowAddFolder] = useState(false);
-
-  const toggleExpand = (folderId, e) => {
-    e.stopPropagation();
-    setExpandedFolders((prev) => ({ ...prev, [folderId]: !prev[folderId] }));
-  };
 
   const handleCreateFolder = (e) => {
     e.preventDefault();
@@ -377,9 +388,9 @@ export default function Sidebar() {
       </div>
 
       {/* Folder Navigation */}
-      <div className="flex-1 overflow-y-auto px-3 space-y-4 pb-4 scrollbar-thin">
+      <div className="flex-1 min-h-0 flex flex-col px-3 pb-4">
         {/* Header Section Label */}
-        <div className="flex items-center justify-between px-2 text-xs font-semibold text-[rgb(var(--color-text-muted))] uppercase tracking-wider">
+        <div className="flex items-center justify-between px-2 py-2 text-xs font-semibold text-[rgb(var(--color-text-muted))] uppercase tracking-wider shrink-0">
           <span className={cn("truncate")}>
             Danh sách Thư Mục Của {`<USER>`}
           </span>
@@ -399,7 +410,7 @@ export default function Sidebar() {
         {showAddFolder && (
           <form
             onSubmit={handleCreateFolder}
-            className="px-2 py-2 bg-[rgb(var(--color-bg))] rounded-lg border border-[rgb(var(--color-border))] space-y-2 animate-fade-in"
+            className="px-2 py-2 bg-[rgb(var(--color-bg))] rounded-lg border border-[rgb(var(--color-border))] space-y-2 animate-fade-in shrink-0"
           >
             <input
               type="text"
@@ -426,64 +437,55 @@ export default function Sidebar() {
         )}
 
         {/* Folders List */}
-        {isLoadingFolders ? (
-          <div className="px-4 py-4 space-y-3">
-            {[...Array(4)].map((_, i) => (
-              <div key={i} className="flex items-center gap-3 animate-pulse">
-                <div className="w-4 h-4 rounded bg-[rgb(var(--color-surface-2))]" />
-                <div className="h-3 rounded bg-[rgb(var(--color-surface-2))] w-3/4" />
-              </div>
-            ))}
-          </div>
-        ) : (
-          <ul className="space-y-1.5">
-            {folders.length === 0 ? (
-              <div className="text-center py-6 text-sm text-[rgb(var(--color-text-muted))]">
-                Không tìm thấy tài liệu nào
-              </div>
-            ) : (
-              folders.map((folder) => {
-                const isExpanded = expandedFolders[folder.id] !== false;
+        <div className="flex-1 min-h-0">
+          {isLoadingFolders ? (
+            <div className="px-4 py-4 space-y-3">
+              {[...Array(4)].map((_, i) => (
+                <div key={i} className="flex items-center gap-3 animate-pulse">
+                  <div className="w-4 h-4 rounded bg-[rgb(var(--color-surface-2))]" />
+                  <div className="h-3 rounded bg-[rgb(var(--color-surface-2))] w-3/4" />
+                </div>
+              ))}
+            </div>
+          ) : folders.length === 0 ? (
+            <div className="text-center py-6 text-sm text-[rgb(var(--color-text-muted))]">
+              Không tìm thấy tài liệu nào
+            </div>
+          ) : (
+            <Tree
+              className="p-2"
+              initialExpandedItems={folders.map((folder) => folder.id)}
+              elements={treeElements}
+            >
+              <CollapseButton
+                elements={treeElements}
+                className="h-5 w-5 p-0 hover:bg-[rgb(var(--color-surface-2))]"
+                title="Mở rộng / Thu gọn tất cả"
+              >
+                <ChevronsUpDown className="w-3.5 h-3.5" />
+              </CollapseButton>
+              {folders.map((folder) => {
                 const isSelected =
                   selectedFolder?.id === folder.id && !selectedFile;
 
                 return (
-                  <li
+                  <TreeFolder
                     key={folder.id}
-                    className="group/folder rounded-lg overflow-hidden transition-all duration-150"
-                  >
-                    {/* Folder Header */}
-                    <div
-                      onClick={() => selectFolder(folder.id)}
-                      className={`flex items-center justify-between px-3 py-2.5 rounded-lg cursor-pointer transition-all ${
-                        isSelected
-                          ? "bg-indigo-600/10 text-indigo-300 border border-indigo-500/20 font-medium"
-                          : "hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))] border border-transparent"
-                      }`}
-                    >
-                      <div className="flex items-center space-x-2.5 min-w-0">
-                        <button
-                          onClick={(e) => toggleExpand(folder.id, e)}
-                          className="text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))] p-0.5 rounded transition-colors"
-                        >
-                          {isExpanded ? (
-                            <ChevronDown className="w-3.5 h-3.5" />
-                          ) : (
-                            <ChevronRight className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-                        {getFolderIcon(folder.type, isExpanded)}
-                        <span className="text-sm truncate select-none">
-                          {folder.name}
-                        </span>
-                      </div>
-
-                      {/* Hover Actions */}
-                      <div className="opacity-0 group-hover/folder:opacity-100 flex items-center space-x-1 transition-opacity">
+                    value={folder.id}
+                    element={folder.name}
+                    isSelect={isSelected}
+                    onSelect={(id) => selectFolder(id)}
+                    openIcon={
+                      <FolderOpen className="w-4 h-4 text-amber-300/90 shrink-0" />
+                    }
+                    closeIcon={getFolderIcon(folder.type, false)}
+                    actions={
+                      <>
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            const addToast = useToastStore.getState().addToast;
+                            const addToast =
+                              useToastStore.getState().addToast;
                             addToast(
                               "Tài liệu mới chỉ có thể được tạo tự động bởi AI thông qua khung chat ở trang chính!",
                               "info",
@@ -509,64 +511,55 @@ export default function Sidebar() {
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
+                      </>
+                    }
+                  >
+                    {folder.files &&
+                      folder.files.map((file) => (
+                        <TreeFile
+                          key={file.id}
+                          value={file.id}
+                          isSelect={selectedFile?.id === file.id}
+                          handleSelect={() =>
+                            selectFile(folder.id, file.id)
+                          }
+                          fileIcon={getFileIcon(file.name)}
+                          actions={
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setItemToDelete({
+                                  type: "file",
+                                  folderId: folder.id,
+                                  fileId: file.id,
+                                  name: file.name,
+                                });
+                                setDeleteConfirmOpen(true);
+                              }}
+                              className="text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-all"
+                              title="Xóa tài liệu"
+                            >
+                              <Trash2 className="w-3 h-3" />
+                            </button>
+                          }
+                        >
+                          <span className="truncate text-xs">
+                            {file.name}
+                          </span>
+                        </TreeFile>
+                      ))}
+
+                    {(!folder.files || folder.files.length === 0) && (
+                      <div className="text-[10px] text-[rgb(var(--color-text-disabled))] px-3 py-1 italic select-none">
+                        Không có file nào
                       </div>
-                    </div>
-
-                    {/* Children Files */}
-                    {isExpanded && (
-                      <ul className="pl-7 pr-1 mt-1 mb-2 space-y-1 border-l border-[rgb(var(--color-border))] ml-4 animate-fade-in">
-                        {/* File Items */}
-                        {folder.files &&
-                          folder.files.map((file) => {
-                            const isFileSelected = selectedFile?.id === file.id;
-                            return (
-                              <li
-                                key={file.id}
-                                onClick={() => selectFile(folder.id, file.id)}
-                                className={`group/file flex items-center justify-between px-3 py-1.5 rounded cursor-pointer transition-colors ${
-                                  isFileSelected
-                                    ? "bg-indigo-600/15 text-indigo-400 font-semibold"
-                                    : "hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))]"
-                                }`}
-                              >
-                                <div className="flex items-center space-x-2 min-w-0">
-                                  {getFileIcon(file.name)}
-                                  <span className="text-xs truncate select-none">
-                                    {file.name}
-                                  </span>
-                                </div>
-                                <button
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setItemToDelete({
-                                      type: "file",
-                                      folderId: folder.id,
-                                      fileId: file.id,
-                                      name: file.name,
-                                    });
-                                    setDeleteConfirmOpen(true);
-                                  }}
-                                  className="opacity-0 group-hover/file:opacity-100 text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-all"
-                                >
-                                  <Trash2 className="w-3 h-3" />
-                                </button>
-                              </li>
-                            );
-                          })}
-
-                        {(!folder.files || folder.files.length === 0) && (
-                          <div className="text-[10px] text-[rgb(var(--color-text-disabled))] px-3 py-1 italic select-none">
-                            Không có file nào
-                          </div>
-                        )}
-                      </ul>
                     )}
-                  </li>
+                  </TreeFolder>
                 );
-              })
-            )}
-          </ul>
-        )}
+              })}
+            </Tree>
+          )}
+        </div>
       </div>
 
       {/* Modal Xác Nhận Xóa */}
