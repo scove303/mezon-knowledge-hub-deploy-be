@@ -1,13 +1,18 @@
-import axiosInstance from '@/libs/axios';
+import axiosInstance from "@/libs/axios";
 
 export const authService = {
   async mezonAuthorize() {
-    const { data } = await axiosInstance.get('/auth/mezon/authorize');
-    return data;
+    try {
+      const { data } = await axiosInstance.get("/auth/mezon/authorize");
+      return data;
+    } catch (err) {
+      console.log(`Error: ${err}`);
+      return [];
+    }
   },
 
   async mezonLogin(code, state) {
-    const { data } = await axiosInstance.post('/auth/mezon', {
+    const { data } = await axiosInstance.post("/auth/mezon", {
       code,
       state,
     });
@@ -15,7 +20,7 @@ export const authService = {
   },
 
   async refresh(refreshToken) {
-    const { data } = await axiosInstance.post('/auth/refresh', {
+    const { data } = await axiosInstance.post("/auth/refresh", {
       refreshToken,
     });
     return data;
