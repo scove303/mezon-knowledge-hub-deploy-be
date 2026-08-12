@@ -1,13 +1,18 @@
-import axiosInstance from '@/libs/axios';
+import axiosInstance from "@/libs/axios";
 
 export const folderService = {
   async getFolders() {
-    const { data } = await axiosInstance.get('/folders');
-    return data;
+    try {
+      const { data } = await axiosInstance.get("/folders");
+      return data;
+    } catch (err) {
+      console.log(`Error: ${err}`);
+      return [];
+    }
   },
 
-  async createFolder(name, type = 'general') {
-    const { data } = await axiosInstance.post('/folders', { name, type });
+  async createFolder(name, type = "general") {
+    const { data } = await axiosInstance.post("/folders", { name, type });
     return data;
   },
 
