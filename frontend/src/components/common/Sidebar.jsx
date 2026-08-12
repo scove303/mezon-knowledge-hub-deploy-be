@@ -333,17 +333,21 @@ export default function Sidebar() {
     <aside className="w-full bg-[rgb(var(--color-surface-1))] border-r border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] flex flex-col h-full select-none">
       {/* Brand Header */}
       <div className="p-5 border-b border-[rgb(var(--color-border))] flex items-center justify-between">
-        <div className="flex items-center space-x-3">
-          <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20">
+        <button
+          onClick={() => router.push("/dashboard")}
+          className="flex items-center space-x-3 group text-left cursor-pointer"
+          title="Về trang chủ"
+        >
+          <div className="w-10 h-10 rounded-xl bg-linear-to-tr from-indigo-500 to-violet-600 flex items-center justify-center shadow-lg shadow-indigo-500/20 transition-transform group-hover:scale-105">
             <HardDrive className="w-5 h-5 text-white" />
           </div>
           <div>
-            <h1 className="text-base font-bold text-[rgb(var(--color-text-primary))] tracking-wide">
+            <h1 className="text-base font-bold text-[rgb(var(--color-text-primary))] tracking-wide transition-colors group-hover:text-indigo-400">
               Mezon MindFolder
             </h1>
             <p className="text-xs text-indigo-400 font-medium">Knowledge Hub</p>
           </div>
-        </div>
+        </button>
 
         {!isAuthenticated && (
           <button

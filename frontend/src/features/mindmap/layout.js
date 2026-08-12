@@ -175,7 +175,7 @@ export function layoutHorizontal(root) {
         id: `e-${parentId}-${node.id}`,
         source: parentId,
         target: node.id,
-        type: 'bezier',
+        type: 'default',
         style: edgeStyle(node),
       });
     }
@@ -247,7 +247,7 @@ export function layoutRadial(root) {
         id: `e-${parentId}-${node.id}`,
         source: parentId,
         target: node.id,
-        type: 'bezier',
+        type: 'default',
         style: edgeStyle(node),
       });
     }

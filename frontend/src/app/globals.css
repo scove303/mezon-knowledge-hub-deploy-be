@@ -48,6 +48,16 @@ body {
 }
 
 /* ─── Mindmap: hover highlight branch ─────────────────────────────────────── */
+/* Nền KineticGrid: texture chấm bằng CSS thuần — hiển thị ngay cả khi canvas chưa vẽ */
+.kinetic-grid-bg {
+  background-color: #161618;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.22) 1.3px, transparent 1.3px);
+  background-size: 28px 28px;
+}
+/* colorMode="dark" của React Flow sơn nền #141414 đè lên — bỏ để KineticGrid lộ ra */
+.mindmap-canvas .react-flow {
+  --xy-background-color: transparent;
+}
 @keyframes mmPulse {
   0%, 100% { opacity: 1; }
   50%      { opacity: 0.82; }

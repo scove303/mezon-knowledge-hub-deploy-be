@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback, ReactNode } from "react";
+import { useLayoutEffect, useRef, useCallback, ReactNode } from "react";
 import { cn } from "@/lib/utils";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -26,9 +26,9 @@ const MAX_WARP = 24;
 const DOT_SPACING = 28;
 const LERP_SPEED = 0.08;
 
-const LINE_BASE = { r: 255, g: 255, b: 255, a: 0.13 };
-const NODE_BASE_RADIUS = 1.8;
-const NODE_ACTIVE_RADIUS = 3.2;
+const LINE_BASE = { r: 255, g: 255, b: 255, a: 0.3 };
+const NODE_BASE_RADIUS = 2.2;
+const NODE_ACTIVE_RADIUS = 3.6;
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -65,7 +65,6 @@ export default function KineticGrid({
   const mouseRef = useRef<Point>({ x: -9999, y: -9999 });
   const targetMouseRef = useRef<Point>({ x: -9999, y: -9999 });
   const ripplesRef = useRef<Ripple[]>([]);
-  const rafRef = useRef<number>(0);
   const sizeRef = useRef<{ w: number; h: number }>({ w: 0, h: 0 });
 
   // ── Warp ────────────────────────────────────────────────────────────────────
@@ -177,11 +176,11 @@ export default function KineticGrid({
       ctx.fillRect(0, 0, W, H);
 
       // Static background dot texture
-      ctx.fillStyle = "rgba(255,255,255,0.05)";
+      ctx.fillStyle = "rgba(255,255,255,0.16)";
       for (let x = DOT_SPACING / 2; x < W; x += DOT_SPACING) {
         for (let y = DOT_SPACING / 2; y < H; y += DOT_SPACING) {
           ctx.beginPath();
-          ctx.arc(x, y, 0.7, 0, Math.PI * 2);
+          ctx.arc(x, y, 1.1, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -232,7 +231,7 @@ export default function KineticGrid({
         ctx.moveTo(p1.x, p1.y);
         ctx.lineTo(p2.x, p2.y);
         ctx.strokeStyle = lerpColor(LINE_BASE, theme.lineActive, t);
-        ctx.lineWidth = lerpN(0.8, 1.5, t);
+        ctx.lineWidth = lerpN(1.1, 1.8, t);
         ctx.stroke();
       };
 
@@ -320,27 +319,39 @@ export default function KineticGrid({
       m.y = lerpN(m.y, t.y, LERP_SPEED);
 
       draw(now);
-      rafRef.current = requestAnimationFrame(animate);
     },
     [draw],
   );
 
   // ── Setup ───────────────────────────────────────────────────────────────────
 
-  useEffect(() => {
+  useLayoutEffect(() => {
     const canvas = canvasRef.current;
     const wrap = wrapRef.current;
     if (!canvas || !wrap) return;
 
+    const measure = () => {
+      const rect = wrap.getBoundingClientRect();
+      return {
+        w: wrap.clientWidth || Math.round(rect.width),
+        h: wrap.clientHeight || Math.round(rect.height),
+      };
+    };
+
     const setSize = () => {
-      const w = wrap.clientWidth;
-      const h = wrap.clientHeight;
+      const { w, h } = measure();
       canvas.width = w;
       canvas.height = h;
       sizeRef.current = { w, h };
     };
 
     setSize();
+    console.info(
+      "[KineticGrid] size:",
+      sizeRef.current.w,
+      "x",
+      sizeRef.current.h,
+    );
     const resizeObserver = new ResizeObserver(setSize);
     resizeObserver.observe(wrap);
     window.addEventListener("resize", setSize);
@@ -374,16 +385,22 @@ export default function KineticGrid({
 
     window.addEventListener("mousemove", onMouseMove);
     window.addEventListener("click", onClick);
-    rafRef.current = requestAnimationFrame(animate);
+
+    let raf = 0;
+    function frame(now: number) {
+      animate(now);
+      raf = requestAnimationFrame(frame);
+    }
+    raf = requestAnimationFrame(frame);
+    // Vẽ frame đầu tiên ngay lập tức (không chờ rAF) để nền hiện ngay khi mount
+    animate(performance.now());
 
     return () => {
       resizeObserver.disconnect();
       window.removeEventListener("resize", setSize);
       window.removeEventListener("mousemove", onMouseMove);
       window.removeEventListener("click", onClick);
-      if (rafRef.current) {
-        cancelAnimationFrame(rafRef.current);
-      }
+      cancelAnimationFrame(raf);
     };
   }, [animate]);
 
@@ -393,8 +410,7 @@ export default function KineticGrid({
     <div
       ref={wrapRef}
       className={cn(
-        "relative w-full h-full overflow-hidden",
-        globalColor === "monochrome" ? "bg-[#000000]" : "bg-[#161618]",
+        "relative w-full h-full overflow-hidden kinetic-grid-bg",
         className,
       )}
     >
@@ -402,6 +418,9 @@ export default function KineticGrid({
         ref={canvasRef}
         className="absolute inset-0 w-full h-full z-0 pointer-events-none"
       />
+
+      {/* Lớp phủ làm mờ + làm tối nhẹ background để nội dung dễ đọc */}
+      <div className="absolute inset-0 z-[5] pointer-events-none bg-[rgb(var(--color-bg)/0.28)] backdrop-blur-[2px]" />
 
       <div className="relative z-10 w-full h-full">{children}</div>
     </div>
