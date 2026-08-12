@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, Bot, User, FolderOpen, Plus } from 'lucide-react';
+import { Loader2, Bot, User, FolderOpen, Plus, Network } from 'lucide-react';
 import Greeting from '@/components/chat/Greeting';
 import ChatInput from '@/components/chat/ChatInput';
 import StreamingText from '@/components/chat/StreamingText';
@@ -288,13 +288,25 @@ export default function DashboardIndex() {
                             active={false}
                             className="text-sm text-[rgb(var(--color-text-primary))] leading-relaxed"
                           />
-                          <button
-                            onClick={() => thread.folderId && openFolder(thread.folderId)}
-                            className="self-start flex items-center gap-2 px-4 py-2 mt-1 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-500/20"
-                          >
-                            <FolderOpen size={16} />
-                            Mở lộ trình
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => thread.folderId && openFolder(thread.folderId)}
+                              className="self-start flex items-center gap-2 px-4 py-2 mt-1 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-500/20"
+                            >
+                              <FolderOpen size={16} />
+                              Mở lộ trình
+                            </button>
+                            <button
+                              onClick={() =>
+                                thread.folderId &&
+                                router.push(`/dashboard/folders/${thread.folderId}?view=mindmap`)
+                              }
+                              className="self-start flex items-center gap-2 px-4 py-2 mt-1 rounded-lg text-sm font-medium border border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] hover:text-indigo-400 hover:border-indigo-500/40 transition-colors"
+                            >
+                              <Network size={16} />
+                              Xem sơ đồ tư duy
+                            </button>
+                          </div>
                         </>
                       )}
 

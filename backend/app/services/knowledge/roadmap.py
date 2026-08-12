@@ -39,15 +39,22 @@ def clone_folder_for_user(
 
     # 2. Duplicate all files inside the cached folder
     cloned_files = []
-    for original_file in getattr(cached_folder, "files", []):
+    for index, original_file in enumerate(
+        sorted(
+            getattr(cached_folder, "files", []),
+            key=lambda f: (f.order_index, f.created_at),
+        )
+    ):
         cloned_files.append(
             KnowledgeFile(
                 id=f"file-{uuid.uuid4().hex[:8]}",
                 folder_id=cloned_folder.id,
                 name=original_file.name,
+                summary=getattr(original_file, "summary", ""),
                 markdown_content=getattr(original_file, "markdown_content", ""),
                 video_url=getattr(original_file, "video_url", None),
-                timestamps_json=getattr(original_file, "timestamps_json", None)
+                timestamps_json=getattr(original_file, "timestamps_json", None),
+                order_index=index
             )
         )
 
@@ -279,11 +286,14 @@ async def revise_roadmap(
             }
 
         # file_id trỏ tới bài không tồn tại (hoặc "new") → tạo bài học mới
+        max_order = max((f.order_index for f in files), default=-1)
         new_file = KnowledgeFile(
             id=f"file-{uuid.uuid4().hex[:8]}",
             folder_id=folder.id,
             name=parsed.get("title") or topic[:80],
+            summary="",
             markdown_content=parsed.get("content", ""),
+            order_index=max_order + 1,
         )
         session.add(new_file)
         session.commit()

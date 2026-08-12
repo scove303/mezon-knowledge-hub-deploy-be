@@ -29,12 +29,14 @@ def store_folder_structure_roadmap(session: Session, user_id: int, roadmap_data:
 
     # 3. Tạo danh sách bài học (KnowledgeFile)
     files_to_create = []
-    for file_info in roadmap_data.get("files", []):
+    for index, file_info in enumerate(roadmap_data.get("files", [])):
         new_file = KnowledgeFile(
             id=f"file-{uuid.uuid4().hex[:8]}",
             name=file_info.get("title", "Bài học không tên"),
+            summary=file_info.get("summary", ""),
             markdown_content=file_info.get("text_content", ""),
-            folder_id=new_folder.id
+            folder_id=new_folder.id,
+            order_index=index
         )
         files_to_create.append(new_file)
 

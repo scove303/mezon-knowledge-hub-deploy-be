@@ -159,6 +159,7 @@ async def generate_single_lesson(topic: str, lesson: dict, tavily_context: str, 
 
         return {
             "title": lesson_title,
+            "summary": lesson.get("summary", ""),
             "text_content": text_content
         }
 

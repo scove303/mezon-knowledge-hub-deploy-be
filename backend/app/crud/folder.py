@@ -9,8 +9,16 @@ from sqlalchemy.orm import selectinload
 
 
 def get_folders_by_user(session: Session, user_id: int) -> list[Folder]:
-    statement = (select(Folder).where(Folder.user_id == user_id).options(selectinload(Folder.files)))
-    return list(session.exec(statement).all())
+    statement = (
+        select(Folder)
+        .where(Folder.user_id == user_id)
+        .options(selectinload(Folder.files))
+        .order_by(Folder.created_at)
+    )
+    folders = list(session.exec(statement).all())
+    for folder in folders:
+        folder.files.sort(key=lambda f: (f.order_index, f.created_at, f.id))
+    return folders
 
 
 def get_folder(session: Session, folder_id: str, user_id: int) -> Optional[Folder]:

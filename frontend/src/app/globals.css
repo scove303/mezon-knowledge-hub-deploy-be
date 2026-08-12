@@ -47,6 +47,50 @@ body {
   background-clip: content-box;
 }
 
+/* ─── Mindmap: hover highlight branch ─────────────────────────────────────── */
+@keyframes mmPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.82; }
+}
+.mindmap-canvas .react-flow__node.mindmap-active,
+.mindmap-canvas .react-flow__edge.mindmap-active {
+  animation: mmPulse 2.2s ease-in-out infinite;
+}
+
+/* Nhánh được hover nhô lên theo trục Z về phía người dùng */
+.mindmap-canvas {
+  perspective: 1400px;
+}
+.mindmap-canvas .react-flow__viewport,
+.mindmap-canvas .react-flow__edges,
+.mindmap-canvas .react-flow__edge {
+  transform-style: preserve-3d;
+}
+.mindmap-canvas .react-flow__edge path {
+  transform: translateZ(0);
+  transition:
+    transform 380ms cubic-bezier(0.4, 0, 0.2, 1),
+    stroke-width 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mindmap-canvas .react-flow__edge.mindmap-active path {
+  transform: translateZ(48px);
+  filter: drop-shadow(0 0 4px currentColor);
+  transition:
+    transform 380ms cubic-bezier(0.4, 0, 0.2, 1),
+    filter 500ms ease,
+    stroke-width 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mindmap-canvas .react-flow__edge.mindmap-edge-hover path {
+  transform: translateZ(70px);
+}
+.mindmap-canvas .react-flow__edge path {
+  transition:
+    stroke-width 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mindmap-canvas .react-flow__node:hover {
+  z-index: 10;
+}
+
 /* ─── Animations ────────────────────────────────────────────────────────────── */
 @keyframes fadeIn {
   from { opacity: 0; }

@@ -5,13 +5,14 @@ import { fileService } from '@/features/files/services';
 import { folderService } from '@/features/folders/services';
 import { aiService } from '@/features/ai/services';
 import FileViewer from '@/features/files/components/FileViewer';
+import MindmapViewer from '@/features/mindmap/components/MindmapViewer';
 import ResizeHandle from '@/components/common/ResizeHandle';
 import { useEffect, useState, use, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import ChatHistory from '@/components/chat/ChatHistory';
 import ChatInput from '@/components/chat/ChatInput';
 import { MessageProps } from '@/components/chat/ChatMessage';
-import { PanelRightClose, PanelRight } from 'lucide-react';
+import { PanelRightClose, PanelRight, Network, FileText } from 'lucide-react';
 
 export default function FolderPage({
   params,
@@ -25,6 +26,7 @@ export default function FolderPage({
   const {
     folders,
     selectedFileId,
+    setSelectedFileId,
     setSidebarOpen,
     isDocumentSideOpen,
     setDocumentSideOpen,
@@ -37,6 +39,11 @@ export default function FolderPage({
   const [fileDetails, setFileDetails] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const statusMsgId = useRef<string | null>(null);
+  const [showMindmap, setShowMindmap] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("view") === "mindmap",
+  );
   const [messages, setMessages] = useState<MessageProps[]>([
     {
       id: "msg-1",
@@ -57,6 +64,13 @@ export default function FolderPage({
     }
   }, [folderId, router, setSidebarOpen]);
 
+  // Deep-link: /dashboard/folders/:id?view=mindmap → mở sẵn khung tài liệu
+  useEffect(() => {
+    if (!showMindmap) return;
+    const t = setTimeout(() => setDocumentSideOpen(true), 0);
+    return () => clearTimeout(t);
+  }, [showMindmap, setDocumentSideOpen]);
+
   // useEffect (2): Tải chi tiết file khi người dùng bấm chọn ở Sidebar
   useEffect(() => {
     async function loadFile() {
@@ -70,6 +84,7 @@ export default function FolderPage({
         if (res.success) {
           setFileDetails(res.data);
           setDocumentSideOpen(true);
+          setShowMindmap(false);
         }
       } catch (err) {
         console.error("Lỗi khi tải chi tiết tài liệu:", err);
@@ -253,7 +268,7 @@ export default function FolderPage({
         </div>
       </div>
 
-      {/* Right Pane: File Viewer (Collapsible) */}
+      {/* Right Pane: File Viewer / Mindmap (Collapsible) */}
       <div
         className={`flex flex-col min-w-0 h-full bg-[rgb(var(--color-surface-1))] transition-all duration-300 ease-in-out ${
           isDocumentSideOpen
@@ -261,7 +276,43 @@ export default function FolderPage({
             : "w-0 opacity-0 overflow-hidden"
         }`}
       >
-        {selectedFileId && fileDetails ? (
+        <div className="flex items-center justify-between px-4 py-2 border-b border-[rgb(var(--color-border))] shrink-0">
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setShowMindmap(false)}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-colors ${
+                !showMindmap
+                  ? "bg-indigo-600 text-white border-indigo-500"
+                  : "text-[rgb(var(--color-text-secondary))] border-[rgb(var(--color-border))] hover:text-indigo-400"
+              }`}
+            >
+              <FileText size={13} />
+              Tài liệu
+            </button>
+            <button
+              onClick={() => setShowMindmap(true)}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-colors ${
+                showMindmap
+                  ? "bg-indigo-600 text-white border-indigo-500"
+                  : "text-[rgb(var(--color-text-secondary))] border-[rgb(var(--color-border))] hover:text-indigo-400"
+              }`}
+            >
+              <Network size={13} />
+              Sơ đồ tư duy
+            </button>
+          </div>
+        </div>
+
+        {showMindmap ? (
+          <MindmapViewer
+            folderId={folderId}
+            onOpenLesson={(fileId: string) => {
+              setShowMindmap(false);
+              setSelectedFileId(fileId);
+              setDocumentSideOpen(true);
+            }}
+          />
+        ) : selectedFileId && fileDetails ? (
           <FileViewer
             file={fileDetails}
             folderName={folder?.name || ""}
@@ -291,7 +342,8 @@ export default function FolderPage({
               </h3>
               <p>
                 Hãy chọn một tài liệu từ thanh bên trái (Sidebar) để xem nội
-                dung.
+                dung, hoặc bấm nút Sơ đồ tư duy để xem tổng quan toàn bộ bài
+                học.
               </p>
             </div>
           </div>
