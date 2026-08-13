@@ -9,8 +9,10 @@ from app.services.document.parser import parse_context_to_structure
 from app.services.search.tavily import tavily_search
 from app.services.storage.file_storage import store_folder_structure_roadmap
 from app.utils.similarity_checker import get_embedding,cosine_similarity
+import asyncio
 
-
+def _get_folders_sync(sess):
+    return sess.exec(select(Folder).where(Folder.type == "roadmap")).all()
 
 def clone_folder_for_user(
     cached_folder: Folder, 
@@ -67,14 +69,13 @@ async def roadmap_service(
     # ---------------------------------------------------------
     # STEP 1: Generate Vector Embedding for incoming prompt
     # ---------------------------------------------------------
-    new_embedding = get_embedding(topic)
+    new_embedding = await get_embedding(topic)
 
     # ---------------------------------------------------------
     # STEP 2: Check Semantic Cache across existing roadmap folders
     # ---------------------------------------------------------
-    existing_folders = session.exec(
-        select(Folder).where(Folder.type == "roadmap")
-    ).all()
+
+    existing_folders = await asyncio.to_thread(_get_folders_sync, session)
 
     if new_embedding:
         for cached_folder in existing_folders:
@@ -96,7 +97,8 @@ async def roadmap_service(
                         return cached_folder
 
                     # Otherwise, clone the folder for the requesting user
-                    return clone_folder_for_user(
+                    return await asyncio.to_thread(
+                        clone_folder_for_user,
                         cached_folder=cached_folder,
                         new_user_id=user_id,
                         new_folder_name=folder_name,
@@ -122,7 +124,8 @@ async def roadmap_service(
     # ---------------------------------------------------------
     # STEP 4: Store New Folder in DB + Save Prompt Embedding
     # ---------------------------------------------------------
-    new_folder = store_folder_structure_roadmap(
+    new_folder = await asyncio.to_thread(
+        store_folder_structure_roadmap,
         session=session,
         user_id=user_id,
         roadmap_data=roadmap_data

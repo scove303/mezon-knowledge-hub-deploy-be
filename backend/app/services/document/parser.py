@@ -24,7 +24,7 @@ client = genai.Client(api_key=api_key)
 MODEL_NAME = "gemini-3.5-flash-lite"
 
 
-SEMAPHORE = asyncio.Semaphore(3)
+
 
 # =====================================================================
 # PROMPT BƯỚC 1: LẬP CÂY LỘ TRÌNH (OUTLINE)
@@ -117,9 +117,9 @@ async def _generate_content_with_retry(
     raise last_exc
 
 
-async def generate_single_lesson(topic: str, lesson: dict, tavily_context: str, idx: int, total: int) -> dict:
+async def generate_single_lesson(topic: str, lesson: dict, tavily_context: str, idx: int, total: int,semaphore) -> dict:
     """Sinh chi tiết từng bài học trực tiếp qua Google GenAI SDK (Async)"""
-    async with SEMAPHORE:
+    async with semaphore:
         lesson_title = lesson["title"]
         lesson_summary = lesson["summary"]
         
@@ -173,6 +173,11 @@ async def parse_context_to_structure(
     Quy trình 2 Bước Async sử dụng Google GenAI SDK.
     on_event: callback nhận dict sự kiện để stream tiến trình ra ngoài (SSE).
     """
+    #  tạo semarphore mới
+    semaphore = asyncio.Semaphore(5)
+
+
+
     print("  ---> [Bước 1/2] Đang lập khung Lộ trình với Gemini Flash...")
     if on_event:
         on_event({"type": "status", "message": "Đang lập khung lộ trình với Gemini..."})
@@ -218,7 +223,7 @@ async def parse_context_to_structure(
 
     for idx, lesson in enumerate(lessons_list, 1):
         task = asyncio.create_task(
-            generate_single_lesson(topic, lesson, tavily_context, idx, total_lessons)
+            generate_single_lesson(topic, lesson, tavily_context, idx, total_lessons,semaphore=semaphore)
         )
         lesson_tasks[task] = (idx, lesson.get("title", f"Bài {idx}"))
         task.add_done_callback(_on_lesson_done)

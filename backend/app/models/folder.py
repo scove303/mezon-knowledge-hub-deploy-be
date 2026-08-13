@@ -19,8 +19,8 @@ class Folder(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
 
     user: Optional["User"] = Relationship(back_populates="folders")
-    files: List["KnowledgeFile"] = Relationship(back_populates="folder")
-    root_entry: Optional["FolderRoot"] = Relationship(back_populates="folder")
+    files: List["KnowledgeFile"] = Relationship(back_populates="folder",cascade_delete=True)
+    root_entry: Optional["FolderRoot"] = Relationship(back_populates="folder",cascade_delete=True)
     prompt_embedding: Optional[str] = Field(default=None, sa_type=JSON)
 
 class FolderRoot(SQLModel,table = True):

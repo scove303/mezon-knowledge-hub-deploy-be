@@ -12,7 +12,7 @@ class KnowledgeFile(SQLModel, table=True):
     __tablename__ = "knowledge_files"
 
     id: str = Field(primary_key=True, max_length=50)
-    folder_id: str = Field(foreign_key="folders.id", index=True)
+    folder_id: str = Field(foreign_key="folders.id", index=True,ondelete="CASCADE")
     name: str = Field(max_length=255)
     markdown_content: str = Field(sa_column=Column(Text, nullable=False, default=""))
     video_url: Optional[str] = Field(default=None, max_length=500)
