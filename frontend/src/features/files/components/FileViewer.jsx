@@ -13,6 +13,8 @@ import {
   Clock,
   Play,
   Trash2,
+  Volume2,
+  VolumeX,
 } from "lucide-react";
 import { Button } from "@/components/base-ui/Button";
 import { Modal } from "@/components/base-ui/Modal";
@@ -20,6 +22,8 @@ import { useWorkspaceStore } from "@/features/folders/store";
 import { fileService } from "@/features/files/services";
 import { folderService } from "@/features/folders/services";
 import { useToastStore } from "@/stores/toast";
+import { speakText, stopSpeech } from "src/utils/speech";
+import { cn } from "@/utils/formatTailwind";
 
 export default function FileViewer({ file, onSaveContent, folderName }) {
   const [isEditing, setIsEditing] = useState(false);
@@ -31,6 +35,8 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
+  const [isSpeaking, setIsSpeaking] = useState(false);
+
   const store = useWorkspaceStore();
 
   const isDirty = isEditing && editedContent !== (file?.content ?? "");
@@ -39,37 +45,51 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
     if (isDirty) {
       const handler = (e) => {
         e.preventDefault();
-        e.returnValue = '';
+        e.returnValue = "";
       };
-      window.addEventListener('beforeunload', handler);
-      return () => window.removeEventListener('beforeunload', handler);
+      window.addEventListener("beforeunload", handler);
+      return () => window.removeEventListener("beforeunload", handler);
     }
   }, [isDirty]);
 
+  const handleSave = () => {
+    onSaveContent(editedContent);
+    setIsEditing(false);
+  };
+
   useEffect(() => {
     const handler = (e) => {
-      if (e.key === 's' && (e.ctrlKey || e.metaKey) && isEditing) {
+      if (e.key === "s" && (e.ctrlKey || e.metaKey) && isEditing) {
         e.preventDefault();
         if (isDirty) handleSave();
       }
     };
-    window.addEventListener('keydown', handler);
-    return () => window.removeEventListener('keydown', handler);
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
   });
 
   const handleDelete = async () => {
     try {
       await fileService.deleteFile(file.id);
-      useToastStore.getState().addToast('Đã xoá tài liệu thành công', 'success');
+      useToastStore
+        .getState()
+        .addToast("Đã xoá tài liệu thành công", "success");
       setDeleteConfirmOpen(false);
       const foldersRes = await folderService.getFolders();
       if (foldersRes.success) store.setFolders(foldersRes.data);
     } catch (err) {
-      useToastStore.getState().addToast('Xoá tài liệu thất bại', 'error');
+      useToastStore.getState().addToast("Xoá tài liệu thất bại", "error");
     }
   };
 
   const [prevFile, setPrevFile] = useState(file);
+
+  // Tắt giọng đọc khi chuyển file hoặc unmount
+  useEffect(() => {
+    return () => {
+      stopSpeech();
+    };
+  }, [file?.id]);
 
   if (file !== prevFile) {
     setPrevFile(file); // Cập nhật lại file cũ để không bị lặp lại ở lần render sau
@@ -77,6 +97,7 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
       setEditedContent(file.content); // Khởi tạo nội dung tương ứng với file mới
       setIsEditing(false); // Tắt chế độ chỉnh sửa
       setSeekTime(0); // Trả thời gian video về 0
+      setIsSpeaking(false); // Tắt giọng đọc khi đổi file
     }
   }
 
@@ -96,11 +117,6 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
       </div>
     );
   }
-
-  const handleSave = () => {
-    onSaveContent(editedContent);
-    setIsEditing(false);
-  };
 
   const getYoutubeId = (url) => {
     if (!url) return null;
@@ -223,6 +239,17 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
     },
   };
 
+  // Phần Tích hợp Text-to-Speech (TTS)
+  const handleToggleSpeech = () => {
+    if (isSpeaking) {
+      stopSpeech();
+      setIsSpeaking(false);
+    } else {
+      setIsSpeaking(true);
+      speakText(file.content, () => setIsSpeaking(false));
+    }
+  };
+
   return (
     <div className="flex-1 bg-[rgb(var(--color-bg))] flex flex-col h-full overflow-hidden text-[rgb(var(--color-text-secondary))]">
       {/* Header */}
@@ -248,6 +275,23 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
 
         {/* Actions */}
         <div className="flex items-center space-x-2">
+          {/* Text-to-Speech (TTS) */}
+          <Button
+            id="btn-tts-file"
+            variant={isSpeaking ? "primary" : "secondary"}
+            size="icon"
+            onClick={handleToggleSpeech}
+            title={isSpeaking ? "Dừng đọc" : "Đọc văn bản"}
+          >
+            {isSpeaking ? (
+              <VolumeX
+                className={cn("w-3.5 h-3.5 text-rose-400 animate-pulse")}
+              />
+            ) : (
+              <Volume2 className={cn("w-3.5 h-3.5")} />
+            )}
+          </Button>
+
           {isEditing ? (
             <div className="flex items-center gap-2">
               {isDirty && (
@@ -294,7 +338,12 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
             size="icon"
             onClick={() => {
               navigator.clipboard.writeText(window.location.href);
-              useToastStore.getState().addToast('Đã copy đường dẫn chia sẻ vào clipboard!', 'success');
+              useToastStore
+                .getState()
+                .addToast(
+                  "Đã copy đường dẫn chia sẻ vào clipboard!",
+                  "success",
+                );
             }}
             title="Chia sẻ link"
           >
@@ -407,7 +456,8 @@ export default function FileViewer({ file, onSaveContent, folderName }) {
         }
       >
         <p className="text-sm text-[rgb(var(--color-text-secondary))] leading-relaxed">
-          Bạn có chắc chắn muốn xóa tài liệu "{file?.name}"? Hành động này không thể hoàn tác.
+          Bạn có chắc chắn muốn xóa tài liệu &quot;{file?.name}&quot;? Hành động
+          này không thể hoàn tác.
         </p>
       </Modal>
     </div>

@@ -35,7 +35,14 @@
     "new_account": "Chưa có tài khoản?",
     "sign_up": "Đăng ký",
     "login": "Đăng nhập",
-    "or": "Hoặc"
+    "or": "Hoặc",
+    "mezon": "Đăng nhập bằng Mezon",
+    "mezon_note": "Tài khoản của bạn sẽ được tạo tự động bằng tài khoản Mezon",
+    "processing": "Đang xử lý đăng nhập...",
+    "access_denied": "Bạn đã hủy đăng nhập Mezon.",
+    "failed": "Đăng nhập Mezon thất bại. Vui lòng thử lại.",
+    "link_error": "Không tạo được liên kết đăng nhập Mezon. Vui lòng thử lại.",
+    "server_error": "Không kết nối được máy chủ. Vui lòng thử lại."
   },
   "register": {
     "header": "Tạo tài khoản mới",

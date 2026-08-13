@@ -19,10 +19,6 @@ class Settings(BaseSettings):
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 15
     REFRESH_TOKEN_EXPIRE_DAYS: int = 7
 
-    # Google OAuth2
-    GOOGLE_CLIENT_ID: str = ""
-    GOOGLE_CLIENT_SECRET: str = ""
-
     # Database
     DB_HOST: str = "127.0.0.1"
     DB_PORT: int = 3306
@@ -49,7 +45,10 @@ class Settings(BaseSettings):
     # Mezon OAuth2
     MEZON_CLIENT_ID: str = ""
     MEZON_CLIENT_SECRET: str = ""
-    MEZON_REDIRECT_URI: str = ""
+    MEZON_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/mezon/callback"
+
+    # URL frontend (nơi Mezon callback sẽ chuyển hướng sau khi lấy được code)
+    FRONTEND_URL: str = "http://localhost:3001"
     
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [

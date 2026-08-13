@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, Bot, User, FolderOpen } from 'lucide-react';
+import { Loader2, Bot, User, FolderOpen, Plus, Network } from 'lucide-react';
 import Greeting from '@/components/chat/Greeting';
 import ChatInput from '@/components/chat/ChatInput';
 import StreamingText from '@/components/chat/StreamingText';
@@ -44,6 +44,8 @@ interface ChatThread {
   output: string;
   folderId: string | null;
   folderName: string;
+  conversationId: string | null;
+  action: 'roadmap' | 'followup';
   error: string;
 }
 
@@ -85,12 +87,22 @@ export default function DashboardIndex() {
     return text.includes('youtube.com/') || text.includes('youtu.be/');
   };
 
+  const getLastConversation = useCallback((): ChatThread | null => {
+    const doneThreads = threads.filter((t) => t.status === 'done' && t.folderId);
+    return doneThreads.length > 0 ? doneThreads[doneThreads.length - 1] : null;
+  }, [threads]);
+
   const handleSubmit = async (message: string, file?: File | null) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
 
     const threadId = `thread-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const folderName = `🐍 Lộ trình: ${message.slice(0, 20)}${message.length > 20 ? '...' : ''}`;
+
+    // Nếu có thread hoàn thành gần nhất (có folder) → đây là prompt hỏi tiếp / chỉnh sửa,
+    // giữ nguyên conversation_id = folder_id cũ thay vì tạo lộ trình mới.
+    const lastConversation = getLastConversation();
+    const isFollowUp = !!lastConversation;
 
     setThreads((prev) => [
       ...prev,
@@ -102,43 +114,83 @@ export default function DashboardIndex() {
         statusMessage: 'Đang gửi yêu cầu...',
         total: 0,
         output: '',
-        folderId: null,
+        folderId: isFollowUp ? lastConversation.folderId : null,
         folderName,
+        conversationId: isFollowUp ? lastConversation.folderId : null,
+        action: isFollowUp ? 'followup' : 'roadmap',
         error: '',
       },
     ]);
 
     try {
-      const roadmapRes = await aiService.generateRoadmap(message, folderName);
-      const jobId = roadmapRes?.data?.job_id;
-      if (!jobId) throw new Error('Backend không trả về job_id');
+      if (isFollowUp) {
+        // ---------- PROMPT HỎI TIẾP / CHỈNH SỬA ----------
+        const followUpRes = await aiService.followUpRoadmap(
+          lastConversation.folderId,
+          message,
+          lastConversation.folderName,
+        );
+        const jobId = followUpRes?.data?.job_id;
+        if (!jobId) throw new Error('Backend không trả về job_id');
 
-      updateThread(threadId, { jobId, status: 'queued', statusMessage: 'Đã nhận yêu cầu, đang chuẩn bị...' });
+        updateThread(threadId, { jobId, status: 'queued', statusMessage: 'Đã nhận yêu cầu, đang chuẩn bị...' });
 
-      await aiService.streamRoadmap(jobId, {
-        onStatus: (msg: string) => updateThread(threadId, { statusMessage: msg }),
-        onOutline: (total: number) => updateThread(threadId, { total }),
-        onLesson: (evt: any) => {
-          const title = evt.title || `Bài ${evt.idx}`;
-          const content = evt.content || '';
-          updateThread(threadId, (t: any) => ({
+        await aiService.streamFollowUp(jobId, {
+          onStatus: (msg: string) => updateThread(threadId, { statusMessage: msg }),
+          onAnswer: (text: string) => updateThread(threadId, {
             status: 'running',
-            statusMessage: `Đang soạn bài ${evt.idx}/${evt.total}...`,
-            output: `${t.output}\n\n## ${title}\n\n${content}`,
-          }));
-        },
-        onDone: async (evt: any) => {
-          updateThread(threadId, {
-            status: 'done',
-            folderId: evt.folder_id,
-            folderName: evt.folder_name || folderName,
-            statusMessage: 'Hoàn tất!',
-            output: `Đã tạo xong lộ trình với ${evt.total_files} bài học.`,
-          });
-          await refreshSidebarFolders();
-        },
-        onError: (msg: string) => updateThread(threadId, { status: 'error', error: msg, statusMessage: 'Thất bại' }),
-      });
+            statusMessage: 'Đang hoàn tất câu trả lời...',
+            output: text,
+          }),
+          onEdit: (evt: any) => updateThread(threadId, {
+            status: 'running',
+            statusMessage: `Đang chỉnh sửa bài "${evt.title}"...`,
+            output: `### ✏️ Đã chỉnh sửa bài học: **${evt.title}**\n\n${evt.content}`,
+          }),
+          onDone: async (evt: any) => {
+            updateThread(threadId, {
+              status: 'done',
+              statusMessage: evt.action === 'edit' ? 'Đã cập nhật bài học!' : 'Hoàn tất!',
+              folderId: evt.folder_id || lastConversation.folderId,
+              folderName: lastConversation.folderName,
+            });
+            if (evt.action === 'edit') await refreshSidebarFolders();
+          },
+          onError: (msg: string) => updateThread(threadId, { status: 'error', error: msg, statusMessage: 'Thất bại' }),
+        });
+      } else {
+        // ---------- TẠO LỘ TRÌNH MỚI ----------
+        const roadmapRes = await aiService.generateRoadmap(message, folderName);
+        const jobId = roadmapRes?.data?.job_id;
+        if (!jobId) throw new Error('Backend không trả về job_id');
+
+        updateThread(threadId, { jobId, status: 'queued', statusMessage: 'Đã nhận yêu cầu, đang chuẩn bị...' });
+
+        await aiService.streamRoadmap(jobId, {
+          onStatus: (msg: string) => updateThread(threadId, { statusMessage: msg }),
+          onOutline: (total: number) => updateThread(threadId, { total }),
+          onLesson: (evt: any) => {
+            const title = evt.title || `Bài ${evt.idx}`;
+            const content = evt.content || '';
+            updateThread(threadId, (t: any) => ({
+              status: 'running',
+              statusMessage: `Đang soạn bài ${evt.idx}/${evt.total}...`,
+              output: `${t.output}\n\n## ${title}\n\n${content}`,
+            }));
+          },
+          onDone: async (evt: any) => {
+            updateThread(threadId, {
+              status: 'done',
+              folderId: evt.folder_id,
+              folderName: evt.folder_name || folderName,
+              statusMessage: 'Hoàn tất!',
+              output: `Đã tạo xong lộ trình với ${evt.total_files} bài học.`,
+            });
+            await refreshSidebarFolders();
+          },
+          onError: (msg: string) => updateThread(threadId, { status: 'error', error: msg, statusMessage: 'Thất bại' }),
+        });
+      }
     } catch (err: any) {
       const msg =
         err?.response?.data?.detail?.message ||
@@ -163,6 +215,18 @@ export default function DashboardIndex() {
       <div className="flex flex-col items-center justify-start h-full w-full p-4 md:p-8">
         <div className="w-full max-w-4xl flex flex-col flex-1 min-h-0">
           <GuestBanner />
+
+          {threads.length > 0 && (
+            <div className="flex justify-end pb-2">
+              <button
+                onClick={() => setThreads([])}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs text-[rgb(var(--color-text-muted))] border border-[rgb(var(--color-border))] hover:text-indigo-400 hover:border-indigo-500/40 transition-colors"
+              >
+                <Plus size={14} />
+                Hội thoại mới
+              </button>
+            </div>
+          )}
 
           {threads.length === 0 ? (
             <div className="flex-1 flex flex-col items-center justify-center gap-8 py-8">
@@ -224,13 +288,25 @@ export default function DashboardIndex() {
                             active={false}
                             className="text-sm text-[rgb(var(--color-text-primary))] leading-relaxed"
                           />
-                          <button
-                            onClick={() => thread.folderId && openFolder(thread.folderId)}
-                            className="self-start flex items-center gap-2 px-4 py-2 mt-1 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-500/20"
-                          >
-                            <FolderOpen size={16} />
-                            Mở lộ trình
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <button
+                              onClick={() => thread.folderId && openFolder(thread.folderId)}
+                              className="self-start flex items-center gap-2 px-4 py-2 mt-1 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-500/20"
+                            >
+                              <FolderOpen size={16} />
+                              Mở lộ trình
+                            </button>
+                            <button
+                              onClick={() =>
+                                thread.folderId &&
+                                router.push(`/dashboard/folders/${thread.folderId}?view=mindmap`)
+                              }
+                              className="self-start flex items-center gap-2 px-4 py-2 mt-1 rounded-lg text-sm font-medium border border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] hover:text-indigo-400 hover:border-indigo-500/40 transition-colors"
+                            >
+                              <Network size={16} />
+                              Xem sơ đồ tư duy
+                            </button>
+                          </div>
                         </>
                       )}
 

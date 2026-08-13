@@ -44,7 +44,7 @@ def get_file_by_id(file_id: str) -> str:
         f"📖 **{file_name}**\n"
         f"🆔 `ID: {file_obj.id}`\n"
         f"🔗 **[Đọc trên Web UI]({web_ui_url})**\n\n"
-        f"{"="*30}\n\n"
+        f"{'=' * 30}\n\n"
         f"{rendered_content}"
     )
 

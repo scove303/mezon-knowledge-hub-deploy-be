@@ -1,16 +1,18 @@
 "use client"; // Bắt buộc khi sử dụng React hooks
 
-import { useWorkspaceStore } from '@/features/folders/store';
+import { useWorkspaceStore, CHAT_PANE_WIDTH_DEFAULT } from '@/features/folders/store';
 import { fileService } from '@/features/files/services';
 import { folderService } from '@/features/folders/services';
 import { aiService } from '@/features/ai/services';
 import FileViewer from '@/features/files/components/FileViewer';
-import { useEffect, useState, use } from 'react';
+import MindmapViewer from '@/features/mindmap/components/MindmapViewer';
+import ResizeHandle from '@/components/common/ResizeHandle';
+import { useEffect, useState, use, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import ChatHistory from '@/components/chat/ChatHistory';
 import ChatInput from '@/components/chat/ChatInput';
 import { MessageProps } from '@/components/chat/ChatMessage';
-import { PanelRightClose, PanelRight } from 'lucide-react';
+import { PanelRightClose, PanelRight, Network, FileText } from 'lucide-react';
 
 export default function FolderPage({
   params,
@@ -24,15 +26,24 @@ export default function FolderPage({
   const {
     folders,
     selectedFileId,
+    setSelectedFileId,
     setSidebarOpen,
     isDocumentSideOpen,
     setDocumentSideOpen,
     toggleDocumentSide,
     setFolders,
+    chatPaneWidth,
+    setChatPaneWidth,
   } = useWorkspaceStore() as any;
 
   const [fileDetails, setFileDetails] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const statusMsgId = useRef<string | null>(null);
+  const [showMindmap, setShowMindmap] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      new URLSearchParams(window.location.search).get("view") === "mindmap",
+  );
   const [messages, setMessages] = useState<MessageProps[]>([
     {
       id: "msg-1",
@@ -53,6 +64,13 @@ export default function FolderPage({
     }
   }, [folderId, router, setSidebarOpen]);
 
+  // Deep-link: /dashboard/folders/:id?view=mindmap → mở sẵn khung tài liệu
+  useEffect(() => {
+    if (!showMindmap) return;
+    const t = setTimeout(() => setDocumentSideOpen(true), 0);
+    return () => clearTimeout(t);
+  }, [showMindmap, setDocumentSideOpen]);
+
   // useEffect (2): Tải chi tiết file khi người dùng bấm chọn ở Sidebar
   useEffect(() => {
     async function loadFile() {
@@ -66,6 +84,7 @@ export default function FolderPage({
         if (res.success) {
           setFileDetails(res.data);
           setDocumentSideOpen(true);
+          setShowMindmap(false);
         }
       } catch (err) {
         console.error("Lỗi khi tải chi tiết tài liệu:", err);
@@ -91,6 +110,30 @@ export default function FolderPage({
   // Kiểm tra chuỗi nhập có phải đường link YouTube không
   const isYoutubeUrl = (text: string) => {
     return text.includes("youtube.com/") || text.includes("youtu.be/");
+  };
+
+  // Cập nhật tin nhắn trạng thái (status) thay vì thêm mới mỗi lần
+  const setStatusMessage = (content: string) => {
+    if (statusMsgId.current) {
+      setMessages((prev) =>
+        prev.map((m) => (m.id === statusMsgId.current ? { ...m, content } : m))
+      );
+    } else {
+      const id = `msg-${Date.now()}`;
+      statusMsgId.current = id;
+      setMessages((prev) => [...prev, { id, role: "bot", content, isStatus: true }]);
+    }
+  };
+
+  const clearStatusMessage = () => {
+    statusMsgId.current = null;
+  };
+
+  const appendBotMessage = (content: string, isStatus?: boolean) => {
+    setMessages((prev) => [
+      ...prev,
+      { id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, role: "bot", content, isStatus },
+    ]);
   };
 
   // Gửi tin nhắn mới hoặc tải file mới lên thư mục hiện tại
@@ -136,15 +179,35 @@ export default function FolderPage({
           if (foldersRes.success) setFolders(foldersRes.data);
         }
       } else {
-        // Tình huống C: Hội thoại thường.
-        // Do API backend chưa hỗ trợ nói chuyện tiếp nối cho từng Folder, chúng ta tạm thời phản hồi giả lập
-        // và lưu vết tin nhắn để hiển thị lịch sử chat cho trực quan.
-        const botMsg: MessageProps = {
-          id: `msg-${Date.now() + 1}`,
-          role: "bot",
-          content: `Backend hiện chưa hỗ trợ API hội thoại tiếp diễn (Chỉ hỗ trợ tạo Lộ trình mới bằng cách gõ lệnh từ Trang chủ). Tin nhắn của bạn: "${message}"`,
-        };
-        setMessages((prev) => [...prev, botMsg]);
+        // Tình huống C: Hội thoại tiếp diễn / hỏi & chỉnh sửa nội dung cũ trong folder.
+        // Giữ nguyên conversation_id = folderId để AI có ngữ cảnh của folder tài liệu này.
+        const followUpRes = await aiService.followUpRoadmap(folderId, message);
+        const jobId = followUpRes?.data?.job_id;
+        if (!jobId) throw new Error("Backend không trả về job_id");
+
+        await aiService.streamFollowUp(jobId, {
+          onStatus: (msg: string) => setStatusMessage(msg),
+          onAnswer: (text: string) => {
+            clearStatusMessage();
+            appendBotMessage(text);
+          },
+          onEdit: (evt: any) => {
+            clearStatusMessage();
+            appendBotMessage(
+              `Đã chỉnh sửa bài học: ${evt.title}\n(File: ${evt.file_id})`
+            );
+          },
+          onDone: async () => {
+            clearStatusMessage();
+            // Re-fetch folders để đồng bộ nội dung bài học đã chỉnh sửa
+            const foldersRes = await folderService.getFolders();
+            if (foldersRes.success) setFolders(foldersRes.data);
+          },
+          onError: (msg: string) => {
+            clearStatusMessage();
+            appendBotMessage(msg, true);
+          },
+        });
       }
     } catch (err) {
       console.error("Lỗi gửi tin nhắn đến AI:", err);
@@ -162,14 +225,21 @@ export default function FolderPage({
 
   return (
     <div className="flex h-full w-full overflow-hidden bg-[rgb(var(--color-bg))]">
-      {/* Left Pane: Chat Interface */}
+      {/* Left Pane: Chat Interface (resizable) */}
       <div
-        className={`flex flex-col shrink-0 transition-all duration-300 ease-in-out h-full ${
-          isDocumentSideOpen
-            ? "w-full lg:w-1/3 xl:w-2/5 border-r border-[rgb(var(--color-border))]"
-            : "w-full"
+        className={`relative flex flex-col shrink-0 h-full ${
+          isDocumentSideOpen ? "border-r border-[rgb(var(--color-border))]" : ""
         }`}
+        style={{ width: isDocumentSideOpen ? chatPaneWidth : "100%" }}
       >
+        {isDocumentSideOpen && (
+          <ResizeHandle
+            onResize={(delta) => setChatPaneWidth(chatPaneWidth + delta)}
+            onResizeEnd={() => setChatPaneWidth(CHAT_PANE_WIDTH_DEFAULT)}
+            className="right-0 -mr-1"
+          />
+        )}
+
         <div className="p-4 border-b border-[rgb(var(--color-border))] flex items-center justify-between pl-16">
           <h2 className="font-semibold text-lg text-[rgb(var(--color-text-primary))] truncate">
             {folder?.name || "Chat Session"}
@@ -198,7 +268,7 @@ export default function FolderPage({
         </div>
       </div>
 
-      {/* Right Pane: File Viewer (Collapsible) */}
+      {/* Right Pane: File Viewer / Mindmap (Collapsible) */}
       <div
         className={`flex flex-col min-w-0 h-full bg-[rgb(var(--color-surface-1))] transition-all duration-300 ease-in-out ${
           isDocumentSideOpen
@@ -206,7 +276,43 @@ export default function FolderPage({
             : "w-0 opacity-0 overflow-hidden"
         }`}
       >
-        {selectedFileId && fileDetails ? (
+        <div className="flex items-center justify-between px-4 py-2 border-b border-[rgb(var(--color-border))] shrink-0">
+          <div className="flex items-center gap-1.5">
+            <button
+              onClick={() => setShowMindmap(false)}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-colors ${
+                !showMindmap
+                  ? "bg-indigo-600 text-white border-indigo-500"
+                  : "text-[rgb(var(--color-text-secondary))] border-[rgb(var(--color-border))] hover:text-indigo-400"
+              }`}
+            >
+              <FileText size={13} />
+              Tài liệu
+            </button>
+            <button
+              onClick={() => setShowMindmap(true)}
+              className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-colors ${
+                showMindmap
+                  ? "bg-indigo-600 text-white border-indigo-500"
+                  : "text-[rgb(var(--color-text-secondary))] border-[rgb(var(--color-border))] hover:text-indigo-400"
+              }`}
+            >
+              <Network size={13} />
+              Sơ đồ tư duy
+            </button>
+          </div>
+        </div>
+
+        {showMindmap ? (
+          <MindmapViewer
+            folderId={folderId}
+            onOpenLesson={(fileId: string) => {
+              setShowMindmap(false);
+              setSelectedFileId(fileId);
+              setDocumentSideOpen(true);
+            }}
+          />
+        ) : selectedFileId && fileDetails ? (
           <FileViewer
             file={fileDetails}
             folderName={folder?.name || ""}
@@ -236,7 +342,8 @@ export default function FolderPage({
               </h3>
               <p>
                 Hãy chọn một tài liệu từ thanh bên trái (Sidebar) để xem nội
-                dung.
+                dung, hoặc bấm nút Sơ đồ tư duy để xem tổng quan toàn bộ bài
+                học.
               </p>
             </div>
           </div>

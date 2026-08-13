@@ -3,6 +3,20 @@
 @plugin "@tailwindcss/typography";
 
 /* ─── Base ─────────────────────────────────────────────────────────────────── */
+@keyframes accordion-down {
+  from { height: 0; }
+  to { height: var(--radix-accordion-content-height); }
+}
+@keyframes accordion-up {
+  from { height: var(--radix-accordion-content-height); }
+  to { height: 0; }
+}
+@utility animate-accordion-down {
+  animation: accordion-down 0.2s ease-out;
+}
+@utility animate-accordion-up {
+  animation: accordion-up 0.2s ease-out;
+}
 body {
   background-color: rgb(var(--color-bg));
   color: rgb(var(--color-text-primary));
@@ -12,15 +26,93 @@ body {
   margin: 0;
 }
 
-/* ─── Custom Scrollbar ──────────────────────────────────────────────────────── */
-.scrollbar-thin::-webkit-scrollbar { width: 5px; }
+/* ─── Custom Scrollbar (Minimalist, theme-aware) ───────────────────────────── */
+/* Firefox */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: rgb(var(--color-text-muted) / 0.35) transparent;
+}
+
+/* WebKit / Chromium */
+*::-webkit-scrollbar { width: 6px; height: 6px; }
+*::-webkit-scrollbar-track { background: transparent; }
+*::-webkit-scrollbar-thumb {
+  background: rgb(var(--color-text-muted) / 0.35);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: rgb(var(--color-text-muted) / 0.6);
+  background-clip: content-box;
+}
+*::-webkit-scrollbar-corner { background: transparent; }
+
+.scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
 .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgb(var(--color-surface-2));
-  border-radius: 4px;
+  background: rgb(var(--color-text-muted) / 0.35);
+  border-radius: 999px;
+  border: 1px solid transparent;
+  background-clip: content-box;
 }
 .scrollbar-thin::-webkit-scrollbar-thumb:hover {
-  background: rgb(var(--color-surface-3));
+  background: rgb(var(--color-text-muted) / 0.6);
+  background-clip: content-box;
+}
+
+/* ─── Mindmap: hover highlight branch ─────────────────────────────────────── */
+/* Nền KineticGrid: texture chấm bằng CSS thuần — hiển thị ngay cả khi canvas chưa vẽ */
+.kinetic-grid-bg {
+  background-color: #161618;
+  background-image: radial-gradient(rgba(255, 255, 255, 0.22) 1.3px, transparent 1.3px);
+  background-size: 28px 28px;
+}
+/* colorMode="dark" của React Flow sơn nền #141414 đè lên — bỏ để KineticGrid lộ ra */
+.mindmap-canvas .react-flow {
+  --xy-background-color: transparent;
+}
+@keyframes mmPulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.82; }
+}
+.mindmap-canvas .react-flow__node.mindmap-active,
+.mindmap-canvas .react-flow__edge.mindmap-active {
+  animation: mmPulse 2.2s ease-in-out infinite;
+}
+
+/* Nhánh được hover nhô lên theo trục Z về phía người dùng */
+.mindmap-canvas {
+  perspective: 1400px;
+}
+.mindmap-canvas .react-flow__viewport,
+.mindmap-canvas .react-flow__edges,
+.mindmap-canvas .react-flow__edge {
+  transform-style: preserve-3d;
+}
+.mindmap-canvas .react-flow__edge path {
+  transform: translateZ(0);
+  transition:
+    transform 380ms cubic-bezier(0.4, 0, 0.2, 1),
+    stroke-width 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mindmap-canvas .react-flow__edge.mindmap-active path {
+  transform: translateZ(48px);
+  filter: drop-shadow(0 0 4px currentColor);
+  transition:
+    transform 380ms cubic-bezier(0.4, 0, 0.2, 1),
+    filter 500ms ease,
+    stroke-width 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mindmap-canvas .react-flow__edge.mindmap-edge-hover path {
+  transform: translateZ(70px);
+}
+.mindmap-canvas .react-flow__edge path {
+  transition:
+    stroke-width 320ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.mindmap-canvas .react-flow__node:hover {
+  z-index: 10;
 }
 
 /* ─── Animations ────────────────────────────────────────────────────────────── */

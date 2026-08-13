@@ -21,6 +21,7 @@ class FileUpdate(BaseModel):
 class FileRead(BaseModel):
     id: str
     name: str
+    summary: Optional[str] = ""
     content: str
     video_url: Optional[str] = None
     timestamps: Optional[List[TimestampItem]] = None

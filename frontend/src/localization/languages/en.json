@@ -35,7 +35,14 @@
     "no_account": "Don't have an account yet?",
     "register": "Register",
     "login": "Login",
-    "or": "Or"
+    "or": "Or",
+    "mezon": "Login with Mezon",
+    "mezon_note": "Your account will be created automatically with your Mezon account",
+    "processing": "Processing login...",
+    "access_denied": "You cancelled the Mezon login.",
+    "failed": "Mezon login failed. Please try again.",
+    "link_error": "Could not create the Mezon login link. Please try again.",
+    "server_error": "Cannot reach the server. Please try again."
   },
   "register": {
     "header": "Make a new account",

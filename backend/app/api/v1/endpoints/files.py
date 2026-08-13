@@ -25,6 +25,7 @@ def get_file(file_id: str, session: SessionDep, current_user: CurrentActor):
         data={
             "id": file.id,
             "name": file.name,
+            "summary": getattr(file, "summary", ""),
             "content": file.markdown_content,
             "video_url": file.video_url,
             "timestamps": file.timestamps_json,

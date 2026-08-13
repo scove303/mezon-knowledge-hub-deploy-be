@@ -4,13 +4,16 @@ import uuid
 
 from fastapi import APIRouter, File, Form, UploadFile, HTTPException, status
 from fastapi.responses import StreamingResponse
+from sqlmodel import select
+from sqlalchemy.orm import selectinload
 
 from app.core.database import get_session
 from app.core.state import create_job, get_job_for_user, roadmap_jobs
 from app.schemas.common import success_response
 from app.api.deps import SessionDep, CurrentActor
-from app.services.knowledge.roadmap import roadmap_service
-from app.schemas.ai import RoadmapCreateRequest
+from app.services.knowledge.roadmap import roadmap_service, revise_roadmap
+from app.schemas.ai import RoadmapCreateRequest, RoadmapFollowUpRequest
+from app.models.folder import Folder
 
 router = APIRouter()
 
@@ -163,6 +166,108 @@ async def get_roadmap_status(
             "files": job.files,
             "last_event": job.events[-1] if job.events else None,
         },
+    )
+
+
+# =====================================================================
+# FOLLOW-UP PROMPT: HỎI TIẾP / CHỈNH SỬA NỘI DUNG CŨ
+# =====================================================================
+def _load_owned_folder(session, folder_id: str, user_id: int) -> Folder:
+    """Load folder kèm files, kiểm tra quyền sở hữu của user."""
+    statement = (
+        select(Folder)
+        .where(Folder.id == folder_id, Folder.user_id == user_id)
+        .options(selectinload(Folder.files))
+    )
+    return session.exec(statement).first()
+
+
+async def run_followup_job(job_id: str):
+    """Chạy follow-up prompt trong background và phát sự kiện qua job.queue."""
+    from app.core.database import get_session as _get_session
+
+    job = roadmap_jobs.get(job_id)
+    if not job:
+        return
+
+    job.status = "running"
+    try:
+        with next(_get_session()) as session:
+            folder = _load_owned_folder(session, job.conversation_id, job.user_id)
+            if not folder:
+                raise HTTPException(
+                    status_code=status.HTTP_404_NOT_FOUND,
+                    detail="Không tìm thấy folder/hội thoại này (có thể đã bị xóa hoặc không thuộc quyền của bạn)",
+                )
+
+            result = await revise_roadmap(
+                topic=job.topic,
+                folder=folder,
+                session=session,
+                on_event=job.push,
+            )
+
+            if result.get("action") == "edit":
+                job.push(
+                    {
+                        "type": "edit",
+                        "file_id": result["file_id"],
+                        "title": result["title"],
+                        "content": result["content"],
+                    }
+                )
+                job.folder_id = folder.id
+                job.files = [
+                    {"file_id": f.id, "title": f.name}
+                    for f in folder.files
+                ]
+            else:
+                job.push({"type": "answer", "text": result.get("text", "")})
+
+            job.status = "done"
+            job.push(
+                {
+                    "type": "done",
+                    "conversation_id": folder.id,
+                    "folder_id": folder.id,
+                    "action": result.get("action"),
+                    "file_id": result.get("file_id"),
+                    "title": result.get("title"),
+                }
+            )
+    except Exception as e:
+        job.status = "error"
+        job.error = str(e)
+        job.push({"type": "error", "message": f"Lỗi xử lý prompt tiếp theo: {str(e)}"})
+        print(f"❌ [FollowUpJob {job_id}] Thất bại: {e}", flush=True)
+
+
+@router.post("/roadmap/followup")
+async def followup_roadmap(
+    body: RoadmapFollowUpRequest,
+    session: SessionDep,
+    current_user: CurrentActor,
+):
+    """Prompt hỏi tiếp / chỉnh sửa nội dung cũ — giữ nguyên conversation_id (folder_id)."""
+    folder = _load_owned_folder(session, body.conversation_id, current_user.id)
+    if not folder:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy hội thoại/lộ trình này. Vui lòng tạo lộ trình trước hoặc kiểm tra lại ID.",
+        )
+
+    job = create_job(
+        user_id=current_user.id,
+        topic=body.topic,
+        folder_name=body.folder_name or folder.name,
+        conversation_id=folder.id,
+    )
+    job.push({"type": "status", "message": "Đã nhận yêu cầu, đang chuẩn bị..."})
+    asyncio.create_task(run_followup_job(job.id))
+
+    return success_response(
+        message="Yêu cầu hỏi tiếp / chỉnh sửa đã được chấp nhận",
+        data={"job_id": job.id, "status": "queued", "conversation_id": folder.id},
     )
 
 

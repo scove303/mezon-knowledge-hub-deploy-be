@@ -1,0 +1,127 @@
+"""
+Copyright 2022 The Mezon Authors
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
+import time
+from typing import Any
+
+import jwt
+
+from .models import ApiSession
+
+
+class Session:
+    """Represents an authenticated user session with JWT token management."""
+
+    def __init__(self, api_session: ApiSession) -> None:
+        """
+        Initialize a Session from an API session response.
+
+        Args:
+            api_session (ApiSession): API session containing token and user data.
+        """
+        self.token: str = api_session.token
+        self.refresh_token: str = api_session.refresh_token
+        self.api_url: str = api_session.api_url
+        self.id_token: str = api_session.id_token
+        self.ws_url: str = self.restore_ws_url(api_session.ws_url)
+        self.created_at: int = int(time.time())
+        self.expires_at: int | None = None
+        self.refresh_expires_at: int | None = None
+        self.vars: dict[str, Any] = {}
+
+        self.update(self.token, self.refresh_token)
+
+        if api_session.user_id is not None:
+            self.user_id: str = str(api_session.user_id)
+        else:
+            payload = jwt.decode(
+                self.token, options={"verify_signature": False, "verify_exp": False}
+            )
+            uid = payload.get("uid", "")
+            self.user_id: str = str(uid) if uid else ""
+
+    def restore_ws_url(self, ws_url: str) -> str:
+        # TODO: Restore the ws url to the correct protocol
+        # for now assume it returns wss:// if not provided
+        if not ws_url.startswith("wss://") and not ws_url.startswith("ws://"):
+            ws_url = f"wss://{ws_url}"
+        return ws_url
+
+    def is_expired(self, current_time: int) -> bool:
+        """
+        Check if the session has expired.
+
+        Args:
+            current_time: Current UNIX timestamp in seconds
+
+        Returns:
+            True if expired, False otherwise
+        """
+        if self.expires_at is None:
+            return True
+        return (self.expires_at - current_time) < 0
+
+    def is_refresh_expired(self, current_time: int) -> bool:
+        """
+        Check if the refresh token has expired.
+
+        Args:
+            current_time: Current UNIX timestamp in seconds
+
+        Returns:
+            True if expired, False otherwise
+        """
+        if self.refresh_expires_at is None:
+            return True
+        return (self.refresh_expires_at - current_time) < 0
+
+    def update(self, token: str, refresh_token: str | None = None) -> None:
+        """
+        Update the session with new tokens.
+
+        Args:
+            token: The JWT token
+            refresh_token: The refresh JWT token (optional)
+
+        Raises:
+            ValueError: If JWT tokens are invalid
+        """
+        payload = jwt.decode(
+            token, options={"verify_signature": False, "verify_exp": False}
+        )
+        self.expires_at = int(payload["exp"])
+        self.token = token
+        self.vars = payload.get("vrs", {})
+
+        if refresh_token:
+            r_payload = jwt.decode(
+                refresh_token, options={"verify_signature": False, "verify_exp": False}
+            )
+            self.refresh_expires_at = int(r_payload["exp"])
+            self.refresh_token = refresh_token
+
+    @classmethod
+    def restore(cls, session: dict[str, Any]) -> "Session":
+        """
+        Restore a session from a dictionary.
+
+        Args:
+            session: Session dictionary
+
+        Returns:
+            Session instance
+        """
+        return cls(session)

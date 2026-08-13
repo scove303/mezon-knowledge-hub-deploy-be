@@ -2,7 +2,8 @@ import uuid
 from datetime import datetime
 from typing import Optional
 
-from sqlmodel import Session
+from sqlalchemy import func
+from sqlmodel import Session, select
 
 from app.models.knowledge_file import KnowledgeFile
 from app.schemas.file import FileCreate, FileUpdate
@@ -13,11 +14,17 @@ def get_file(session: Session, file_id: str) -> Optional[KnowledgeFile]:
 
 
 def create_file(session: Session, folder_id: str, data: FileCreate) -> KnowledgeFile:
+    max_order = session.exec(
+        select(func.max(KnowledgeFile.order_index)).where(
+            KnowledgeFile.folder_id == folder_id
+        )
+    ).one()
     file = KnowledgeFile(
         id=f"file-{uuid.uuid4().hex[:8]}",
         folder_id=folder_id,
         name=data.name,
         markdown_content=data.content,
+        order_index=(max_order or -1) + 1,
     )
     session.add(file)
     session.commit()

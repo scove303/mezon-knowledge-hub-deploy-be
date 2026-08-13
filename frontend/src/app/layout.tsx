@@ -1,4 +1,5 @@
 import { Geist, Geist_Mono } from "next/font/google";
+import "katex/dist/katex.min.css";
 import "./globals.css";
 import React from "react";
 import Providers from "@/components/layout/Providers";
@@ -44,7 +45,7 @@ export const metadata = {
     "Trợ lý AI biên soạn, phân loại và quản lý tri thức đa phương tiện trên Mezon.",
   keywords: ["knowledge hub", "mezon", "ai", "learning", "documents"],
   icons: {
-    icon: 'data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📁</text></svg>',
+    icon: "data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📁</text></svg>",
   },
 };
 
@@ -54,23 +55,23 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-      <LanguageProvider>
-        <html
-          lang="vi"
-          suppressHydrationWarning
-          className={`${geistSans.variable} ${geistMono.variable} h-full`}
-        >
-          <head>
-            {/* Nhúng đoạn script chống nhấp nháy giao diện */}
-            <script
-              dangerouslySetInnerHTML={{ __html: themeInitializerScript }}
-            ></script>
-          </head>
+    <LanguageProvider>
+      <html
+        lang="vi"
+        suppressHydrationWarning
+        className={`${geistSans.variable} ${geistMono.variable} h-full`}
+      >
+        <head>
+          {/* Nhúng đoạn script chống nhấp nháy giao diện */}
+          <script
+            dangerouslySetInnerHTML={{ __html: themeInitializerScript }}
+          ></script>
+        </head>
 
-          <body className="h-full antialiased" suppressHydrationWarning>
-            <Providers>{children}</Providers>
-          </body>
-        </html>
-      </LanguageProvider>
+        <body className="h-full antialiased" suppressHydrationWarning>
+          <Providers>{children}</Providers>
+        </body>
+      </html>
+    </LanguageProvider>
   );
 }

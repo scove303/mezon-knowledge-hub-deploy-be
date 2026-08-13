@@ -14,6 +14,7 @@ class RoadmapJob:
     topic: str
     folder_name: str
     id: str = field(default_factory=lambda: uuid.uuid4().hex[:12])
+    conversation_id: str = ""  # folder_id của hội thoại cũ (follow-up prompt)
     status: str = "queued"  # queued | running | done | error
     error: str = ""
     folder_id: str = ""
@@ -30,8 +31,18 @@ class RoadmapJob:
 roadmap_jobs: dict[str, RoadmapJob] = {}
 
 
-def create_job(user_id: int, topic: str, folder_name: str) -> RoadmapJob:
-    job = RoadmapJob(user_id=user_id, topic=topic, folder_name=folder_name)
+def create_job(
+    user_id: int,
+    topic: str,
+    folder_name: str,
+    conversation_id: str = "",
+) -> RoadmapJob:
+    job = RoadmapJob(
+        user_id=user_id,
+        topic=topic,
+        folder_name=folder_name,
+        conversation_id=conversation_id,
+    )
     roadmap_jobs[job.id] = job
 
     # Dọn các job cũ đã kết thúc nếu vượt giới hạn
