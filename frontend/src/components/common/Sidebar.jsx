@@ -1,4 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+
+// Timer hoãn xóa (module scope để React Compiler không chặn việc modify trong handler)
+let deleteTimer = null;
 import {
   Folder,
   FolderOpen,
@@ -338,6 +341,19 @@ export default function Sidebar() {
 
       if (isInputting) return;
 
+      // Ctrl+Z = hoàn tác thao tác xóa (giống nút "Hoàn tác" trên toast)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        if (deleteTimer) {
+          e.preventDefault();
+          clearTimeout(deleteTimer);
+          deleteTimer = null;
+          useToastStore
+            .getState()
+            .addToast("Đã hoàn tác, mục được giữ lại!", "success");
+        }
+        return;
+      }
+
       if (e.key === "Delete" || e.key === "Backspace") {
         const selFile = selectedFile;
         const selFolder = selectedFolder;
@@ -387,6 +403,9 @@ export default function Sidebar() {
         const res = await folderService.deleteFolder(folderId);
         if (res.success) {
           await refreshFolders();
+          useToastStore
+            .getState()
+            .addToast("Đã xóa thư mục!", "success");
           if (store.selectedFolderId === folderId) {
             store.setSelectedFolder(null);
             router.push("/dashboard");
@@ -400,6 +419,9 @@ export default function Sidebar() {
         const res = await fileService.deleteFile(fileId);
         if (res.success) {
           await refreshFolders();
+          useToastStore
+            .getState()
+            .addToast("Đã xóa tài liệu!", "success");
           if (store.selectedFileId === fileId) {
             store.setSelectedFile(null);
           }
@@ -411,14 +433,12 @@ export default function Sidebar() {
   };
 
   // Xác nhận xóa: hoãn 5s để người dùng có thể hoàn tác
-  const deleteTimerRef = useRef(null);
-
   const confirmDelete = () => {
     if (!itemToDelete) return;
 
     const name = itemToDelete.name || "mục này";
     setDeleteConfirmOpen(false);
-    clearTimeout(deleteTimerRef.current);
+    clearTimeout(deleteTimer);
 
     useToastStore
       .getState()
@@ -429,7 +449,7 @@ export default function Sidebar() {
         {
           label: "Hoàn tác",
           onClick: () => {
-            clearTimeout(deleteTimerRef.current);
+            clearTimeout(deleteTimer);
             useToastStore
               .getState()
               .addToast("Đã hoàn tác, mục được giữ lại!", "success");
@@ -437,7 +457,7 @@ export default function Sidebar() {
         },
       );
 
-    deleteTimerRef.current = setTimeout(() => {
+    deleteTimer = setTimeout(() => {
       doDelete();
     }, 5000);
   };

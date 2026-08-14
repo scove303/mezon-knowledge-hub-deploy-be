@@ -289,12 +289,8 @@ const Folder = forwardRef<
           <AccordionPrimitive.Root
             dir={direction}
             type="multiple"
-            className="flex flex-col gap-1 py-1 ml-5 rtl:mr-5 "
+            className="flex flex-col gap-1 py-1 ml-5 rtl:mr-5"
             defaultValue={expandedItems}
-            value={expandedItems}
-            onValueChange={(value) => {
-              setExpandedItems?.(value)
-            }}
           >
             {children}
           </AccordionPrimitive.Root>

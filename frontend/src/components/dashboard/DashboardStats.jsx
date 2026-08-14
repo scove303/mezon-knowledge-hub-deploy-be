@@ -38,7 +38,7 @@ const formatDate = (s) => {
 
 export default function DashboardStats() {
   const router = useRouter();
-  const { folders, setSelectedFileId } = useWorkspaceStore();
+  const { folders, setSelectedFile } = useWorkspaceStore();
 
   const [doneCount, setDoneCount] = useState(() => {
     if (typeof window === "undefined") return 0;

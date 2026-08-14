@@ -181,6 +181,62 @@ export default function FolderPage({
     }
   };
 
+  // Tóm tắt AI: hiển thị kết quả ngay trong khung chat (nối tiếp luồng hội thoại)
+  const handleAiSummary = async (file: any) => {
+    if (!file) return;
+    const fileName = file.name || "tài liệu";
+    const userMsg: MessageProps = {
+      id: `msg-sum-${Date.now()}`,
+      role: "user",
+      content: `Hãy tóm tắt nội dung của tài liệu "${fileName}"`,
+    };
+    const botMsg: MessageProps = {
+      id: `msg-sum-${Date.now() + 1}`,
+      role: "bot",
+      content: `Đang tóm tắt nội dung của "${fileName}"...`,
+    };
+    setMessages((prev) => [...prev, userMsg, botMsg]);
+
+    try {
+      const res = await aiService.summarizeFile(file.id);
+      if (res.success) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === botMsg.id
+              ? {
+                  ...m,
+                  content: `### 📝 Tóm tắt AI — ${fileName}\n\n${
+                    res.data?.summary || "(AI không trả về nội dung)"
+                  }`,
+                }
+              : m,
+          ),
+        );
+      } else {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === botMsg.id
+              ? { ...m, content: `Không thể tóm tắt: ${res.message || "lỗi không xác định"}` }
+              : m,
+          ),
+        );
+      }
+    } catch (err: any) {
+      console.error("Lỗi tóm tắt file:", err);
+      const msg =
+        err?.response?.data?.detail?.message ||
+        err?.response?.data?.detail ||
+        "Không thể kết nối với dịch vụ AI. Vui lòng thử lại sau!";
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === botMsg.id
+            ? { ...m, content: `Lỗi: ${typeof msg === "string" ? msg : JSON.stringify(msg)}` }
+            : m,
+        ),
+      );
+    }
+  };
+
   // Lưu nội dung sau khi chỉnh sửa
   const handleSaveContent = async (newContent: string) => {
     if (!selectedFileId) return;
@@ -448,6 +504,7 @@ export default function FolderPage({
             file={fileDetails}
             folderName={folder?.name || ""}
             onSaveContent={handleSaveContent}
+            onAiSummary={handleAiSummary}
             onRestoreContent={(content: string) => {
               setFileDetails((prev: any) =>
                 prev ? { ...prev, content } : prev,

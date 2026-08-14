@@ -5,6 +5,7 @@ import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ChevronLeft, ChevronRight, X, Presentation } from 'lucide-react';
 import { MarkdownComponents } from '@/components/markdown/MarkdownComponents';
+import KineticGrid from '@/components/ui/kinetic-grid';
 import { Button } from '@/components/base-ui/Button';
 
 const splitSlides = (md) => {
@@ -82,22 +83,25 @@ export default function SlideViewer({ content, name, onClose }) {
         </Button>
       </header>
 
-      <div className="flex-1 overflow-y-auto scrollbar-thin flex items-center justify-center p-8">
-        <div className="w-full max-w-3xl">
-          <h2 className="text-3xl font-bold text-[rgb(var(--color-text-primary))] mb-8 pb-4 border-b border-[rgb(var(--color-border))]">
-            {slide.title}
-          </h2>
-          {slide.body.length > 0 ? (
-            <article className="prose prose-invert max-w-none prose-lg">
-              <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
-                {slide.body.join('\n')}
-              </ReactMarkdown>
-            </article>
-          ) : (
-            <p className="text-lg text-[rgb(var(--color-text-muted))]">
-              (Slide này không có nội dung)
-            </p>
-          )}
+      <div className="flex-1 relative overflow-hidden">
+        <KineticGrid className="absolute inset-0" />
+        <div className="relative z-10 h-full overflow-y-auto scrollbar-thin flex items-center justify-center p-8">
+          <div className="w-full max-w-3xl">
+            <h2 className="text-3xl font-bold text-[rgb(var(--color-text-primary))] mb-8 pb-4 border-b border-[rgb(var(--color-border))]">
+              {slide.title}
+            </h2>
+            {slide.body.length > 0 ? (
+              <article className="prose prose-invert max-w-none prose-lg">
+                <ReactMarkdown remarkPlugins={[remarkGfm]} components={MarkdownComponents}>
+                  {slide.body.join('\n')}
+                </ReactMarkdown>
+              </article>
+            ) : (
+              <p className="text-lg text-[rgb(var(--color-text-muted))]">
+                (Slide này không có nội dung)
+              </p>
+            )}
+          </div>
         </div>
       </div>
 

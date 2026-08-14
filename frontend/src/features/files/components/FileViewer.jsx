@@ -22,21 +22,22 @@ import {
   History,
   Presentation,
   Sparkles,
-  Loader2,
 } from "lucide-react";
 import { Button } from "@/components/base-ui/Button";
 import { Modal } from "@/components/base-ui/Modal";
 import { useWorkspaceStore } from "@/features/folders/store";
 import { fileService } from "@/features/files/services";
 import { folderService } from "@/features/folders/services";
-import { aiService } from "@/features/ai/services";
 import { useToastStore } from "@/stores/toast";
 import { speakText, stopSpeech } from "src/utils/speech";
 import { MarkdownComponents } from "@/components/markdown/MarkdownComponents";
 import SlideViewer from "./SlideViewer";
 import { cn } from "@/utils/formatTailwind";
 
-export default function FileViewer({ file, onSaveContent, onRestoreContent, folderName }) {
+// Timer hoãn xóa (module scope để React Compiler không chặn việc modify trong handler)
+let deleteTimer = null;
+
+export default function FileViewer({ file, onSaveContent, onRestoreContent, folderName, onAiSummary }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(file ? file.content : "");
   const [seekTime, setSeekTime] = useState(0);
@@ -107,32 +108,9 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
   // Chế độ trình chiếu (slide) từ markdown
   const [slideOpen, setSlideOpen] = useState(false);
 
-  // Tóm tắt nội dung bằng AI
-  const [summaryOpen, setSummaryOpen] = useState(false);
-  const [summary, setSummary] = useState("");
-  const [summaryLoading, setSummaryLoading] = useState(false);
-
-  const handleSummarize = async () => {
-    setSummaryOpen(true);
-    setSummary("");
-    setSummaryLoading(true);
-    try {
-      const res = await aiService.summarizeFile(file.id);
-      if (res.success) {
-        setSummary(res.data?.summary || "(AI không trả về nội dung)");
-      } else {
-        setSummary(`Không thể tóm tắt: ${res.message || "lỗi không xác định"}`);
-      }
-    } catch (err) {
-      console.error("Lỗi tóm tắt file:", err);
-      const msg =
-        err?.response?.data?.detail?.message ||
-        err?.response?.data?.detail ||
-        "Không thể kết nối với dịch vụ AI. Vui lòng thử lại sau!";
-      setSummary(`Lỗi: ${typeof msg === "string" ? msg : JSON.stringify(msg)}`);
-    } finally {
-      setSummaryLoading(false);
-    }
+  // Tóm tắt nội dung bằng AI → hiển thị trong khung chat (nối tiếp hội thoại)
+  const handleSummarize = () => {
+    onAiSummary?.(file);
   };
 
   // Đánh dấu bài đã học (lưu localStorage)
@@ -196,6 +174,22 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
         e.preventDefault();
         if (isDirty) handleSave();
       }
+      // Ctrl+Z = hoàn tác xóa (giống nút "Hoàn tác" trên toast)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        const tagName = document.activeElement?.tagName;
+        const isInputting =
+          ["INPUT", "TEXTAREA"].includes(tagName) ||
+          document.activeElement?.isContentEditable;
+        if (isInputting) return;
+        if (deleteTimer) {
+          e.preventDefault();
+          clearTimeout(deleteTimer);
+          deleteTimer = null;
+          useToastStore
+            .getState()
+            .addToast("Đã hoàn tác, tài liệu được giữ lại!", "success");
+        }
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -216,12 +210,10 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
   };
 
   // Xóa có hoàn tác: hoãn 5s, nút "Hoàn tác" hủy xóa
-  const deleteTimerRef = useRef(null);
-
   const confirmDelete = () => {
     const name = file?.name || "tài liệu";
     setDeleteConfirmOpen(false);
-    clearTimeout(deleteTimerRef.current);
+    clearTimeout(deleteTimer);
 
     useToastStore
       .getState()
@@ -232,7 +224,7 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
         {
           label: "Hoàn tác",
           onClick: () => {
-            clearTimeout(deleteTimerRef.current);
+            clearTimeout(deleteTimer);
             useToastStore
               .getState()
               .addToast("Đã hoàn tác, tài liệu được giữ lại!", "success");
@@ -240,7 +232,7 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
         },
       );
 
-    deleteTimerRef.current = setTimeout(() => {
+    deleteTimer = setTimeout(() => {
       handleDelete();
     }, 5000);
   };
@@ -826,36 +818,6 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
           </div>
         )}
       </div>
-
-      <Modal
-        isOpen={summaryOpen}
-        onClose={() => setSummaryOpen(false)}
-        title={`Tóm tắt AI — ${file?.name || ""}`}
-        size="lg"
-        footer={
-          <div className="flex justify-end gap-2 w-full">
-            <Button variant="ghost" onClick={() => setSummaryOpen(false)}>
-              Đóng
-            </Button>
-          </div>
-        }
-      >
-        {summaryLoading ? (
-          <div className="flex flex-col items-center gap-3 py-10 text-sm text-[rgb(var(--color-text-muted))]">
-            <Loader2 className="w-6 h-6 animate-spin text-indigo-400" />
-            Đang tóm tắt nội dung bằng AI...
-          </div>
-        ) : (
-          <article className="prose prose-invert max-w-none max-h-96 overflow-y-auto scrollbar-thin text-sm">
-            <ReactMarkdown
-              remarkPlugins={[remarkGfm]}
-              components={FileMarkdownComponents}
-            >
-              {summary}
-            </ReactMarkdown>
-          </article>
-        )}
-      </Modal>
 
       <Modal
         isOpen={revisionsOpen}

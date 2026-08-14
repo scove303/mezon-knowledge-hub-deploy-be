@@ -38,26 +38,37 @@ export default function CommandPalette() {
   const [query, setQuery] = useState("");
   const [activeIndex, setActiveIndex] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
+  const listRef = useRef<HTMLDivElement>(null);
+  const itemRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
-  // Ctrl+K để mở / đóng, Esc để đóng
+  // Ctrl+K để mở / đóng, Esc để đóng + reset
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
         e.preventDefault();
+        // Không reset query/activeIndex → giữ nguyên trạng thái khi mở lại
         if (!open) {
-          setQuery("");
-          setActiveIndex(0);
           setOpen(true);
           requestAnimationFrame(() => inputRef.current?.focus());
         } else {
           setOpen(false);
         }
       }
-      if (e.key === "Escape") setOpen(false);
+      if (e.key === "Escape") {
+        setOpen(false);
+        setQuery("");
+        setActiveIndex(0);
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
   }, [open]);
+
+  // Tự cuộn item đang active vào trong tầm nhìn (không nhảy khỏi scroll view)
+  useEffect(() => {
+    const el = itemRefs.current[activeIndex];
+    el?.scrollIntoView({ block: "nearest" });
+  }, [activeIndex]);
 
   const openFile = useCallback(
     (folderId: string, fileId: string) => {
@@ -250,6 +261,8 @@ export default function CommandPalette() {
               } else if (e.key === "Enter") {
                 e.preventDefault();
                 items[activeIndex]?.run();
+                // Đóng palette nhưng GIỮ query + activeIndex (Ctrl+K mở lại y chang)
+                setOpen(false);
               }
             }}
             placeholder="Tìm tài liệu, thư mục hoặc gõ lệnh..."
@@ -257,7 +270,10 @@ export default function CommandPalette() {
           />
         </div>
 
-        <div className="max-h-80 overflow-y-auto scrollbar-thin border-t border-[rgb(var(--color-border))]">
+        <div
+          ref={listRef}
+          className="max-h-80 overflow-y-auto scrollbar-thin border-t border-[rgb(var(--color-border))]"
+        >
           {items.length === 0 ? (
             <div className="px-4 py-8 text-center text-sm text-[rgb(var(--color-text-muted))]">
               Không có kết quả cho &quot;{query}&quot;
@@ -274,8 +290,15 @@ export default function CommandPalette() {
                     </p>
                   )}
                   <button
+                    ref={(el) => {
+                      itemRefs.current[idx] = el;
+                    }}
                     onMouseEnter={() => setActiveIndex(idx)}
-                    onClick={() => it.run()}
+                    onClick={() => {
+                      it.run();
+                      // Đóng palette nhưng GIỮ query + activeIndex (Ctrl+K mở lại y chang)
+                      setOpen(false);
+                    }}
                     className={`flex items-center gap-3 w-full text-left px-4 py-2.5 transition-colors ${
                       isActive
                         ? "bg-[rgb(var(--color-primary)/0.12)] text-[rgb(var(--color-primary))]"

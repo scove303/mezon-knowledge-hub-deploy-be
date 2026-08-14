@@ -30,7 +30,10 @@ export const fileService = {
     const formData = new FormData();
     formData.append("folder_id", folderId);
     formData.append("file", file);
-    const { data } = await axiosInstance.post("/files", formData);
+    // Content-Type undefined → bỏ header JSON default, browser tự set multipart + boundary
+    const { data } = await axiosInstance.post("/files", formData, {
+      headers: { "Content-Type": undefined },
+    });
     return data;
   },
 

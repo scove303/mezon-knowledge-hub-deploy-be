@@ -5,8 +5,6 @@ import ResizeHandle from "@/components/common/ResizeHandle";
 import CommandPalette from "@/components/common/CommandPalette";
 import { useWorkspaceStore, SIDEBAR_WIDTH_DEFAULT } from "@/features/folders/store";
 import { PanelLeft, PanelLeftClose } from "lucide-react";
-import { usePathname } from "next/navigation";
-import { useEffect } from "react";
 
 export default function DashboardLayout({
   children,
@@ -20,13 +18,6 @@ export default function DashboardLayout({
     sidebarWidth,
     setSidebarWidth,
   } = useWorkspaceStore() as any;
-  const pathname = usePathname();
-
-  useEffect(() => {
-    if (pathname === "/dashboard" || pathname === "/") {
-      setSidebarOpen(false);
-    }
-  }, [pathname, setSidebarOpen]);
 
   return (
     <div className="flex h-screen bg-[rgb(var(--color-bg))] overflow-hidden">
