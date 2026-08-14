@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     MEZON_REDIRECT_URI: str = "http://localhost:8000/api/v1/auth/mezon/callback"
 
     # URL frontend (nơi Mezon callback sẽ chuyển hướng sau khi lấy được code)
-    FRONTEND_URL: str = "http://localhost:3001"
+    FRONTEND_URL: str = "http://localhost:3000"
     
     # CORS
     BACKEND_CORS_ORIGINS: List[str] = [

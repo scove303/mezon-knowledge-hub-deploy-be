@@ -76,7 +76,7 @@ const MarkdownComponents = {
       </code>
     ),
   pre: ({ children }: any) => (
-    <pre className="my-2">{children}</pre>
+    <div className="my-2">{children}</div>
   ),
   table: ({ children }: any) => (
     <div className="overflow-x-auto my-2">

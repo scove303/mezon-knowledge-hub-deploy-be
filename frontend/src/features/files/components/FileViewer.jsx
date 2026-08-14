@@ -82,6 +82,10 @@ export default function FileViewer({
   folderId,
   onAiSummary,
 }) {
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [showTtsSettings, setShowTtsSettings] = useState(false);
+  const [speechRate, setSpeechRate] = useState(1.0);
+  const [useCloudNeural, setUseCloudNeural] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(file ? file.content : "");
   const [seekTime, setSeekTime] = useState(0);
@@ -686,6 +690,8 @@ export default function FileViewer({
 
   const FileMarkdownComponents = {
     ...MarkdownComponents,
+    pre: ({ children }) => <>{children}</>,
+    p: ({ children, ...props }) => <div className="mb-4 last:mb-0" {...props}>{children}</div>,
     a: TimestampA,
     h1: (props) => <HeadingWithId tag="h1" {...props} />,
     h2: (props) => <HeadingWithId tag="h2" {...props} />,
@@ -694,10 +700,6 @@ export default function FileViewer({
 
   // Phần Tích hợp Text-to-Speech (TTS)
   // Trạng thái phát âm thanh & Bảng cài đặt giọng đọc
-  const [isSpeaking, setIsSpeaking] = useState(false);
-  const [showTtsSettings, setShowTtsSettings] = useState(false);
-  const [speechRate, setSpeechRate] = useState(1.0);
-  const [useCloudNeural, setUseCloudNeural] = useState(true);
 
   // Cập nhật cấu hình khi thay đổi thông số đọc
   const handleRateChange = (newRate) => {
@@ -1244,7 +1246,7 @@ export default function FileViewer({
             >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
-                components={FileMarkdownComponents}
+                components={  FileMarkdownComponents}
               >
                 {file.content}
               </ReactMarkdown>
@@ -1486,9 +1488,9 @@ export default function FileViewer({
                   {rev.content || "(trống)"}
                 </p>
                 {previewRevision?.id === rev.id && (
-                  <pre className="mt-2 p-3 rounded-md bg-[rgb(var(--color-bg))] border border-[rgb(var(--color-border))] text-xs text-[rgb(var(--color-text-secondary))] whitespace-pre-wrap max-h-56 overflow-y-auto scrollbar-thin">
+                  <div className="mt-2 p-3 rounded-md bg-[rgb(var(--color-bg))] border border-[rgb(var(--color-border))] text-xs text-[rgb(var(--color-text-secondary))] whitespace-pre-wrap max-h-56 overflow-y-auto scrollbar-thin">
                     {rev.content || "(trống)"}
-                  </pre>
+                  </div>
                 )}
               </div>
             ))}
