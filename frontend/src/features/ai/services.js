@@ -115,6 +115,12 @@ export const aiService = {
     return data;
   },
 
+  // 3b. Tóm tắt nội dung một file/bài học đang mở
+  async summarizeFile(fileId) {
+    const { data } = await axiosInstance.post(`/ai/files/${fileId}/summarize`, null, { timeout: 60000 });
+    return data;
+  },
+
   // 4. Prompt hỏi tiếp / chỉnh sửa nội dung cũ (giữ conversation_id = folder_id cũ)
   async followUpRoadmap(conversationId, topic, folderName) {
     const { data } = await axiosInstance.post('/ai/roadmap/followup', {

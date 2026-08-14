@@ -33,6 +33,17 @@ export default function ToastContainer() {
           >
             <Icon size={18} className="shrink-0 mt-0.5" />
             <p className="text-sm font-medium flex-1">{toast.message}</p>
+            {toast.action && (
+              <button
+                onClick={() => {
+                  toast.action.onClick();
+                  removeToast(toast.id);
+                }}
+                className="shrink-0 px-2 py-0.5 rounded-md bg-white/15 hover:bg-white/25 text-xs font-bold transition-colors"
+              >
+                {toast.action.label}
+              </button>
+            )}
             <button
               onClick={() => removeToast(toast.id)}
               className="shrink-0 opacity-70 hover:opacity-100 transition-opacity"

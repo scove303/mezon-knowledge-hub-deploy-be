@@ -6,7 +6,7 @@ from app.core.config import settings
 # Import models for create_all to detect them
 from app.models.user import User
 from app.models.folder import Folder
-from app.models.knowledge_file import KnowledgeFile
+from app.models.knowledge_file import KnowledgeFile, FileRevision
 from app.models.processing_job import ProcessingJob
 
 engine = create_engine(

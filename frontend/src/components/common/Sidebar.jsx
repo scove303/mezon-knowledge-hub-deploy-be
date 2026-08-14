@@ -1,7 +1,11 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo, useRef } from "react";
+
+// Timer hoãn xóa (module scope để React Compiler không chặn việc modify trong handler)
+let deleteTimer = null;
 import {
   Folder,
   FolderOpen,
+  FolderPlus,
   FileText,
   FileCode,
   FileJson,
@@ -10,12 +14,16 @@ import {
   Search,
   Plus,
   Trash2,
-  ChevronsUpDown,
+  Pencil,
+  Star,
   Compass,
   FileCheck,
   Video,
   HardDrive,
   LogIn,
+  Upload,
+  SquareCheckBig,
+  CheckCircle2,
 } from "lucide-react";
 import {
   Tree,
@@ -99,6 +107,23 @@ const MOCK_FOLDERS = [
   },
 ];
 
+// Hàm highlight phần khớp với từ khóa tìm kiếm trong tên file / thư mục
+const highlightMatch = (text, query) => {
+  if (!query || !query.trim()) return text;
+  const q = query.trim().toLowerCase();
+  const idx = text.toLowerCase().indexOf(q);
+  if (idx === -1) return text;
+  return (
+    <>
+      {text.slice(0, idx)}
+      <mark className="bg-indigo-500/30 text-indigo-200 rounded px-0.5">
+        {text.slice(idx, idx + q.length)}
+      </mark>
+      {text.slice(idx + q.length)}
+    </>
+  );
+};
+
 // Hàm trả về icon phù hợp theo tên / phần mở rộng file
 const getFileIcon = (fileName) => {
   if (!fileName) return <File className="w-4 h-4 text-gray-400 shrink-0" />;
@@ -151,6 +176,7 @@ export default function Sidebar() {
 
   // 1. Tách riêng hàm setFolders từ store (hàm này sẽ ổn định tham chiếu, không bị đổi)
   const setFolders = useWorkspaceStore((state) => state.setFolders);
+  const setStoreLoading = useWorkspaceStore((state) => state.setLoading);
 
   const router = useRouter();
   const { isAuthenticated, clearAuth } = useAuthStore();
@@ -160,10 +186,125 @@ export default function Sidebar() {
   const selectedFile = store.getSelectedFile();
   const searchQuery = store.searchQuery;
   const setSearchQuery = store.setSearch;
+  const selectedFileIds = store.selectedFileIds;
+  const toggleFileSelection = store.toggleFileSelection;
+  const clearFileSelection = store.clearFileSelection;
+  // Chế độ chọn nhiều: bật bằng nút, bấm file = chọn/bỏ chọn
+  const [selectionArmed, setSelectionArmed] = useState(false);
+  const selMode = selectedFileIds.length > 0 || selectionArmed;
+  const clearAllSelection = useCallback(() => {
+    setSelectionArmed(false);
+    clearFileSelection();
+  }, [clearFileSelection]);
 
   const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
   const [itemToDelete, setItemToDelete] = useState(null);
+  const [bulkDeleteOpen, setBulkDeleteOpen] = useState(false);
+  const [renameOpen, setRenameOpen] = useState(false);
+  const [itemToRename, setItemToRename] = useState(null);
+  const [renameValue, setRenameValue] = useState("");
   const [isLoadingFolders, setIsLoadingFolders] = useState(true);
+  // Upload file thủ công: folder đích + input ẩn dùng chung
+  const [uploadFolderId, setUploadFolderId] = useState(null);
+  const [isUploadingFile, setIsUploadingFile] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const uploadInputRef = useRef(null);
+  // Drag & drop: file đang kéo + folder đang được hover làm đích
+  const [draggingFile, setDraggingFile] = useState(null);
+  const [dragOverFolderId, setDragOverFolderId] = useState(null);
+  // Context menu chuột phải
+  const [ctxMenu, setCtxMenu] = useState(null); // { x, y, type, folderId, fileId, name }
+  // Ghim thư mục (lưu localStorage)
+  const [pinnedIds, setPinnedIds] = useState(() => {
+    if (typeof window === "undefined") return [];
+    try {
+      return JSON.parse(localStorage.getItem("mf-pinned-folders") || "[]");
+    } catch {
+      return [];
+    }
+  });
+
+  // Trạng thái bài đã học (đồng bộ qua event khi FileViewer thay đổi)
+  const [doneMap, setDoneMap] = useState(() => {
+    if (typeof window === "undefined") return {};
+    try {
+      return JSON.parse(localStorage.getItem("mf-lessons-done") || "{}");
+    } catch {
+      return {};
+    }
+  });
+
+  const loadDoneMap = useCallback(() => {
+    try {
+      setDoneMap(JSON.parse(localStorage.getItem("mf-lessons-done") || "{}"));
+    } catch {
+      setDoneMap({});
+    }
+  }, []);
+
+  useEffect(() => {
+    window.addEventListener("mf-lessons-changed", loadDoneMap);
+    return () => window.removeEventListener("mf-lessons-changed", loadDoneMap);
+  }, [loadDoneMap]);
+
+  const folderBadge = (folder) => {
+    const total = folder.files?.length || 0;
+    if (!total) return undefined;
+    const done = folder.files.filter((f) => doneMap[f.id]).length;
+    return done > 0 ? `${done}/${total}` : total;
+  };
+
+  const togglePin = (folderId) => {
+    setPinnedIds((prev) => {
+      const next = prev.includes(folderId)
+        ? prev.filter((id) => id !== folderId)
+        : [...prev, folderId];
+      try {
+        localStorage.setItem("mf-pinned-folders", JSON.stringify(next));
+      } catch { /* ignore */ }
+      return next;
+    });
+  };
+
+  // Upload file .md/.txt vào folder (không cần AI)
+  const handleUploadChange = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || !uploadFolderId) return;
+    setIsUploadingFile(true);
+    setUploadProgress(0);
+    try {
+      const res = await fileService.uploadFile(uploadFolderId, file, (pct) =>
+        setUploadProgress(pct),
+      );
+      if (res.success) {
+        useToastStore
+          .getState()
+          .addToast(`Đã tải lên "${res.data.name}"`, "success");
+        refreshFolders();
+      } else {
+        useToastStore.getState().addToast("Tải lên thất bại", "error");
+      }
+    } catch (err) {
+      console.error("Lỗi upload file:", err);
+      useToastStore.getState().addToast("Tải lên thất bại", "error");
+    } finally {
+      setIsUploadingFile(false);
+      setUploadProgress(0);
+      setUploadFolderId(null);
+    }
+  };
+
+  // Folder đã ghim hiển thị trước
+  const sortedFolders = useMemo(
+    () =>
+      [...folders].sort((a, b) => {
+        const pa = pinnedIds.includes(a.id) ? 0 : 1;
+        const pb = pinnedIds.includes(b.id) ? 0 : 1;
+        return pa - pb;
+      }),
+    [folders, pinnedIds],
+  );
   const {currentLanguage, setCurrentLanguage} = useLanguage();
   const currentText = translation[currentLanguage];
 
@@ -172,13 +313,52 @@ export default function Sidebar() {
   };
 
   const selectFile = (folderId, fileId) => {
+    // Chế độ chọn nhiều: bấm file = chọn/bỏ chọn, không mở tài liệu
+    if (selectionArmed) {
+      toggleFileSelection(fileId);
+      return;
+    }
     store.setSelectedFolder(folderId);
     store.setSelectedFile(fileId);
     router.push(`/dashboard/folders/${folderId}`);
   };
 
+  // Thoát chế độ chọn nhiều bằng phím Esc
+  useEffect(() => {
+    if (!selectionArmed) return;
+    const onKey = (e) => {
+      if (e.key === "Escape") clearAllSelection();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [selectionArmed, clearAllSelection]);
+
+  // Xóa hàng loạt các file đã chọn
+  const confirmBulkDelete = async () => {
+    const ids = [...selectedFileIds];
+    setBulkDeleteOpen(false);
+    if (!ids.length) return;
+    const results = await Promise.allSettled(
+      ids.map((id) => fileService.deleteFile(id)),
+    );
+    const okCount = results.filter((r) => r.status === "fulfilled").length;
+    useToastStore
+      .getState()
+      .addToast(
+        okCount === ids.length
+          ? `Đã xóa ${okCount} tài liệu`
+          : `Đã xóa ${okCount}/${ids.length} tài liệu (một số thất bại)`,
+        okCount === ids.length ? "success" : "error",
+      );
+    if (store.selectedFileId && ids.includes(store.selectedFileId)) {
+      store.setSelectedFile(null);
+    }
+    clearAllSelection();
+    await refreshFolders();
+  };
+
   // Cấu trúc cây cho Tree / CollapseButton (expand tất cả / thu gọn tất cả)
-  const treeElements = folders.map((folder) => ({
+  const treeElements = sortedFolders.map((folder) => ({
     id: folder.id,
     isSelectable: true,
     name: folder.name,
@@ -192,6 +372,7 @@ export default function Sidebar() {
   // 2. Sửa lại useCallback: Thay 'store' thành 'setFolders' ở mảng Dependency
   const refreshFolders = useCallback(async () => {
     setIsLoadingFolders(true);
+    setStoreLoading(true);
     try {
       const res = await folderService.getFolders();
       if (res.success) {
@@ -202,8 +383,9 @@ export default function Sidebar() {
       setFolders([]);
     } finally {
       setIsLoadingFolders(false);
+      setStoreLoading(false);
     }
-  }, [setFolders, setIsLoadingFolders]);
+  }, [setFolders, setStoreLoading, setIsLoadingFolders]);
 
   useEffect(() => {
     Promise.resolve().then(() => {
@@ -219,6 +401,19 @@ export default function Sidebar() {
         document.activeElement?.isContentEditable;
 
       if (isInputting) return;
+
+      // Ctrl+Z = hoàn tác thao tác xóa (giống nút "Hoàn tác" trên toast)
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "z") {
+        if (deleteTimer) {
+          e.preventDefault();
+          clearTimeout(deleteTimer);
+          deleteTimer = null;
+          useToastStore
+            .getState()
+            .addToast("Đã hoàn tác, mục được giữ lại!", "success");
+        }
+        return;
+      }
 
       if (e.key === "Delete" || e.key === "Backspace") {
         const selFile = selectedFile;
@@ -258,18 +453,20 @@ export default function Sidebar() {
     }
   };
 
-  // Hàm xử lý kích hoạt xóa khi người dùng xác nhận ở Modal
-  const confirmDelete = async () => {
+  // Hàm thực thi xóa thật (sau 5s nếu không hoàn tác)
+  const doDelete = async () => {
     if (!itemToDelete) return;
 
     const { type, folderId, fileId } = itemToDelete;
-    setDeleteConfirmOpen(false);
 
     if (type === "folder") {
       try {
         const res = await folderService.deleteFolder(folderId);
         if (res.success) {
           await refreshFolders();
+          useToastStore
+            .getState()
+            .addToast("Đã xóa thư mục!", "success");
           if (store.selectedFolderId === folderId) {
             store.setSelectedFolder(null);
             router.push("/dashboard");
@@ -283,6 +480,9 @@ export default function Sidebar() {
         const res = await fileService.deleteFile(fileId);
         if (res.success) {
           await refreshFolders();
+          useToastStore
+            .getState()
+            .addToast("Đã xóa tài liệu!", "success");
           if (store.selectedFileId === fileId) {
             store.setSelectedFile(null);
           }
@@ -290,6 +490,132 @@ export default function Sidebar() {
       } catch (err) {
         console.error("Lỗi khi xóa file:", err);
       }
+    }
+  };
+
+  // Xác nhận xóa: hoãn 5s để người dùng có thể hoàn tác
+  const confirmDelete = () => {
+    if (!itemToDelete) return;
+
+    const name = itemToDelete.name || "mục này";
+    setDeleteConfirmOpen(false);
+    clearTimeout(deleteTimer);
+
+    useToastStore
+      .getState()
+      .addToast(
+        `Đã xóa "${name}"`,
+        "info",
+        5000,
+        {
+          label: "Hoàn tác",
+          onClick: () => {
+            clearTimeout(deleteTimer);
+            useToastStore
+              .getState()
+              .addToast("Đã hoàn tác, mục được giữ lại!", "success");
+          },
+        },
+      );
+
+    deleteTimer = setTimeout(() => {
+      doDelete();
+    }, 5000);
+  };
+
+  const openRename = (item) => {
+    setItemToRename(item);
+    setRenameValue(item.name);
+    setRenameOpen(true);
+  };
+
+  // Bắt đầu kéo một file
+  const handleFileDragStart = (e, folderId, fileId) => {
+    setDraggingFile({ fileId, folderId });
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", fileId);
+  };
+
+  // Thả file vào folder đích
+  const handleFolderDrop = async (e, folderId) => {
+    e.preventDefault();
+    setDragOverFolderId(null);
+    if (!draggingFile || draggingFile.folderId === folderId) {
+      setDraggingFile(null);
+      return;
+    }
+    try {
+      const res = await fileService.moveFile(draggingFile.fileId, folderId);
+      if (res.success) {
+        await refreshFolders();
+        useToastStore.getState().addToast("Đã di chuyển tài liệu", "success");
+      }
+    } catch (err) {
+      console.error("Lỗi khi di chuyển file:", err);
+      useToastStore.getState().addToast("Di chuyển tài liệu thất bại", "error");
+    }
+    setDraggingFile(null);
+  };
+
+  // Mở context menu chuột phải tại vị trí con trỏ
+  const openContextMenu = (e, item) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setCtxMenu({
+      x: e.clientX,
+      y: e.clientY,
+      ...item,
+    });
+  };
+
+  // Đóng context menu khi click nơi khác / Esc / cuộn
+  useEffect(() => {
+    if (!ctxMenu) return;
+    const close = () => setCtxMenu(null);
+    const onKey = (e) => {
+      if (e.key === "Escape") setCtxMenu(null);
+    };
+    window.addEventListener("click", close);
+    window.addEventListener("contextmenu", close);
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", close, true);
+    return () => {
+      window.removeEventListener("click", close);
+      window.removeEventListener("contextmenu", close);
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", close, true);
+    };
+  }, [ctxMenu]);
+
+  // Xử lý đổi tên file / thư mục sau khi người dùng xác nhận ở Modal
+  const confirmRename = async () => {
+    if (!itemToRename) return;
+    const newName = renameValue.trim();
+    if (!newName) return;
+    if (newName === itemToRename.name) {
+      setRenameOpen(false);
+      return;
+    }
+
+    const { type, folderId, fileId } = itemToRename;
+    setRenameOpen(false);
+    try {
+      const res =
+        type === "folder"
+          ? await folderService.renameFolder(folderId, newName)
+          : await fileService.renameFile(fileId, newName);
+      if (res.success) {
+        await refreshFolders();
+        useToastStore
+          .getState()
+          .addToast(
+            `Đã đổi tên ${type === "folder" ? "thư mục" : "tài liệu"} thành "${newName}"`,
+            "success",
+          );
+      }
+    } catch (err) {
+      console.error("Lỗi khi đổi tên:", err);
+      useToastStore.getState().addToast("Đổi tên thất bại", "error");
     }
   };
 
@@ -365,6 +691,7 @@ export default function Sidebar() {
             onClick={handleLoginRedirect}
             className="p-2 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] hover:text-indigo-400 rounded-lg transition-colors"
             title="Đăng nhập"
+            aria-label="Đăng nhập"
           >
             <LogIn className="w-4 h-4" />
           </button>
@@ -373,44 +700,71 @@ export default function Sidebar() {
 
       {/* Quick Search Bar */}
       {/* Search */}
-      <div className="p-4">
+      <div className="px-6 py-3 border-b border-[rgb(var(--color-border))]/40">
         <div className="relative">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[rgb(var(--color-text-muted))]" />
           <input
             id="sidebar-search"
             type="text"
             placeholder={currentText.searchBar.placeholder}
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-[rgb(var(--color-bg))] border border-[rgb(var(--color-border))] focus:border-indigo-500/80 focus:ring-1 focus:ring-indigo-500/50 rounded-lg pl-10 pr-4 py-2 text-sm text-[rgb(var(--color-text-primary))] placeholder:text-[rgb(var(--color-text-muted))] outline-none transition-all"
+            className="w-full bg-[rgb(var(--color-surface-2))/40] border border-[rgb(var(--color-border))] focus:border-[rgb(var(--color-primary))] focus:ring-1 focus:ring-[rgb(var(--color-primary)/0.4)] rounded-lg pl-10 pr-4 py-2.5 text-sm text-[rgb(var(--color-text-primary))] placeholder:text-[rgb(var(--color-text-muted))] outline-none transition-all"
           />
-          <Search className="absolute left-3 top-2.5 w-4 h-4 text-[rgb(var(--color-text-muted))]" />
         </div>
       </div>
 
       {/* Folder Navigation */}
-      <div className="flex-1 min-h-0 flex flex-col px-3 pb-4">
+      <div className="flex-1 min-h-0 flex flex-col pb-4">
+        {/* Input ẩn dùng cho upload file thủ công */}
+        <input
+          ref={uploadInputRef}
+          type="file"
+          accept=".md,.markdown,.txt,text/markdown,text/plain"
+          className="hidden"
+          onChange={handleUploadChange}
+        />
         {/* Header Section Label */}
-        <div className="flex items-center justify-between px-2 py-2 text-xs font-semibold text-[rgb(var(--color-text-muted))] uppercase tracking-wider shrink-0">
-          <span className={cn("truncate")}>
-            Danh sách Thư Mục Của {`<USER>`}
+        <div className="flex items-center justify-between px-6 py-3 border-b border-[rgb(var(--color-border))]/40 shrink-0">
+          <span className="text-[11px] font-semibold uppercase tracking-widest text-[rgb(var(--color-text-muted))] truncate">
+            Thư Mục Của {`<USER>`}
           </span>
-          <Button
-            id="btn-add-folder"
-            variant="ghost"
-            size="icon"
-            onClick={() => setShowAddFolder(!showAddFolder)}
-            title="Tạo thư mục mới"
-            className={cn("h-5 w-5 p-0 hover:bg-[rgb(var(--color-surface-2))]")}
-          >
-            <Plus className="w-4 h-4" />
-          </Button>
+          <div className="flex items-center gap-1 shrink-0">
+            <span className="text-[11px] opacity-60 text-[rgb(var(--color-text-muted))] mr-0.5">
+              {folders.length}
+            </span>
+            <Button
+              id="btn-add-folder"
+              variant="ghost"
+              size="icon"
+              onClick={() => setShowAddFolder(!showAddFolder)}
+              title="Tạo thư mục mới"
+              aria-label="Tạo thư mục mới"
+              className={cn("h-7 w-7 p-0 rounded-md hover:bg-[rgb(var(--color-surface-2))] hover:text-[rgb(var(--color-primary))]")}
+            >
+              <Plus className="w-4 h-4" />
+            </Button>
+            <Button
+              id="btn-multiselect"
+              variant={selMode ? "primary" : "ghost"}
+              size="icon"
+              onClick={() =>
+                selectionArmed ? clearAllSelection() : setSelectionArmed(true)
+              }
+              title={selectionArmed ? "Hủy chọn nhiều" : "Chọn nhiều tài liệu"}
+              aria-label={selectionArmed ? "Hủy chọn nhiều" : "Chọn nhiều tài liệu"}
+              className={cn("h-7 w-7 p-0 rounded-md hover:bg-[rgb(var(--color-surface-2))] hover:text-[rgb(var(--color-primary))]")}
+            >
+              <SquareCheckBig className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
 
         {/* Create Folder Form */}
         {showAddFolder && (
           <form
             onSubmit={handleCreateFolder}
-            className="px-2 py-2 bg-[rgb(var(--color-bg))] rounded-lg border border-[rgb(var(--color-border))] space-y-2 animate-fade-in shrink-0"
+            className="mx-6 my-3 px-4 py-3 bg-[rgb(var(--color-bg))] rounded-lg border border-[rgb(var(--color-border))] space-y-2 animate-fade-in shrink-0"
           >
             <input
               type="text"
@@ -448,23 +802,56 @@ export default function Sidebar() {
               ))}
             </div>
           ) : folders.length === 0 ? (
-            <div className="text-center py-6 text-sm text-[rgb(var(--color-text-muted))]">
-              Không tìm thấy tài liệu nào
-            </div>
+            searchQuery ? (
+              <div className="text-center py-6 px-4">
+                <div className="text-sm font-medium text-[rgb(var(--color-text-secondary))]">
+                  Không tìm thấy kết quả
+                </div>
+                <div className="text-xs text-[rgb(var(--color-text-muted))] mt-1">
+                  Không có thư mục/tài liệu nào khớp với &quot;{searchQuery}&quot;
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center px-6 py-10">
+                <div className="w-14 h-14 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-3">
+                  <FolderPlus className="w-6 h-6 text-indigo-400" />
+                </div>
+                <p className="text-sm font-semibold text-[rgb(var(--color-text-secondary))]">
+                  Chưa có thư mục nào
+                </p>
+                <p className="text-xs text-[rgb(var(--color-text-muted))] mt-1 max-w-[220px] leading-relaxed">
+                  Tạo thư mục đầu tiên hoặc nhập chủ đề muốn học vào khung chat
+                  để AI biên soạn lộ trình.
+                </p>
+                <button
+                  onClick={() => setShowAddFolder(true)}
+                  className="mt-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-500 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Tạo thư mục mới
+                </button>
+              </div>
+            )
           ) : (
             <Tree
-              className="p-2"
-              initialExpandedItems={folders.map((folder) => folder.id)}
+              className="p-0"
+              initialExpandedItems={sortedFolders.map((folder) => folder.id)}
               elements={treeElements}
             >
               <CollapseButton
                 elements={treeElements}
-                className="h-5 w-5 p-0 hover:bg-[rgb(var(--color-surface-2))]"
+                className="flex items-center justify-between w-full px-4 py-2.5 h-auto rounded-lg text-sm font-semibold text-[rgb(var(--color-text-primary))] hover:bg-[rgb(var(--color-surface-2))]"
                 title="Mở rộng / Thu gọn tất cả"
+                aria-label="Mở rộng / Thu gọn tất cả thư mục"
               >
-                <ChevronsUpDown className="w-3.5 h-3.5" />
+                <span className="text-[13px] font-semibold text-[rgb(var(--color-text-primary))]">
+                  Tất cả thư mục
+                </span>
+                <span className="text-[11px] opacity-60">
+                  {sortedFolders.length}
+                </span>
               </CollapseButton>
-              {folders.map((folder) => {
+              {sortedFolders.map((folder) => {
                 const isSelected =
                   selectedFolder?.id === folder.id && !selectedFile;
 
@@ -472,9 +859,41 @@ export default function Sidebar() {
                   <TreeFolder
                     key={folder.id}
                     value={folder.id}
-                    element={folder.name}
+                    element={
+                      <>
+                        {pinnedIds.includes(folder.id) && (
+                          <Star className="w-3 h-3 text-amber-400 fill-amber-400 inline-block shrink-0 mr-1 -mt-px" />
+                        )}
+                        {highlightMatch(folder.name, searchQuery)}
+                      </>
+                    }
                     isSelect={isSelected}
                     onSelect={(id) => selectFolder(id)}
+                    className={`px-4 py-2.5 rounded-lg text-sm font-semibold text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] ${
+                      dragOverFolderId === folder.id &&
+                      draggingFile &&
+                      draggingFile.folderId !== folder.id
+                        ? "ring-2 ring-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/0.08)]"
+                        : ""
+                    }`}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      setDragOverFolderId(folder.id);
+                    }}
+                    onDragLeave={() =>
+                      setDragOverFolderId((id) =>
+                        id === folder.id ? null : id,
+                      )
+                    }
+                    onDrop={(e) => handleFolderDrop(e, folder.id)}
+                    onContextMenu={(e) =>
+                      openContextMenu(e, {
+                        type: "folder",
+                        folderId: folder.id,
+                        name: folder.name,
+                      })
+                    }
+                    badge={folderBadge(folder)}
                     openIcon={
                       <FolderOpen className="w-4 h-4 text-amber-300/90 shrink-0" />
                     }
@@ -484,17 +903,65 @@ export default function Sidebar() {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
-                            const addToast =
-                              useToastStore.getState().addToast;
-                            addToast(
-                              "Tài liệu mới chỉ có thể được tạo tự động bởi AI thông qua khung chat ở trang chính!",
-                              "info",
-                            );
+                            openRename({
+                              type: "folder",
+                              folderId: folder.id,
+                              name: folder.name,
+                            });
                           }}
-                          className="text-[rgb(var(--color-text-muted))] hover:text-indigo-400 p-0.5 rounded transition-colors"
-                          title="Tạo file bằng AI"
+                          className="text-[rgb(var(--color-text-muted))] hover:text-amber-400 p-0.5 rounded transition-colors"
+                          title="Đổi tên thư mục"
+                          aria-label="Đổi tên thư mục"
                         >
-                          <Plus className="w-3.5 h-3.5" />
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            togglePin(folder.id);
+                          }}
+                          className={`p-0.5 rounded transition-colors ${
+                            pinnedIds.includes(folder.id)
+                              ? "text-amber-400"
+                              : "text-[rgb(var(--color-text-muted))] hover:text-amber-400"
+                          }`}
+                          title={
+                            pinnedIds.includes(folder.id)
+                              ? "Bỏ ghim thư mục"
+                              : "Ghim thư mục"
+                          }
+                          aria-label={
+                            pinnedIds.includes(folder.id)
+                              ? "Bỏ ghim thư mục"
+                              : "Ghim thư mục"
+                          }
+                        >
+                          <Star
+                            className={`w-3.5 h-3.5 ${
+                              pinnedIds.includes(folder.id)
+                                ? "fill-amber-400"
+                                : ""
+                            }`}
+                          />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setUploadFolderId(folder.id);
+                            uploadInputRef.current?.click();
+                          }}
+                          disabled={isUploadingFile}
+                          className="text-[rgb(var(--color-text-muted))] hover:text-indigo-400 p-0.5 rounded transition-colors disabled:opacity-40"
+                          title="Tải lên file (md/txt)"
+                          aria-label="Tải lên file (md/txt)"
+                        >
+                          {isUploadingFile && uploadFolderId === folder.id && uploadProgress > 0 ? (
+                            <span className="text-[10px] font-bold text-indigo-400 leading-none">
+                              {uploadProgress}%
+                            </span>
+                          ) : (
+                            <Upload className="w-3.5 h-3.5" />
+                          )}
                         </button>
                         <button
                           onClick={(e) => {
@@ -508,6 +975,7 @@ export default function Sidebar() {
                           }}
                           className="text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-colors"
                           title="Xóa thư mục"
+                          aria-label="Xóa thư mục"
                         >
                           <Trash2 className="w-3.5 h-3.5" />
                         </button>
@@ -523,34 +991,96 @@ export default function Sidebar() {
                           handleSelect={() =>
                             selectFile(folder.id, file.id)
                           }
-                          fileIcon={getFileIcon(file.name)}
+                          className={`px-4 py-1.5 rounded-md text-[13px] ${
+                            draggingFile?.fileId === file.id
+                              ? "opacity-40"
+                              : ""
+                          }`}
+                          draggable
+                          onDragStart={(e) =>
+                            handleFileDragStart(e, folder.id, file.id)
+                          }
+                          onDragEnd={() => {
+                            setDraggingFile(null);
+                            setDragOverFolderId(null);
+                          }}
+                          onContextMenu={(e) =>
+                            openContextMenu(e, {
+                              type: "file",
+                              folderId: folder.id,
+                              fileId: file.id,
+                              name: file.name,
+                            })
+                          }
+                          fileIcon={
+                            selectionArmed &&
+                            selectedFileIds.includes(file.id) ? (
+                              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                            ) : (
+                              getFileIcon(file.name)
+                            )
+                          }
+                          preview={
+                            !selectionArmed && (
+                              <div className="mx-2 p-3 rounded-lg bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] shadow-xl shadow-black/30 animate-fade-in">
+                                <div className="text-xs font-semibold text-[rgb(var(--color-text-primary))] truncate">
+                                  {file.name}
+                                </div>
+                                <div className="text-[11px] text-[rgb(var(--color-text-muted))] mt-1 line-clamp-3 whitespace-pre-line leading-relaxed">
+                                  {(file.content || "Chưa có nội dung").slice(0, 200)}
+                                </div>
+                                <div className="text-[10px] text-[rgb(var(--color-text-disabled))] mt-1.5">
+                                  Cập nhật {file.createdAt || file.created_at || "—"}
+                                </div>
+                              </div>
+                            )
+                          }
                           actions={
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setItemToDelete({
-                                  type: "file",
-                                  folderId: folder.id,
-                                  fileId: file.id,
-                                  name: file.name,
-                                });
-                                setDeleteConfirmOpen(true);
-                              }}
-                              className="text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-all"
-                              title="Xóa tài liệu"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
+                            <>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openRename({
+                                    type: "file",
+                                    folderId: folder.id,
+                                    fileId: file.id,
+                                    name: file.name,
+                                  });
+                                }}
+                                className="text-[rgb(var(--color-text-muted))] hover:text-amber-400 p-0.5 rounded transition-colors"
+                                title="Đổi tên tài liệu"
+                                aria-label="Đổi tên tài liệu"
+                              >
+                                <Pencil className="w-3 h-3" />
+                              </button>
+                              <button
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  setItemToDelete({
+                                    type: "file",
+                                    folderId: folder.id,
+                                    fileId: file.id,
+                                    name: file.name,
+                                  });
+                                  setDeleteConfirmOpen(true);
+                                }}
+                                className="text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-all"
+                                title="Xóa tài liệu"
+                                aria-label="Xóa tài liệu"
+                              >
+                                <Trash2 className="w-3 h-3" />
+                              </button>
+                            </>
                           }
                         >
-                          <span className="truncate text-xs">
-                            {file.name}
+                          <span className="min-w-0 truncate text-xs">
+                            {highlightMatch(file.name, searchQuery)}
                           </span>
                         </TreeFile>
                       ))}
 
                     {(!folder.files || folder.files.length === 0) && (
-                      <div className="text-[10px] text-[rgb(var(--color-text-disabled))] px-3 py-1 italic select-none">
+                      <div className="text-[10px] text-[rgb(var(--color-text-disabled))] px-4 py-1 italic select-none">
                         Không có file nào
                       </div>
                     )}
@@ -561,6 +1091,103 @@ export default function Sidebar() {
           )}
         </div>
       </div>
+
+      {/* Context Menu (chuột phải) */}
+      {ctxMenu && (
+        <div
+          className="fixed z-50 w-48 py-1 bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] rounded-lg shadow-xl shadow-black/40 animate-fade-in"
+          style={{
+            left: Math.min(
+              ctxMenu.x,
+              (typeof window !== "undefined" ? window.innerWidth : 800) - 200,
+            ),
+            top: Math.min(
+              ctxMenu.y,
+              (typeof window !== "undefined" ? window.innerHeight : 600) - 140,
+            ),
+          }}
+          onContextMenu={(e) => e.preventDefault()}
+        >
+          <button
+            onClick={() => {
+              openRename(ctxMenu);
+              setCtxMenu(null);
+            }}
+            className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] hover:text-amber-400 transition-colors"
+          >
+            <Pencil className="w-3.5 h-3.5" /> Đổi tên
+          </button>
+          {ctxMenu.type === "folder" && (
+            <button
+              onClick={() => {
+                togglePin(ctxMenu.folderId);
+                setCtxMenu(null);
+              }}
+              className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] hover:text-amber-400 transition-colors"
+            >
+              <Star
+                className={`w-3.5 h-3.5 ${
+                  pinnedIds.includes(ctxMenu.folderId)
+                    ? "text-amber-400 fill-amber-400"
+                    : ""
+                }`}
+              />
+              {pinnedIds.includes(ctxMenu.folderId) ? "Bỏ ghim" : "Ghim thư mục"}
+            </button>
+          )}
+          <button
+            onClick={() => {
+              setItemToDelete({
+                type: ctxMenu.type,
+                folderId: ctxMenu.folderId,
+                fileId: ctxMenu.fileId,
+                name: ctxMenu.name,
+              });
+              setDeleteConfirmOpen(true);
+              setCtxMenu(null);
+            }}
+            className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-rose-400 hover:bg-[rgb(var(--color-surface-2))] transition-colors"
+          >
+            <Trash2 className="w-3.5 h-3.5" /> Xóa
+          </button>
+        </div>
+      )}
+
+      {/* Modal Đổi Tên */}
+      <Modal
+        isOpen={renameOpen}
+        onClose={() => setRenameOpen(false)}
+        title={itemToRename?.type === "folder" ? "Đổi Tên Thư Mục" : "Đổi Tên Tài Liệu"}
+        size="sm"
+        footer={
+          <div className="flex justify-end gap-2 w-full">
+            <Button variant="ghost" onClick={() => setRenameOpen(false)}>
+              Hủy
+            </Button>
+            <Button
+              variant="primary"
+              onClick={confirmRename}
+              disabled={!renameValue.trim()}
+            >
+              Đổi tên
+            </Button>
+          </div>
+        }
+      >
+        <label className="block text-xs font-medium text-[rgb(var(--color-text-muted))] mb-1.5">
+          Tên mới
+        </label>
+        <input
+          type="text"
+          value={renameValue}
+          onChange={(e) => setRenameValue(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") confirmRename();
+          }}
+          autoFocus
+          className="w-full bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] rounded px-2.5 py-1.5 text-sm outline-none focus:border-indigo-500 text-[rgb(var(--color-text-primary))]"
+        />
+      </Modal>
 
       {/* Modal Xác Nhận Xóa */}
       <Modal
@@ -586,6 +1213,55 @@ export default function Sidebar() {
             : `tài liệu "${itemToDelete?.name}" khỏi thư mục?`}
         </p>
       </Modal>
+
+      {/* Modal Xác Nhận Xóa Hàng Loạt */}
+      <Modal
+        isOpen={bulkDeleteOpen}
+        onClose={() => setBulkDeleteOpen(false)}
+        title="Xóa Nhiều Tài Liệu"
+        size="sm"
+        footer={
+          <div className="flex justify-end gap-2 w-full">
+            <Button variant="ghost" onClick={() => setBulkDeleteOpen(false)}>
+              Hủy
+            </Button>
+            <Button variant="danger" onClick={confirmBulkDelete}>
+              Xóa {selectedFileIds.length} tài liệu
+            </Button>
+          </div>
+        }
+      >
+        <p className="text-sm text-[rgb(var(--color-text-secondary))] leading-relaxed">
+          Bạn có chắc chắn muốn xóa{" "}
+          <span className="font-semibold">{selectedFileIds.length} tài liệu</span>{" "}
+          đã chọn? Hành động này không thể hoàn tác.
+        </p>
+      </Modal>
+
+      {/* Thanh hành động chế độ chọn nhiều */}
+      {selMode && (
+        <div className="px-3 py-2.5 border-t border-[rgb(var(--color-border))] bg-[rgb(var(--color-surface-1))] shrink-0 animate-fade-in">
+          <div className="text-[11px] font-medium text-[rgb(var(--color-text-muted))] mb-2 flex items-center gap-1.5">
+            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+            Đã chọn {selectedFileIds.length} tài liệu
+          </div>
+          <div className="flex items-center gap-2">
+            <Button
+              variant="danger"
+              size="sm"
+              onClick={() => setBulkDeleteOpen(true)}
+              disabled={selectedFileIds.length === 0}
+              className="flex-1"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Xóa đã chọn
+            </Button>
+            <Button variant="ghost" size="sm" onClick={clearAllSelection}>
+              Hủy
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Footer */}
       <div className="p-4 bg-[rgb(var(--color-bg))] border-t border-[rgb(var(--color-border))]">

@@ -45,6 +45,21 @@ def delete_folder(session: Session, folder_id: str, user_id: int) -> bool:
     folder = get_folder(session, folder_id, user_id)
     if not folder:
         return False
+    # Xóa tay các file (kèm revisions) và folder_root để tránh vi phạm khóa ngoại
+    from app.models.knowledge_file import KnowledgeFile, FileRevision
+
+    for f in session.exec(
+        select(KnowledgeFile).where(KnowledgeFile.folder_id == folder_id)
+    ).all():
+        for rev in session.exec(
+            select(FileRevision).where(FileRevision.file_id == f.id)
+        ).all():
+            session.delete(rev)
+        session.delete(f)
+    for root in session.exec(
+        select(FolderRoot).where(FolderRoot.folder_id == folder_id)
+    ).all():
+        session.delete(root)
     session.delete(folder)
     session.commit()
     return True

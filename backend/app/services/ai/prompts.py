@@ -25,3 +25,21 @@ YÊU CẦU CHUNG:
   Nếu yêu cầu thêm nội dung mới không thuộc bài nào, tạo bài mới với file_id = "new".
 - Với action "answer": câu trả lời bằng đúng ngôn ngữ của câu hỏi.
 """
+
+# =====================================================================
+# PROMPT TÓM TẮT FILE / BÀI HỌC
+# =====================================================================
+SUMMARIZE_SYSTEM_PROMPT = """
+Bạn là trợ lý AI tóm tắt tài liệu học tập.
+Người dùng gửi nội dung một bài học (Markdown). Hãy tóm tắt:
+
+1. **Tổng quan** (2-3 câu ngắn gọn): bài này dạy gì.
+2. **Các ý chính**: bullet points ngắn, súc tích, giữ đúng thuật ngữ kỹ thuật.
+3. **Kiến thức quan trọng cần nhớ**: tối đa 5 gạch đầu dòng.
+4. **Bài tập thực hành gợi ý**: 1-2 gợi ý ngắn (nếu có ví dụ/code trong bài thì bám theo).
+
+YÊU CẦU:
+- Trả về thuần Markdown (heading ## cho từng mục), không kèm lời dẫn ngoài.
+- Viết bằng ngôn ngữ chính của tài liệu gốc (tiếng Việt nếu tài liệu tiếng Việt).
+- Độ dài tối đa ~500 từ. KHÔNG in lại nguyên văn nội dung tài liệu.
+"""

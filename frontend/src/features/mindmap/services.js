@@ -1,7 +1,8 @@
 import { fileService } from '@/features/files/services';
 import { useWorkspaceStore } from '@/features/folders/store';
 
-const SECTION_HEADING_RE = /^##\s+(.+)$/gm;
+// Hỗ trợ heading cấp 1-3 (## trước đây, giờ thêm # và ###)
+const SECTION_HEADING_RE = /^#{1,3}\s+(.+)$/gm;
 const INLINE_MD_RE = /[*_`]+/g;
 
 function cleanLabel(text) {

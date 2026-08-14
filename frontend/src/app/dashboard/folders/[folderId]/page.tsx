@@ -5,14 +5,39 @@ import { fileService } from '@/features/files/services';
 import { folderService } from '@/features/folders/services';
 import { aiService } from '@/features/ai/services';
 import FileViewer from '@/features/files/components/FileViewer';
-import MindmapViewer from '@/features/mindmap/components/MindmapViewer';
 import ResizeHandle from '@/components/common/ResizeHandle';
+import dynamic from 'next/dynamic';
 import { useEffect, useState, use, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import ChatHistory from '@/components/chat/ChatHistory';
-import ChatInput from '@/components/chat/ChatInput';
 import { MessageProps } from '@/components/chat/ChatMessage';
-import { PanelRightClose, PanelRight, Network, FileText } from 'lucide-react';
+import { PanelRightClose, PanelRight, Network, FileText, Upload, Loader2, Download, X } from 'lucide-react';
+import { useToastStore } from '@/stores/toast';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+
+// Tách bundle: Mindmap (@xyflow/react) và Chat chỉ tải khi cần
+const MindmapViewer = dynamic(
+  () => import('@/features/mindmap/components/MindmapViewer'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex-1 flex items-center justify-center text-[rgb(var(--color-text-muted))]">
+        Đang tải sơ đồ tư duy...
+      </div>
+    ),
+  },
+);
+const ChatHistory = dynamic(
+  () => import('@/components/chat/ChatHistory'),
+  { ssr: false },
+);
+const ChatInput = dynamic(() => import('@/components/chat/ChatInput'), {
+  ssr: false,
+  loading: () => (
+    <div className="p-4 animate-pulse">
+      <div className="h-11 rounded-lg bg-[rgb(var(--color-surface-2))]" />
+    </div>
+  ),
+});
 
 export default function FolderPage({
   params,
@@ -26,7 +51,7 @@ export default function FolderPage({
   const {
     folders,
     selectedFileId,
-    setSelectedFileId,
+    setSelectedFile,
     setSidebarOpen,
     isDocumentSideOpen,
     setDocumentSideOpen,
@@ -38,7 +63,14 @@ export default function FolderPage({
 
   const [fileDetails, setFileDetails] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [fileLoading, setFileLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const statusMsgId = useRef<string | null>(null);
+  const uploadInputRef = useRef<HTMLInputElement | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isExporting, setIsExporting] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 767px)');
   const [showMindmap, setShowMindmap] = useState(
     () =>
       typeof window !== "undefined" &&
@@ -76,22 +108,162 @@ export default function FolderPage({
     async function loadFile() {
       if (!selectedFileId) {
         setFileDetails(null);
+        setLoadError(false);
         return;
       }
 
       try {
+        setFileLoading(true);
+        setLoadError(false);
         const res = await fileService.getFile(selectedFileId);
         if (res.success) {
           setFileDetails(res.data);
           setDocumentSideOpen(true);
           setShowMindmap(false);
+        } else {
+          setLoadError(true);
         }
       } catch (err) {
         console.error("Lỗi khi tải chi tiết tài liệu:", err);
+        setLoadError(true);
+      } finally {
+        setFileLoading(false);
       }
     }
     loadFile();
   }, [selectedFileId, setDocumentSideOpen]);
+
+  // Refetch danh sách thư mục khi quay lại tab (dữ liệu có thể đổi ở tab khác)
+  useEffect(() => {
+    const handler = () => {
+      if (document.visibilityState === "visible") {
+        folderService.getFolders().then((res) => {
+          if (res.success) setFolders(res.data);
+        });
+      }
+    };
+    document.addEventListener("visibilitychange", handler);
+    return () => document.removeEventListener("visibilitychange", handler);
+  }, [setFolders]);
+
+  // Xuất toàn bộ thư mục thành 1 file Markdown
+  const handleExportFolder = async () => {
+    const files = folder?.files || [];
+    if (files.length === 0) {
+      useToastStore.getState().addToast("Thư mục chưa có tài liệu", "info");
+      return;
+    }
+    setIsExporting(true);
+    try {
+      const parts: string[] = [`# ${folder?.name || "Thư mục"}\n`];
+      for (const f of files) {
+        const res = await fileService.getFile(f.id);
+        if (res.success && res.data?.content) {
+          parts.push(`\n---\n\n## ${f.name}\n\n${res.data.content}`);
+        }
+      }
+      const md = parts.join("\n");
+      const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${folder?.name || "thu-muc"}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+      useToastStore.getState().addToast("Đã xuất thư mục ra file .md", "success");
+    } catch (err) {
+      console.error("Lỗi export folder:", err);
+      useToastStore.getState().addToast("Xuất thư mục thất bại", "error");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Upload file thủ công vào thư mục hiện tại
+  const handleUploadChange = async (e: any) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setIsUploading(true);
+    setUploadProgress(0);
+    try {
+      const res = await fileService.uploadFile(folderId, file, (pct: number) =>
+        setUploadProgress(pct),
+      );
+      if (res.success) {
+        useToastStore
+          .getState()
+          .addToast(`Đã tải lên "${res.data.name}"`, "success");
+        const foldersRes = await folderService.getFolders();
+        if (foldersRes.success) setFolders(foldersRes.data);
+        setSelectedFile(res.data.id);
+      } else {
+        useToastStore.getState().addToast("Tải lên thất bại", "error");
+      }
+    } catch (err) {
+      console.error("Lỗi upload file:", err);
+      useToastStore.getState().addToast("Tải lên thất bại", "error");
+    } finally {
+      setIsUploading(false);
+      setUploadProgress(0);
+    }
+  };
+
+  // Tóm tắt AI: hiển thị kết quả ngay trong khung chat (nối tiếp luồng hội thoại)
+  const handleAiSummary = async (file: any) => {
+    if (!file) return;
+    const fileName = file.name || "tài liệu";
+    const userMsg: MessageProps = {
+      id: `msg-sum-${Date.now()}`,
+      role: "user",
+      content: `Hãy tóm tắt nội dung của tài liệu "${fileName}"`,
+    };
+    const botMsg: MessageProps = {
+      id: `msg-sum-${Date.now() + 1}`,
+      role: "bot",
+      content: `Đang tóm tắt nội dung của "${fileName}"...`,
+    };
+    setMessages((prev) => [...prev, userMsg, botMsg]);
+
+    try {
+      const res = await aiService.summarizeFile(file.id);
+      if (res.success) {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === botMsg.id
+              ? {
+                  ...m,
+                  content: `### 📝 Tóm tắt AI — ${fileName}\n\n${
+                    res.data?.summary || "(AI không trả về nội dung)"
+                  }`,
+                }
+              : m,
+          ),
+        );
+      } else {
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === botMsg.id
+              ? { ...m, content: `Không thể tóm tắt: ${res.message || "lỗi không xác định"}` }
+              : m,
+          ),
+        );
+      }
+    } catch (err: any) {
+      console.error("Lỗi tóm tắt file:", err);
+      const msg =
+        err?.response?.data?.detail?.message ||
+        err?.response?.data?.detail ||
+        "Không thể kết nối với dịch vụ AI. Vui lòng thử lại sau!";
+      setMessages((prev) =>
+        prev.map((m) =>
+          m.id === botMsg.id
+            ? { ...m, content: `Lỗi: ${typeof msg === "string" ? msg : JSON.stringify(msg)}` }
+            : m,
+        ),
+      );
+    }
+  };
 
   // Lưu nội dung sau khi chỉnh sửa
   const handleSaveContent = async (newContent: string) => {
@@ -100,7 +272,10 @@ export default function FolderPage({
     try {
       const res = await fileService.updateFile(selectedFileId, newContent);
       if (res.success) {
-        setFileDetails(res.data);
+        // Backend chỉ trả về {id, updated_at} → merge vào bản cũ để không mất content/name
+        setFileDetails((prev: any) =>
+          prev ? { ...prev, ...res.data } : res.data,
+        );
       }
     } catch (err) {
       console.error("Lỗi khi cập nhật tài liệu:", err);
@@ -224,15 +399,15 @@ export default function FolderPage({
   };
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-[rgb(var(--color-bg))]">
+    <div className="relative flex h-full w-full overflow-hidden bg-[rgb(var(--color-bg))]">
       {/* Left Pane: Chat Interface (resizable) */}
       <div
         className={`relative flex flex-col shrink-0 h-full ${
           isDocumentSideOpen ? "border-r border-[rgb(var(--color-border))]" : ""
         }`}
-        style={{ width: isDocumentSideOpen ? chatPaneWidth : "100%" }}
+        style={{ width: isDocumentSideOpen ? (isMobile ? 0 : chatPaneWidth) : "100%" }}
       >
-        {isDocumentSideOpen && (
+        {isDocumentSideOpen && !isMobile && (
           <ResizeHandle
             onResize={(delta) => setChatPaneWidth(chatPaneWidth + delta)}
             onResizeEnd={() => setChatPaneWidth(CHAT_PANE_WIDTH_DEFAULT)}
@@ -244,17 +419,59 @@ export default function FolderPage({
           <h2 className="font-semibold text-lg text-[rgb(var(--color-text-primary))] truncate">
             {folder?.name || "Chat Session"}
           </h2>
-          <button
-            onClick={toggleDocumentSide}
-            className="p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors"
-            title="Bật/Tắt cửa sổ tài liệu"
-          >
-            {isDocumentSideOpen ? (
-              <PanelRightClose size={20} />
-            ) : (
-              <PanelRight size={20} />
-            )}
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={handleExportFolder}
+              disabled={isExporting}
+              className="p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors disabled:opacity-40"
+              title="Xuất toàn bộ thư mục ra 1 file Markdown"
+              aria-label="Xuất toàn bộ thư mục ra 1 file Markdown"
+            >
+              {isExporting ? (
+                <Loader2 size={20} className="animate-spin text-indigo-400" />
+              ) : (
+                <Download size={20} />
+              )}
+            </button>
+            <button
+              onClick={() => uploadInputRef.current?.click()}
+              disabled={isUploading}
+              className="p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors disabled:opacity-40"
+              title="Tải lên file (md/txt) vào thư mục này"
+              aria-label="Tải lên file (md/txt) vào thư mục này"
+            >
+              {isUploading ? (
+                uploadProgress > 0 ? (
+                  <span className="text-[10px] font-bold text-indigo-400 leading-none min-w-[20px] text-center">
+                    {uploadProgress}%
+                  </span>
+                ) : (
+                  <Loader2 size={20} className="animate-spin text-indigo-400" />
+                )
+              ) : (
+                <Upload size={20} />
+              )}
+            </button>
+            <input
+              ref={uploadInputRef}
+              type="file"
+              accept=".md,.markdown,.txt,text/markdown,text/plain"
+              className="hidden"
+              onChange={handleUploadChange}
+            />
+            <button
+              onClick={toggleDocumentSide}
+              className="p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors"
+              title="Bật/Tắt cửa sổ tài liệu"
+              aria-label="Bật/Tắt cửa sổ tài liệu"
+            >
+              {isDocumentSideOpen ? (
+                <PanelRightClose size={20} />
+              ) : (
+                <PanelRight size={20} />
+              )}
+            </button>
+          </div>
         </div>
 
         <ChatHistory messages={messages} />
@@ -274,7 +491,7 @@ export default function FolderPage({
           isDocumentSideOpen
             ? "flex-1 opacity-100"
             : "w-0 opacity-0 overflow-hidden"
-        }`}
+        } ${isDocumentSideOpen && isMobile ? "absolute inset-0 z-30" : ""}`}
       >
         <div className="flex items-center justify-between px-4 py-2 border-b border-[rgb(var(--color-border))] shrink-0">
           <div className="flex items-center gap-1.5">
@@ -301,6 +518,14 @@ export default function FolderPage({
               Sơ đồ tư duy
             </button>
           </div>
+          <button
+            onClick={toggleDocumentSide}
+            className="md:hidden p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors"
+            title="Đóng cửa sổ tài liệu"
+            aria-label="Đóng cửa sổ tài liệu"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         {showMindmap ? (
@@ -308,15 +533,99 @@ export default function FolderPage({
             folderId={folderId}
             onOpenLesson={(fileId: string) => {
               setShowMindmap(false);
-              setSelectedFileId(fileId);
+              setSelectedFile(fileId);
               setDocumentSideOpen(true);
             }}
           />
+        ) : selectedFileId && loadError ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center p-8">
+            <div className="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-red-400"
+              >
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" x2="12" y1="9" y2="13" />
+                <line x1="12" x2="12.01" y1="17" y2="17" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-[rgb(var(--color-text-primary))]">
+                Không thể tải tài liệu
+              </h3>
+              <p className="text-xs text-[rgb(var(--color-text-muted))] mt-1 max-w-xs">
+                Có lỗi khi lấy nội dung. Kiểm tra kết nối mạng rồi thử lại.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setFileDetails(null);
+                setLoadError(false);
+                setFileLoading(true);
+                const reload = async () => {
+                  try {
+                    const res = await fileService.getFile(selectedFileId);
+                    if (res.success) {
+                      setFileDetails(res.data);
+                      setDocumentSideOpen(true);
+                    } else {
+                      setLoadError(true);
+                    }
+                  } catch {
+                    setLoadError(true);
+                  } finally {
+                    setFileLoading(false);
+                  }
+                };
+                reload();
+              }}
+              className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-500 transition-colors"
+            >
+              Thử lại
+            </button>
+          </div>
+        ) : selectedFileId && (fileLoading || !fileDetails) ? (
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <div className="h-16 border-b border-[rgb(var(--color-border))] px-6 flex items-center gap-3 flex-shrink-0">
+              <div className="w-9 h-9 rounded-lg bg-[rgb(var(--color-surface-2))] animate-pulse" />
+              <div className="space-y-2 flex-1 max-w-md">
+                <div className="h-3.5 w-2/3 rounded bg-[rgb(var(--color-surface-2))] animate-pulse" />
+                <div className="h-2.5 w-1/2 rounded bg-[rgb(var(--color-surface-2))] animate-pulse" />
+              </div>
+            </div>
+            <div className="flex-1 p-8 space-y-4 overflow-hidden">
+              {[...Array(6)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-3 rounded bg-[rgb(var(--color-surface-2))] animate-pulse ${
+                    i === 2 ? "w-1/3" : i === 4 ? "w-2/3" : "w-full"
+                  }`}
+                  style={{ animationDelay: `${i * 120}ms` }}
+                />
+              ))}
+            </div>
+          </div>
         ) : selectedFileId && fileDetails ? (
           <FileViewer
             file={fileDetails}
             folderName={folder?.name || ""}
+            folderId={folderId}
             onSaveContent={handleSaveContent}
+            onAiSummary={handleAiSummary}
+            onRestoreContent={(content: string) => {
+              setFileDetails((prev: any) =>
+                prev ? { ...prev, content } : prev,
+              );
+              setShowMindmap(false);
+            }}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center text-[rgb(var(--color-text-muted))] p-8 text-center min-w-[300px]">

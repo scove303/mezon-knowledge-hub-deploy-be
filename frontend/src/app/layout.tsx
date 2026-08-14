@@ -4,6 +4,7 @@ import "./globals.css";
 import React from "react";
 import Providers from "@/components/layout/Providers";
 import { LanguageProvider } from "@/localization/LanguageContext";
+import PwaRegister from "@/components/layout/PwaRegister";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -69,6 +70,7 @@ export default function RootLayout({
         </head>
 
         <body className="h-full antialiased" suppressHydrationWarning>
+          <PwaRegister />
           <Providers>{children}</Providers>
         </body>
       </html>

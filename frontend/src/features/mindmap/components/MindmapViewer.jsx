@@ -7,7 +7,8 @@ import {
   MarkerType,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
-import { Loader2, Network, RefreshCw, SplitSquareHorizontal, Orbit, FileQuestion } from 'lucide-react';
+import { toPng } from 'html-to-image';
+import { Loader2, Network, RefreshCw, SplitSquareHorizontal, Orbit, FileQuestion, ImageDown } from 'lucide-react';
 import MindmapNode from './MindmapNode';
 import KineticGrid from '@/components/ui/kinetic-grid';
 import { getMindmapData } from '../services';
@@ -58,6 +59,23 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
     setError('');
     setRefreshKey((k) => k + 1);
   };
+
+  const exportPng = useCallback(async () => {
+    const el = document.querySelector('.mindmap-canvas .react-flow');
+    if (!el) return;
+    try {
+      const dataUrl = await toPng(el, {
+        backgroundColor: '#0b1220',
+        pixelRatio: 2,
+      });
+      const a = document.createElement('a');
+      a.download = `mindmap-${folderId}.png`;
+      a.href = dataUrl;
+      a.click();
+    } catch (err) {
+      console.error('Lỗi xuất ảnh sơ đồ tư duy:', err);
+    }
+  }, [folderId]);
 
   const graph = useMemo(() => {
     if (!data) return null;
@@ -287,6 +305,13 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
           >
             <Orbit size={13} />
             Tròn
+          </button>
+          <button
+            onClick={exportPng}
+            className="p-1.5 rounded-lg text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] hover:text-indigo-400 transition-colors"
+            title="Xuất ảnh PNG"
+          >
+            <ImageDown size={15} />
           </button>
           <button
             onClick={refresh}

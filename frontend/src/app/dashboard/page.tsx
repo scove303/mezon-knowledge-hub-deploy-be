@@ -7,6 +7,7 @@ import { Loader2, Bot, User, FolderOpen, Plus, Network } from 'lucide-react';
 import Greeting from '@/components/chat/Greeting';
 import ChatInput from '@/components/chat/ChatInput';
 import StreamingText from '@/components/chat/StreamingText';
+import DashboardStats from '@/components/dashboard/DashboardStats';
 import { useWorkspaceStore } from '@/features/folders/store';
 import { folderService } from '@/features/folders/services';
 import { aiService } from '@/features/ai/services';
@@ -215,6 +216,8 @@ export default function DashboardIndex() {
       <div className="flex flex-col items-center justify-start h-full w-full p-4 md:p-8">
         <div className="w-full max-w-4xl flex flex-col flex-1 min-h-0">
           <GuestBanner />
+
+          {threads.length === 0 && <DashboardStats />}
 
           {threads.length > 0 && (
             <div className="flex justify-end pb-2">

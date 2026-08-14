@@ -20,4 +20,9 @@ export const folderService = {
     const { data } = await axiosInstance.delete(`/folders/${id}`);
     return data;
   },
+
+  async renameFolder(id, name) {
+    const { data } = await axiosInstance.put(`/folders/${id}`, { name });
+    return data;
+  },
 };
