@@ -143,6 +143,7 @@ export default function ChatMessage({ message }: { message: MessageProps }) {
               onClick={handleCopy}
               className="p-1 rounded transition-colors text-[rgb(var(--color-text-muted))] hover:text-indigo-400 hover:bg-[rgb(var(--color-surface-2))]"
               title="Copy nội dung"
+              aria-label="Copy nội dung"
             >
               {copied ? (
                 <Check className="w-3 h-3 text-emerald-400" />

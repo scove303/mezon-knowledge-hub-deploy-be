@@ -73,6 +73,7 @@ export default function ShortcutHelp() {
         onClick={() => setOpen(true)}
         className="fixed bottom-4 right-4 z-40 p-2 rounded-lg bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] text-[rgb(var(--color-text-muted))] hover:text-indigo-400 hover:border-indigo-500/40 transition-colors shadow-sm"
         title="Phím tắt (?)"
+        aria-label="Phím tắt (?)"
       >
         <Keyboard className="w-4 h-4" />
       </button>

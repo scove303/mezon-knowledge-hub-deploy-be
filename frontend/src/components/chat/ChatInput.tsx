@@ -92,6 +92,7 @@ export default function ChatInput({
                 type="button"
                 onClick={() => setFile(null)}
                 className="ml-1 text-[rgb(var(--color-text-muted))] hover:text-red-500"
+                aria-label="Bỏ đính kèm file"
               >
                 <X size={14} />
               </button>
@@ -99,7 +100,7 @@ export default function ChatInput({
           </div>
         )}
         <div className="flex items-end px-2 pb-2 pt-2 gap-2">
-          <label className="p-2 mb-1 cursor-pointer text-[rgb(var(--color-text-muted))] hover:text-indigo-400 transition-colors rounded-full hover:bg-[rgb(var(--color-surface-2))]">
+          <label className="p-2 mb-1 cursor-pointer text-[rgb(var(--color-text-muted))] hover:text-indigo-400 transition-colors rounded-full hover:bg-[rgb(var(--color-surface-2))] min-w-[44px] min-h-[44px] flex items-center justify-center md:min-w-0 md:min-h-0" aria-label="Đính kèm file">
             <Paperclip size={20} />
             <input
               type="file"
@@ -122,7 +123,8 @@ export default function ChatInput({
           <button
             type="submit"
             disabled={isLoading || (!message.trim() && !file)}
-            className={`p-2 mb-1 mr-1 rounded-full transition-colors flex items-center justify-center
+            aria-label="Gửi tin nhắn"
+            className={`p-2 mb-1 mr-1 rounded-full transition-colors flex items-center justify-center min-w-[44px] min-h-[44px] md:min-w-0 md:min-h-0
               ${
                 (message.trim() || file) && !isLoading
                   ? "bg-indigo-600 text-white hover:bg-indigo-500 shadow-md"
