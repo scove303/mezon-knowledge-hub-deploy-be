@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useContext,
   useEffect,
+  useRef,
   useState,
 } from "react"
 import * as AccordionPrimitive from "@radix-ui/react-accordion"
@@ -248,8 +249,9 @@ const Folder = forwardRef<
     return (
       <AccordionPrimitive.Item
         {...props}
+        ref={ref}
         value={value}
-        className="relative overflow-hidden h-full group/folder"
+        className="relative h-full group/folder hover:z-[60]"
       >
         <div className="relative">
           <AccordionPrimitive.Trigger
@@ -284,7 +286,7 @@ const Folder = forwardRef<
             </div>
           )}
         </div>
-        <AccordionPrimitive.Content className="text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down relative overflow-hidden h-full">
+        <AccordionPrimitive.Content className="text-sm data-[state=closed]:animate-accordion-up data-[state=open]:animate-accordion-down relative overflow-hidden h-full acc-content">
           {element && indicator && <TreeIndicator aria-hidden="true" />}
           <AccordionPrimitive.Root
             dir={direction}
@@ -333,8 +335,24 @@ const File = forwardRef<
   ) => {
     const { direction, selectedId, selectItem } = useTree()
     const isSelected = isSelect ?? selectedId === value
+    // Preview mở lên trên nếu row nằm sát đáy vùng cuộn (không bị lọt ra ngoài)
+    const [previewUp, setPreviewUp] = useState(false)
+    const rowRef = useRef<HTMLDivElement>(null)
+    const handleMouseEnter = () => {
+      const row = rowRef.current
+      if (!row) return
+      const vp = row.closest("[data-radix-scroll-area-viewport]")
+      const rowRect = row.getBoundingClientRect()
+      const limit = vp ? vp.getBoundingClientRect().bottom : window.innerHeight
+      setPreviewUp(rowRect.bottom + 240 > limit)
+    }
     return (
-      <AccordionPrimitive.Item value={value} className="relative group/file">
+      <AccordionPrimitive.Item
+        ref={rowRef}
+        value={value}
+        className="relative group/file hover:z-[60]"
+        onMouseEnter={handleMouseEnter}
+      >
         <div className="relative">
           <AccordionPrimitive.Trigger
             ref={ref}
@@ -370,7 +388,12 @@ const File = forwardRef<
             </div>
           )}
           {preview && (
-            <div className="absolute left-0 right-0 top-full z-50 hidden group-hover/file:block pointer-events-none">
+            <div
+              className={cn(
+                "absolute left-0 right-0 z-50 hidden group-hover/file:block pointer-events-none",
+                previewUp ? "bottom-full mb-1" : "top-full mt-0.5",
+              )}
+            >
               {preview}
             </div>
           )}

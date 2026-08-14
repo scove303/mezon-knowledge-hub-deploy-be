@@ -156,6 +156,15 @@ body {
   outline-offset: 2px;
 }
 
+/* ─── File hover preview thoát khỏi clip của accordion ────────────────────── */
+/* Accordion Content cần overflow-hidden để animate thu gọn, nhưng nó cũng cắt
+   hover preview của file (preview mở xuống dưới ranh giới folder). Khi có file
+   đang hover (preview hiển thị) thì mở overflow để preview vẽ lên trên mọi thứ
+   bên dưới; animation đóng/mở vẫn giữ nguyên clipping. */
+.acc-content:has([class*="group/file"]:hover) {
+  overflow: visible;
+}
+
 /* ─── Giảm chuyển động theo tùy chọn hệ điều hành ─────────────────────────── */
 /* prefers-reduced-motion: giữ nguyên layout nhưng bỏ animation/transition */
 @media (prefers-reduced-motion: reduce) {
