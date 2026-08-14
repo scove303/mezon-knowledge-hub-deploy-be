@@ -1,4 +1,10 @@
-import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
+import React, {
+  useState,
+  useEffect,
+  useRef,
+  useMemo,
+  useCallback,
+} from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -32,6 +38,8 @@ import {
   Maximize2,
   Minimize2,
   Ellipsis,
+  Settings2,
+  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/base-ui/Button";
 import { Modal } from "@/components/base-ui/Modal";
@@ -39,10 +47,18 @@ import { useWorkspaceStore } from "@/features/folders/store";
 import { fileService } from "@/features/files/services";
 import { folderService } from "@/features/folders/services";
 import { useToastStore } from "@/stores/toast";
-import { speakText, stopSpeech } from "src/utils/speech";
+import { speakText, stopSpeech } from "@/utils/Speech/speechSystem";
 import { MarkdownComponents } from "@/components/markdown/MarkdownComponents";
 import SlideViewer from "./SlideViewer";
 import { cn } from "@/utils/formatTailwind";
+
+// Import Hệ thống Giọng đọc Tối ưu Lai (Hybrid Speech System)
+import {
+  speakContent,
+  stopAllSpeech,
+  updateSpeechConfig,
+  getSpeechConfig,
+} from "@/utils/speechSystem";
 
 // Timer hoãn xóa (module scope để React Compiler không chặn việc modify trong handler)
 let deleteTimer = null;
@@ -59,7 +75,14 @@ const slugify = (text) =>
     .replace(/[\s_]+/g, "-")
     .replace(/^-+|-+$/g, "");
 
-export default function FileViewer({ file, onSaveContent, onRestoreContent, folderName, folderId, onAiSummary }) {
+export default function FileViewer({
+  file,
+  onSaveContent,
+  onRestoreContent,
+  folderName,
+  folderId,
+  onAiSummary,
+}) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(file ? file.content : "");
   const [seekTime, setSeekTime] = useState(0);
@@ -84,7 +107,9 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
       const res = await fileService.listRevisions(file.id);
       if (res.success) setRevisions(res.data || []);
     } catch (err) {
-      useToastStore.getState().addToast("Không thể tải lịch sử phiên bản", "error");
+      useToastStore
+        .getState()
+        .addToast("Không thể tải lịch sử phiên bản", "error");
     } finally {
       setRevisionsLoading(false);
     }
@@ -96,9 +121,7 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
       const res = await fileService.restoreRevision(file.id, revId);
       if (res.success) {
         onRestoreContent?.(res.data.content);
-        useToastStore
-          .getState()
-          .addToast("Đã khôi phục phiên bản", "success");
+        useToastStore.getState().addToast("Đã khôi phục phiên bản", "success");
         setRevisionsOpen(false);
       } else {
         useToastStore.getState().addToast("Khôi phục thất bại", "error");
@@ -124,8 +147,6 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
       return iso;
     }
   };
-
-  const [isSpeaking, setIsSpeaking] = useState(false);
 
   // Chế độ trình chiếu (slide) từ markdown
   const [slideOpen, setSlideOpen] = useState(false);
@@ -212,14 +233,15 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
   // Chế độ đọc tập trung (zen): ẩn mục lục + căn giữa cột nội dung
   const [zenOpen, setZenOpen] = useState(
     () =>
-      typeof window !== "undefined" &&
-      localStorage.getItem("mf-zen") === "1",
+      typeof window !== "undefined" && localStorage.getItem("mf-zen") === "1",
   );
   const toggleZen = () => {
     setZenOpen((prev) => {
       try {
         localStorage.setItem("mf-zen", prev ? "0" : "1");
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       return !prev;
     });
   };
@@ -237,7 +259,9 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
       scrollSaveTimer = setTimeout(() => {
         try {
           localStorage.setItem(`mf-scroll-${file.id}`, String(el.scrollTop));
-        } catch { /* ignore */ }
+        } catch {
+          /* ignore */
+        }
       }, 400);
     };
     el.addEventListener("scroll", handler);
@@ -255,9 +279,10 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
     let saved = 0;
     try {
       saved =
-        parseInt(localStorage.getItem(`mf-scroll-${file.id}`) || "0", 10) ||
-        0;
-    } catch { /* ignore */ }
+        parseInt(localStorage.getItem(`mf-scroll-${file.id}`) || "0", 10) || 0;
+    } catch {
+      /* ignore */
+    }
     const frame = requestAnimationFrame(() => {
       if (docPanelRef.current) docPanelRef.current.scrollTop = saved;
     });
@@ -289,7 +314,8 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
     if (idx === -1) return;
 
     const mark = document.createElement("mark");
-    mark.className = "bg-amber-400/40 text-[rgb(var(--color-text-primary))] rounded px-0.5";
+    mark.className =
+      "bg-amber-400/40 text-[rgb(var(--color-text-primary))] rounded px-0.5";
     const range = document.createRange();
     range.setStart(targetNode, idx);
     range.setEnd(targetNode, idx + q.length);
@@ -355,7 +381,9 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
     setTocOpen((prev) => {
       try {
         localStorage.setItem("mf-toc-open", prev ? "0" : "1");
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       return !prev;
     });
   };
@@ -376,13 +404,17 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
       const next = Math.min(1.4, Math.max(0.8, +(prev + delta).toFixed(2)));
       try {
         localStorage.setItem("mf-font-scale", String(next));
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       return next;
     });
   };
 
   const scrollToHeading = (id) => {
-    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+    document
+      .getElementById(id)
+      ?.scrollIntoView({ behavior: "smooth", block: "start" });
   };
 
   useEffect(() => {
@@ -450,22 +482,15 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
     setDeleteConfirmOpen(false);
     clearTimeout(deleteTimer);
 
-    useToastStore
-      .getState()
-      .addToast(
-        `Đã xóa "${name}"`,
-        "info",
-        5000,
-        {
-          label: "Hoàn tác",
-          onClick: () => {
-            clearTimeout(deleteTimer);
-            useToastStore
-              .getState()
-              .addToast("Đã hoàn tác, tài liệu được giữ lại!", "success");
-          },
-        },
-      );
+    useToastStore.getState().addToast(`Đã xóa "${name}"`, "info", 5000, {
+      label: "Hoàn tác",
+      onClick: () => {
+        clearTimeout(deleteTimer);
+        useToastStore
+          .getState()
+          .addToast("Đã hoàn tác, tài liệu được giữ lại!", "success");
+      },
+    });
 
     deleteTimer = setTimeout(() => {
       handleDelete();
@@ -477,7 +502,8 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
   // Tắt giọng đọc khi chuyển file hoặc unmount
   useEffect(() => {
     return () => {
-      stopSpeech();
+      stopAllSpeech();
+      setIsSpeaking(false);
     };
   }, [file?.id]);
 
@@ -668,13 +694,33 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
   };
 
   // Phần Tích hợp Text-to-Speech (TTS)
+  // Trạng thái phát âm thanh & Bảng cài đặt giọng đọc
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [showTtsSettings, setShowTtsSettings] = useState(false);
+  const [speechRate, setSpeechRate] = useState(1.0);
+  const [useCloudNeural, setUseCloudNeural] = useState(true);
+
+  // Cập nhật cấu hình khi thay đổi thông số đọc
+  const handleRateChange = (newRate) => {
+    setSpeechRate(newRate);
+    updateSpeechConfig({ rate: newRate });
+  };
+
+  const handleCloudToggle = (enabled) => {
+    setUseCloudNeural(enabled);
+    updateSpeechConfig({ useCloudNeural: enabled });
+  };
+
+  // Xử lý Bật / Tắt giọng đọc
   const handleToggleSpeech = () => {
     if (isSpeaking) {
-      stopSpeech();
+      stopAllSpeech();
       setIsSpeaking(false);
     } else {
       setIsSpeaking(true);
-      speakText(file.content, () => setIsSpeaking(false));
+      speakContent(file.content, () => {
+        setIsSpeaking(false);
+      });
     }
   };
 
@@ -715,7 +761,9 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
       else delete next[key];
       try {
         localStorage.setItem("mf-video-notes", JSON.stringify(next));
-      } catch { /* ignore */ }
+      } catch {
+        /* ignore */
+      }
       return next;
     });
     setNoteEditingKey(null);
@@ -734,9 +782,7 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
       .filter((e) => e.text && !Number.isNaN(e.secs))
       .sort((a, b) => a.secs - b.secs);
     if (entries.length === 0) {
-      useToastStore
-        .getState()
-        .addToast("Chưa có ghi chú nào để xuất", "info");
+      useToastStore.getState().addToast("Chưa có ghi chú nào để xuất", "info");
       return;
     }
     const fmt = (s) =>
@@ -775,24 +821,25 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
             </h2>
             {!zenOpen && (
               <div className="flex items-center space-x-2 text-[10px] text-[rgb(var(--color-text-muted))] font-medium min-w-0 overflow-hidden">
-              <button
-                onClick={() => folderId && store.setSelectedFolder(folderId)}
-                className="truncate min-w-0 max-w-[200px] hover:text-indigo-400 transition-colors cursor-pointer"
-                title="Về thư mục này"
-              >
-                {folderName || "Thư mục gốc"}
-              </button>
-              <ChevronRight className="w-3 h-3 shrink-0" />
-              <span className="truncate min-w-0">{file.name}</span>
-              <span>•</span>
-              <Calendar className="w-3 h-3" />
-              <span>Cập nhật {file.createdAt}</span>
-              <span>•</span>
-              <FileText className="w-3 h-3" />
-              <span>
-                {contentStats.words} từ • {contentStats.readingMinutes} phút đọc
-              </span>
-            </div>
+                <button
+                  onClick={() => folderId && store.setSelectedFolder(folderId)}
+                  className="truncate min-w-0 max-w-[200px] hover:text-indigo-400 transition-colors cursor-pointer"
+                  title="Về thư mục này"
+                >
+                  {folderName || "Thư mục gốc"}
+                </button>
+                <ChevronRight className="w-3 h-3 shrink-0" />
+                <span className="truncate min-w-0">{file.name}</span>
+                <span>•</span>
+                <Calendar className="w-3 h-3" />
+                <span>Cập nhật {file.createdAt}</span>
+                <span>•</span>
+                <FileText className="w-3 h-3" />
+                <span>
+                  {contentStats.words} từ • {contentStats.readingMinutes} phút
+                  đọc
+                </span>
+              </div>
             )}
           </div>
         </div>
@@ -805,8 +852,16 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
             size="icon"
             onClick={() => goToFile(prevFileItem)}
             disabled={!prevFileItem}
-            title={prevFileItem ? `Bài trước: ${prevFileItem.name}` : "Không có bài trước"}
-            aria-label={prevFileItem ? `Bài trước: ${prevFileItem.name}` : "Không có bài trước"}
+            title={
+              prevFileItem
+                ? `Bài trước: ${prevFileItem.name}`
+                : "Không có bài trước"
+            }
+            aria-label={
+              prevFileItem
+                ? `Bài trước: ${prevFileItem.name}`
+                : "Không có bài trước"
+            }
           >
             <ChevronUp className="w-3.5 h-3.5" />
           </Button>
@@ -815,8 +870,16 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
             size="icon"
             onClick={() => goToFile(nextFileItem)}
             disabled={!nextFileItem}
-            title={nextFileItem ? `Bài tiếp theo: ${nextFileItem.name}` : "Không có bài tiếp theo"}
-            aria-label={nextFileItem ? `Bài tiếp theo: ${nextFileItem.name}` : "Không có bài tiếp theo"}
+            title={
+              nextFileItem
+                ? `Bài tiếp theo: ${nextFileItem.name}`
+                : "Không có bài tiếp theo"
+            }
+            aria-label={
+              nextFileItem
+                ? `Bài tiếp theo: ${nextFileItem.name}`
+                : "Không có bài tiếp theo"
+            }
           >
             <ChevronDown className="w-3.5 h-3.5" />
           </Button>
@@ -826,8 +889,12 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
             variant="secondary"
             size="icon"
             onClick={toggleZen}
-            title={zenOpen ? "Thoát chế độ đọc tập trung" : "Chế độ đọc tập trung"}
-            aria-label={zenOpen ? "Thoát chế độ đọc tập trung" : "Chế độ đọc tập trung"}
+            title={
+              zenOpen ? "Thoát chế độ đọc tập trung" : "Chế độ đọc tập trung"
+            }
+            aria-label={
+              zenOpen ? "Thoát chế độ đọc tập trung" : "Chế độ đọc tập trung"
+            }
           >
             {zenOpen ? (
               <Minimize2 className="w-3.5 h-3.5" />
@@ -863,7 +930,9 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
             <CheckCircle2
               className={cn(
                 "w-3.5 h-3.5",
-                isDone ? "text-emerald-400" : "text-[rgb(var(--color-text-muted))]",
+                isDone
+                  ? "text-emerald-400"
+                  : "text-[rgb(var(--color-text-muted))]",
               )}
             />
           </Button>
@@ -894,7 +963,10 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
           ) : (
             <>
               {lastSavedAt && (
-                <span className="text-[10px] text-emerald-400 font-medium flex items-center gap-1 shrink-0" title={`Lần lưu cuối: ${formatSavedTime(lastSavedAt)}`}>
+                <span
+                  className="text-[10px] text-emerald-400 font-medium flex items-center gap-1 shrink-0"
+                  title={`Lần lưu cuối: ${formatSavedTime(lastSavedAt)}`}
+                >
                   <CheckCircle2 className="w-3 h-3" />
                   Đã lưu {formatSavedTime(lastSavedAt)}
                 </span>
@@ -965,15 +1037,31 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
                     className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:text-[rgb(var(--color-text-primary))] hover:bg-[rgb(var(--color-surface-2))] rounded-lg transition-colors"
                   >
                     {isSpeaking ? (
-                      <VolumeX className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+                      <>
+                        <VolumeX className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+                        <span className="text-xs text-rose-400 font-medium">
+                          Dừng đọc
+                        </span>
+                      </>
                     ) : (
-                      <Volume2 className="w-3.5 h-3.5" />
+                      <>
+                        <Volume2 className="w-3.5 h-3.5" />
+                        <span className="text-xs font-medium">Đọc bài</span>
+                      </>
                     )}
-                    <span className="font-medium">
-                      {isSpeaking ? "Dừng đọc" : "Đọc văn bản"}
-                    </span>
                   </button>
                 )}
+
+                {/* Nút Mở Bảng Cài đặt Thông số Đọc */}
+                <Button
+                  id="btn-tts-settings"
+                  variant="ghost"
+                  size="icon"
+                  onClick={() => setShowTtsSettings(!showTtsSettings)}
+                  title="Cấu hình giọng đọc"
+                >
+                  <Settings2 className="w-3.5 h-3.5 text-[rgb(var(--color-text-muted))]" />
+                </Button>
 
                 {/* Text-to-Speech (AI tóm tắt) */}
                 {!file.videoUrl && (
@@ -1087,10 +1175,58 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
         </div>
       </header>
 
+      {/* Bảng cấu hình thông số giọng đọc dạng Popup thả xuống */}
+      {showTtsSettings && (
+        <div className="bg-[rgb(var(--color-surface-1))] border-b border-[rgb(var(--color-border))] px-6 py-3 flex items-center justify-between text-xs animate-slide-down">
+          <div className="flex items-center space-x-6">
+            {/* Tốc độ đọc */}
+            <div className="flex items-center space-x-2">
+              <span className="text-[rgb(var(--color-text-muted))] font-medium">
+                Tốc độ:
+              </span>
+              {[0.8, 1.0, 1.25, 1.5].map((rate) => (
+                <button
+                  key={rate}
+                  onClick={() => handleRateChange(rate)}
+                  className={`px-2 py-0.5 rounded text-xs font-mono font-semibold transition-colors ${
+                    speechRate === rate
+                      ? "bg-indigo-600 text-white"
+                      : "bg-[rgb(var(--color-bg))] text-[rgb(var(--color-text-muted))] hover:text-white"
+                  }`}
+                >
+                  {rate}x
+                </button>
+              ))}
+            </div>
+
+            {/* Chế độ Giọng Neural Cloud vs Local */}
+            <div className="flex items-center space-x-2">
+              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+              <span className="text-[rgb(var(--color-text-muted))] font-medium">
+                Giọng AI Neural (Edge):
+              </span>
+              <input
+                type="checkbox"
+                checked={useCloudNeural}
+                onChange={(e) => handleCloudToggle(e.target.checked)}
+                className="rounded border-[rgb(var(--color-border))] bg-[rgb(var(--color-bg))] text-indigo-600 focus:ring-0 cursor-pointer"
+              />
+            </div>
+          </div>
+
+          <span className="text-[10px] text-[rgb(var(--color-text-muted))] italic">
+            Tự động làm sạch Markdown & dịch chuyển công thức LaTeX
+          </span>
+        </div>
+      )}
+
       {/* Body */}
       <div className="flex-1 flex overflow-hidden">
         {/* Document Panel */}
-        <div ref={docPanelRef} className="flex-1 overflow-y-auto px-8 py-6 scrollbar-thin">
+        <div
+          ref={docPanelRef}
+          className="flex-1 overflow-y-auto px-8 py-6 scrollbar-thin"
+        >
           {isEditing ? (
             <textarea
               value={editedContent}
@@ -1262,7 +1398,10 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
                               onChange={(e) => setNoteDraft(e.target.value)}
                               onBlur={() => saveNote(t.seconds)}
                               onKeyDown={(e) => {
-                                if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
+                                if (
+                                  e.key === "Enter" &&
+                                  (e.ctrlKey || e.metaKey)
+                                ) {
                                   saveNote(t.seconds);
                                 }
                                 if (e.key === "Escape") {
