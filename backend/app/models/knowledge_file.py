@@ -23,3 +23,14 @@ class KnowledgeFile(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     folder: Optional["Folder"] = Relationship(back_populates="files")
+
+
+class FileRevision(SQLModel, table=True):
+    """Snapshot nội dung file mỗi lần cập nhật (version history)."""
+
+    __tablename__ = "file_revisions"
+
+    id: str = Field(primary_key=True, max_length=50)
+    file_id: str = Field(foreign_key="knowledge_files.id", index=True)
+    content: str = Field(sa_column=Column(Text, nullable=False))
+    created_at: datetime = Field(default_factory=datetime.utcnow)

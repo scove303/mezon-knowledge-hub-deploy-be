@@ -19,6 +19,16 @@ const BEAM_VARIANT: Record<ThemeMode, BorderBeamColorVariant> = {
   "crimson-dark": "sunset",
 };
 
+// Không dùng theme="auto" (đọc prefers-color-scheme) → gây hydration mismatch
+// giữa server (luôn sáng) và client (theo OS). Dùng theme từ store để khớp SSR.
+const BEAM_THEME: Record<ThemeMode, "light" | "dark"> = {
+  light: "light",
+  dark: "dark",
+  cisher: "dark",
+  "sunset-gradient": "dark",
+  "crimson-dark": "dark",
+};
+
 export default function ChatInput({
   onSubmit,
   isLoading,
@@ -63,7 +73,7 @@ export default function ChatInput({
     <BorderBeam
       size="md"
       colorVariant={BEAM_VARIANT[theme] ?? "ocean"}
-      theme="auto"
+      theme={BEAM_THEME[theme] ?? "light"}
       className="w-full max-w-3xl mx-auto"
       borderRadius={16}
     >

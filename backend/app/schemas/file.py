@@ -18,6 +18,14 @@ class FileUpdate(BaseModel):
     content: str
 
 
+class FileRename(BaseModel):
+    name: str
+
+
+class FileMove(BaseModel):
+    folder_id: str
+
+
 class FileRead(BaseModel):
     id: str
     name: str
@@ -31,3 +39,9 @@ class FileRead(BaseModel):
 class FileItem(BaseModel):
     title:str
     text_content:str = ""
+
+
+class FileRevisionRead(BaseModel):
+    id: str
+    created_at: datetime
+    content: str

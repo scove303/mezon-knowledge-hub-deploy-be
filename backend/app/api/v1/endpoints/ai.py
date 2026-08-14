@@ -14,6 +14,10 @@ from app.api.deps import SessionDep, CurrentActor
 from app.services.knowledge.roadmap import roadmap_service, revise_roadmap
 from app.schemas.ai import RoadmapCreateRequest, RoadmapFollowUpRequest
 from app.models.folder import Folder
+from app.models.knowledge_file import KnowledgeFile
+from app.services.document.parser import _generate_content_with_retry
+from app.services.ai.prompts import SUMMARIZE_SYSTEM_PROMPT
+from google.genai import types
 
 router = APIRouter()
 
@@ -268,6 +272,67 @@ async def followup_roadmap(
     return success_response(
         message="Yêu cầu hỏi tiếp / chỉnh sửa đã được chấp nhận",
         data={"job_id": job.id, "status": "queued", "conversation_id": folder.id},
+    )
+
+
+@router.post("/files/{file_id}/summarize")
+async def summarize_file(
+    file_id: str,
+    session: SessionDep,
+    current_user: CurrentActor,
+):
+    """Tóm tắt nội dung một bài học (file markdown) bằng Gemini."""
+    file = session.exec(
+        select(KnowledgeFile).where(KnowledgeFile.id == file_id)
+    ).first()
+    if not file:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Không tìm thấy tài liệu này",
+        )
+
+    folder = session.exec(
+        select(Folder).where(Folder.id == file.folder_id)
+    ).first()
+    if not folder or folder.user_id != current_user.id:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Bạn không có quyền truy cập tài liệu này",
+        )
+
+    content = (getattr(file, "markdown_content", "") or "").strip()
+    if not content:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Tài liệu này chưa có nội dung để tóm tắt",
+        )
+
+    if len(content) > 20000:
+        content = content[:20000] + "\n...(bị cắt gọn)"
+
+    prompt = (
+        f"Tiêu đề bài học: {file.name}\n\n"
+        f"Nội dung bài học (Markdown):\n{content}"
+    )
+
+    try:
+        response = await _generate_content_with_retry(
+            prompt,
+            types.GenerateContentConfig(
+                system_instruction=SUMMARIZE_SYSTEM_PROMPT,
+                temperature=0.3,
+            ),
+        )
+    except Exception as e:
+        print(f"❌ [Summarize {file_id}] Lỗi gọi Gemini: {e}", flush=True)
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=f"Không thể gọi AI để tóm tắt: {e}",
+        )
+
+    return success_response(
+        message="Đã tóm tắt xong",
+        data={"file_id": file_id, "summary": (response.text or "").strip()},
     )
 
 

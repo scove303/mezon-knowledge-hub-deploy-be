@@ -209,6 +209,9 @@ type FolderProps = {
   isSelect?: boolean
   onSelect?: (id: string) => void
   actions?: React.ReactNode
+  badge?: React.ReactNode
+  openIcon?: React.ReactNode
+  closeIcon?: React.ReactNode
 } & FolderComponentProps
 
 const Folder = forwardRef<
@@ -224,6 +227,10 @@ const Folder = forwardRef<
       isSelect,
       onSelect,
       actions,
+      badge,
+      openIcon,
+      closeIcon,
+      expandedItems,
       children,
       ...props
     },
@@ -232,11 +239,10 @@ const Folder = forwardRef<
     const {
       direction,
       handleExpand,
-      expandedItems,
       indicator,
       setExpandedItems,
-      openIcon,
-      closeIcon,
+      openIcon: contextOpenIcon,
+      closeIcon: contextCloseIcon,
     } = useTree()
 
     return (
@@ -251,7 +257,7 @@ const Folder = forwardRef<
               `flex items-center gap-1.5 text-sm rounded-md w-full min-w-0 text-left pr-8`,
               className,
               {
-                "bg-indigo-600/10 text-indigo-300 border border-indigo-500/20 font-medium": isSelect && isSelectable,
+                "bg-[rgb(var(--color-primary)/0.12)] text-[rgb(var(--color-primary))] border border-[rgb(var(--color-primary)/0.3)] font-medium": isSelect && isSelectable,
                 "cursor-pointer": isSelectable,
                 "cursor-not-allowed opacity-50": !isSelectable,
               },
@@ -263,10 +269,15 @@ const Folder = forwardRef<
             }}
           >
             {expandedItems?.includes(value)
-              ? openIcon ?? <FolderOpenIcon className="size-4 shrink-0" />
-              : closeIcon ?? <FolderIcon className="size-4 shrink-0" />}
+              ? openIcon ?? contextOpenIcon ?? <FolderOpenIcon className="size-4 shrink-0" />
+              : closeIcon ?? contextCloseIcon ?? <FolderIcon className="size-4 shrink-0" />}
             <span className="truncate">{element}</span>
           </AccordionPrimitive.Trigger>
+          {badge && (
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] opacity-60 group-hover/folder:hidden">
+              {badge}
+            </span>
+          )}
           {actions && (
             <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover/folder:opacity-100 transition-opacity">
               {actions}
@@ -304,6 +315,7 @@ const File = forwardRef<
     isSelect?: boolean
     fileIcon?: React.ReactNode
     actions?: React.ReactNode
+    badge?: React.ReactNode
   } & React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
 >(
   (
@@ -315,6 +327,7 @@ const File = forwardRef<
       isSelect,
       fileIcon,
       actions,
+      badge,
       children,
       ...props
     },
@@ -334,7 +347,7 @@ const File = forwardRef<
             className={cn(
               "flex items-center gap-1.5 cursor-pointer text-sm pr-1 rtl:pl-1 rtl:pr-0 rounded-md duration-200 ease-in-out w-full min-w-0 text-left pr-8",
               {
-                "bg-indigo-600/15 text-indigo-400 font-semibold": isSelected && isSelectable,
+                "bg-[rgb(var(--color-primary)/0.15)] text-[rgb(var(--color-primary))] font-semibold": isSelected && isSelectable,
               },
               isSelectable
                 ? "cursor-pointer text-[rgb(var(--color-text-muted))] hover:text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))]"
@@ -349,6 +362,11 @@ const File = forwardRef<
             {fileIcon ?? <FileIcon className="size-4 shrink-0" />}
             {children}
           </AccordionPrimitive.Trigger>
+          {badge && (
+            <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] opacity-60 group-hover/file:hidden">
+              {badge}
+            </span>
+          )}
           {actions && (
             <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover/file:opacity-100 transition-opacity">
               {actions}

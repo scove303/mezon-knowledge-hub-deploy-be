@@ -5,14 +5,39 @@ import { fileService } from '@/features/files/services';
 import { folderService } from '@/features/folders/services';
 import { aiService } from '@/features/ai/services';
 import FileViewer from '@/features/files/components/FileViewer';
-import MindmapViewer from '@/features/mindmap/components/MindmapViewer';
 import ResizeHandle from '@/components/common/ResizeHandle';
+import dynamic from 'next/dynamic';
 import { useEffect, useState, use, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import ChatHistory from '@/components/chat/ChatHistory';
-import ChatInput from '@/components/chat/ChatInput';
 import { MessageProps } from '@/components/chat/ChatMessage';
-import { PanelRightClose, PanelRight, Network, FileText } from 'lucide-react';
+import { PanelRightClose, PanelRight, Network, FileText, Upload, Loader2, Download, X } from 'lucide-react';
+import { useToastStore } from '@/stores/toast';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+
+// Tách bundle: Mindmap (@xyflow/react) và Chat chỉ tải khi cần
+const MindmapViewer = dynamic(
+  () => import('@/features/mindmap/components/MindmapViewer'),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="flex-1 flex items-center justify-center text-[rgb(var(--color-text-muted))]">
+        Đang tải sơ đồ tư duy...
+      </div>
+    ),
+  },
+);
+const ChatHistory = dynamic(
+  () => import('@/components/chat/ChatHistory'),
+  { ssr: false },
+);
+const ChatInput = dynamic(() => import('@/components/chat/ChatInput'), {
+  ssr: false,
+  loading: () => (
+    <div className="p-4 animate-pulse">
+      <div className="h-11 rounded-lg bg-[rgb(var(--color-surface-2))]" />
+    </div>
+  ),
+});
 
 export default function FolderPage({
   params,
@@ -39,6 +64,10 @@ export default function FolderPage({
   const [fileDetails, setFileDetails] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const statusMsgId = useRef<string | null>(null);
+  const uploadInputRef = useRef<HTMLInputElement | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [isExporting, setIsExporting] = useState(false);
+  const isMobile = useMediaQuery('(max-width: 767px)');
   const [showMindmap, setShowMindmap] = useState(
     () =>
       typeof window !== "undefined" &&
@@ -93,6 +122,65 @@ export default function FolderPage({
     loadFile();
   }, [selectedFileId, setDocumentSideOpen]);
 
+  // Xuất toàn bộ thư mục thành 1 file Markdown
+  const handleExportFolder = async () => {
+    const files = folder?.files || [];
+    if (files.length === 0) {
+      useToastStore.getState().addToast("Thư mục chưa có tài liệu", "info");
+      return;
+    }
+    setIsExporting(true);
+    try {
+      const parts: string[] = [`# ${folder?.name || "Thư mục"}\n`];
+      for (const f of files) {
+        const res = await fileService.getFile(f.id);
+        if (res.success && res.data?.content) {
+          parts.push(`\n---\n\n## ${f.name}\n\n${res.data.content}`);
+        }
+      }
+      const md = parts.join("\n");
+      const blob = new Blob([md], { type: "text/markdown;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${folder?.name || "thu-muc"}.md`;
+      a.click();
+      URL.revokeObjectURL(url);
+      useToastStore.getState().addToast("Đã xuất thư mục ra file .md", "success");
+    } catch (err) {
+      console.error("Lỗi export folder:", err);
+      useToastStore.getState().addToast("Xuất thư mục thất bại", "error");
+    } finally {
+      setIsExporting(false);
+    }
+  };
+
+  // Upload file thủ công vào thư mục hiện tại
+  const handleUploadChange = async (e: any) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setIsUploading(true);
+    try {
+      const res = await fileService.uploadFile(folderId, file);
+      if (res.success) {
+        useToastStore
+          .getState()
+          .addToast(`Đã tải lên "${res.data.name}"`, "success");
+        const foldersRes = await folderService.getFolders();
+        if (foldersRes.success) setFolders(foldersRes.data);
+        setSelectedFileId(res.data.id);
+      } else {
+        useToastStore.getState().addToast("Tải lên thất bại", "error");
+      }
+    } catch (err) {
+      console.error("Lỗi upload file:", err);
+      useToastStore.getState().addToast("Tải lên thất bại", "error");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   // Lưu nội dung sau khi chỉnh sửa
   const handleSaveContent = async (newContent: string) => {
     if (!selectedFileId) return;
@@ -100,7 +188,10 @@ export default function FolderPage({
     try {
       const res = await fileService.updateFile(selectedFileId, newContent);
       if (res.success) {
-        setFileDetails(res.data);
+        // Backend chỉ trả về {id, updated_at} → merge vào bản cũ để không mất content/name
+        setFileDetails((prev: any) =>
+          prev ? { ...prev, ...res.data } : res.data,
+        );
       }
     } catch (err) {
       console.error("Lỗi khi cập nhật tài liệu:", err);
@@ -224,15 +315,15 @@ export default function FolderPage({
   };
 
   return (
-    <div className="flex h-full w-full overflow-hidden bg-[rgb(var(--color-bg))]">
+    <div className="relative flex h-full w-full overflow-hidden bg-[rgb(var(--color-bg))]">
       {/* Left Pane: Chat Interface (resizable) */}
       <div
         className={`relative flex flex-col shrink-0 h-full ${
           isDocumentSideOpen ? "border-r border-[rgb(var(--color-border))]" : ""
         }`}
-        style={{ width: isDocumentSideOpen ? chatPaneWidth : "100%" }}
+        style={{ width: isDocumentSideOpen ? (isMobile ? 0 : chatPaneWidth) : "100%" }}
       >
-        {isDocumentSideOpen && (
+        {isDocumentSideOpen && !isMobile && (
           <ResizeHandle
             onResize={(delta) => setChatPaneWidth(chatPaneWidth + delta)}
             onResizeEnd={() => setChatPaneWidth(CHAT_PANE_WIDTH_DEFAULT)}
@@ -244,17 +335,50 @@ export default function FolderPage({
           <h2 className="font-semibold text-lg text-[rgb(var(--color-text-primary))] truncate">
             {folder?.name || "Chat Session"}
           </h2>
-          <button
-            onClick={toggleDocumentSide}
-            className="p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors"
-            title="Bật/Tắt cửa sổ tài liệu"
-          >
-            {isDocumentSideOpen ? (
-              <PanelRightClose size={20} />
-            ) : (
-              <PanelRight size={20} />
-            )}
-          </button>
+          <div className="flex items-center gap-1 shrink-0">
+            <button
+              onClick={handleExportFolder}
+              disabled={isExporting}
+              className="p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors disabled:opacity-40"
+              title="Xuất toàn bộ thư mục ra 1 file Markdown"
+            >
+              {isExporting ? (
+                <Loader2 size={20} className="animate-spin text-indigo-400" />
+              ) : (
+                <Download size={20} />
+              )}
+            </button>
+            <button
+              onClick={() => uploadInputRef.current?.click()}
+              disabled={isUploading}
+              className="p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors disabled:opacity-40"
+              title="Tải lên file (md/txt) vào thư mục này"
+            >
+              {isUploading ? (
+                <Loader2 size={20} className="animate-spin text-indigo-400" />
+              ) : (
+                <Upload size={20} />
+              )}
+            </button>
+            <input
+              ref={uploadInputRef}
+              type="file"
+              accept=".md,.markdown,.txt,text/markdown,text/plain"
+              className="hidden"
+              onChange={handleUploadChange}
+            />
+            <button
+              onClick={toggleDocumentSide}
+              className="p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors"
+              title="Bật/Tắt cửa sổ tài liệu"
+            >
+              {isDocumentSideOpen ? (
+                <PanelRightClose size={20} />
+              ) : (
+                <PanelRight size={20} />
+              )}
+            </button>
+          </div>
         </div>
 
         <ChatHistory messages={messages} />
@@ -274,7 +398,7 @@ export default function FolderPage({
           isDocumentSideOpen
             ? "flex-1 opacity-100"
             : "w-0 opacity-0 overflow-hidden"
-        }`}
+        } ${isDocumentSideOpen && isMobile ? "absolute inset-0 z-30" : ""}`}
       >
         <div className="flex items-center justify-between px-4 py-2 border-b border-[rgb(var(--color-border))] shrink-0">
           <div className="flex items-center gap-1.5">
@@ -301,6 +425,13 @@ export default function FolderPage({
               Sơ đồ tư duy
             </button>
           </div>
+          <button
+            onClick={toggleDocumentSide}
+            className="md:hidden p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors"
+            title="Đóng cửa sổ tài liệu"
+          >
+            <X size={18} />
+          </button>
         </div>
 
         {showMindmap ? (
@@ -317,6 +448,12 @@ export default function FolderPage({
             file={fileDetails}
             folderName={folder?.name || ""}
             onSaveContent={handleSaveContent}
+            onRestoreContent={(content: string) => {
+              setFileDetails((prev: any) =>
+                prev ? { ...prev, content } : prev,
+              );
+              setShowMindmap(false);
+            }}
           />
         ) : (
           <div className="flex-1 flex items-center justify-center text-[rgb(var(--color-text-muted))] p-8 text-center min-w-[300px]">
