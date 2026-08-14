@@ -39,7 +39,6 @@ import {
   Minimize2,
   Ellipsis,
   Settings2,
-  Sparkles,
 } from "lucide-react";
 import { Button } from "@/components/base-ui/Button";
 import { Modal } from "@/components/base-ui/Modal";
@@ -58,7 +57,7 @@ import {
   stopAllSpeech,
   updateSpeechConfig,
   getSpeechConfig,
-} from "@/utils/speechSystem";
+} from "@/utils/Speech/speechSystem"
 
 // Timer hoãn xóa (module scope để React Compiler không chặn việc modify trong handler)
 let deleteTimer = null;
