@@ -77,7 +77,7 @@ export default function DashboardStats() {
     .slice(0, 5);
 
   const openFile = (file) => {
-    setSelectedFileId(file.id);
+    setSelectedFile(file.id);
     router.push(`/dashboard/folders/${file.folderId}`);
   };
 

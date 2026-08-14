@@ -51,7 +51,7 @@ export default function FolderPage({
   const {
     folders,
     selectedFileId,
-    setSelectedFileId,
+    setSelectedFile,
     setSidebarOpen,
     isDocumentSideOpen,
     setDocumentSideOpen,
@@ -169,7 +169,7 @@ export default function FolderPage({
           .addToast(`Đã tải lên "${res.data.name}"`, "success");
         const foldersRes = await folderService.getFolders();
         if (foldersRes.success) setFolders(foldersRes.data);
-        setSelectedFileId(res.data.id);
+        setSelectedFile(res.data.id);
       } else {
         useToastStore.getState().addToast("Tải lên thất bại", "error");
       }
@@ -495,7 +495,7 @@ export default function FolderPage({
             folderId={folderId}
             onOpenLesson={(fileId: string) => {
               setShowMindmap(false);
-              setSelectedFileId(fileId);
+              setSelectedFile(fileId);
               setDocumentSideOpen(true);
             }}
           />

@@ -271,7 +271,7 @@ const Folder = forwardRef<
             {expandedItems?.includes(value)
               ? openIcon ?? contextOpenIcon ?? <FolderOpenIcon className="size-4 shrink-0" />
               : closeIcon ?? contextCloseIcon ?? <FolderIcon className="size-4 shrink-0" />}
-            <span className="truncate">{element}</span>
+            <span className="min-w-0 truncate">{element}</span>
           </AccordionPrimitive.Trigger>
           {badge && (
             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] opacity-60 group-hover/folder:hidden">

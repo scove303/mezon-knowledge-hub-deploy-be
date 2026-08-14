@@ -931,7 +931,7 @@ export default function Sidebar() {
                             </>
                           }
                         >
-                          <span className="truncate text-xs">
+                          <span className="min-w-0 truncate text-xs">
                             {highlightMatch(file.name, searchQuery)}
                           </span>
                         </TreeFile>
