@@ -26,8 +26,14 @@ export default function ChatInput({
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [file, setFile] = useState<File | null>(null);
+  const [mounted, setMounted] = useState(false); // ✅ 1. Thêm state mounted
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const theme = useThemeStore((s) => s.theme);
+
+  // ✅ 2. Đánh dấu đã mount phía Client
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleInput = () => {
     if (textareaRef.current) {
@@ -62,7 +68,7 @@ export default function ChatInput({
   return (
     <BorderBeam
       size="md"
-      colorVariant={BEAM_VARIANT[theme] ?? "ocean"}
+      colorVariant={mounted ? (BEAM_VARIANT[theme] ?? "ocean") : "ocean"} // ✅ 3. Dùng fallback cố định khi SSR
       theme="auto"
       className="w-full max-w-3xl mx-auto"
       borderRadius={16}
