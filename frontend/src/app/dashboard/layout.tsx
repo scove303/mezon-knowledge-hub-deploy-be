@@ -3,6 +3,7 @@
 import Sidebar from "@/components/common/Sidebar";
 import ResizeHandle from "@/components/common/ResizeHandle";
 import CommandPalette from "@/components/common/CommandPalette";
+import ShortcutHelp from "@/components/common/ShortcutHelp";
 import { useWorkspaceStore, SIDEBAR_WIDTH_DEFAULT } from "@/features/folders/store";
 import { PanelLeft, PanelLeftClose } from "lucide-react";
 
@@ -45,6 +46,7 @@ export default function DashboardLayout({
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col min-w-0 h-full relative">
         <CommandPalette />
+        <ShortcutHelp />
         <div className="absolute top-4 left-4 z-10 flex items-center gap-2">
           <button
             onClick={toggleSidebar}

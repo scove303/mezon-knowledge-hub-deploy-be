@@ -1,7 +1,8 @@
-import React from "react";
-import { User, Bot, Paperclip } from "lucide-react";
+import React, { useState } from "react";
+import { User, Bot, Paperclip, Copy, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { useToastStore } from "@/stores/toast";
 
 export interface MessageProps {
   id: string;
@@ -104,6 +105,18 @@ const MarkdownComponents = {
 
 export default function ChatMessage({ message }: { message: MessageProps }) {
   const isUser = message.role === "user";
+  const [copied, setCopied] = useState(false);
+
+  const handleCopy = async () => {
+    try {
+      await navigator.clipboard.writeText(message.content || "");
+      setCopied(true);
+      useToastStore.getState().addToast("Đã copy nội dung vào clipboard!", "success");
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+      useToastStore.getState().addToast("Không thể copy nội dung", "error");
+    }
+  };
 
   return (
     <div
@@ -121,8 +134,23 @@ export default function ChatMessage({ message }: { message: MessageProps }) {
         )}
       </div>
       <div className="flex flex-col gap-2 flex-1 min-w-0">
-        <div className="font-semibold text-sm text-[rgb(var(--color-text-primary))]">
-          {isUser ? "You" : "AI-KHB"}
+        <div className="flex items-center gap-2">
+          <div className="font-semibold text-sm text-[rgb(var(--color-text-primary))]">
+            {isUser ? "You" : "AI-KHB"}
+          </div>
+          {!isUser && !message.isStatus && (
+            <button
+              onClick={handleCopy}
+              className="p-1 rounded transition-colors text-[rgb(var(--color-text-muted))] hover:text-indigo-400 hover:bg-[rgb(var(--color-surface-2))]"
+              title="Copy nội dung"
+            >
+              {copied ? (
+                <Check className="w-3 h-3 text-emerald-400" />
+              ) : (
+                <Copy className="w-3 h-3" />
+              )}
+            </button>
+          )}
         </div>
 
         {message.fileAttachment && (

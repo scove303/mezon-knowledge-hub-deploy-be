@@ -110,6 +110,24 @@ export default function DashboardStats() {
 
   return (
     <div className="w-full mt-3 space-y-3">
+      {(!folders || folders.length === 0) && (
+        <div className="rounded-xl bg-[rgb(var(--color-surface-1))] border border-indigo-500/20 p-5 flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+            <FolderOpen size={22} className="text-indigo-400" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">
+              Bắt đầu hành trình học tập của bạn
+            </div>
+            <div className="text-xs text-[rgb(var(--color-text-muted))] mt-1 leading-relaxed">
+              Nhập chủ đề bạn muốn học (ví dụ: &quot;Lộ trình Python cho người
+              mới&quot;) vào khung chat bên dưới — AI sẽ tự động biên soạn lộ
+              trình, chia bài học và lưu vào thư mục cho bạn.
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {cards.map((card) => (
           <div

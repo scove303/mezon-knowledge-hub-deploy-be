@@ -22,6 +22,10 @@ import {
   History,
   Presentation,
   Sparkles,
+  ChevronRight,
+  ListTree,
+  Minus,
+  Plus,
 } from "lucide-react";
 import { Button } from "@/components/base-ui/Button";
 import { Modal } from "@/components/base-ui/Modal";
@@ -37,7 +41,17 @@ import { cn } from "@/utils/formatTailwind";
 // Timer hoãn xóa (module scope để React Compiler không chặn việc modify trong handler)
 let deleteTimer = null;
 
-export default function FileViewer({ file, onSaveContent, onRestoreContent, folderName, onAiSummary }) {
+// Chuyển tiêu đề heading thành id ổn định cho mục lục
+const slugify = (text) =>
+  String(text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+export default function FileViewer({ file, onSaveContent, onRestoreContent, folderName, folderId, onAiSummary }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(file ? file.content : "");
   const [seekTime, setSeekTime] = useState(0);
@@ -151,6 +165,67 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
   const store = useWorkspaceStore();
 
   const isDirty = isEditing && editedContent !== (file?.content ?? "");
+
+  // Mục lục tự sinh từ các heading H1-H3 trong nội dung markdown
+  const headings = useMemo(() => {
+    const out = [];
+    const seen = new Set();
+    for (const line of (file?.content || "").split("\n")) {
+      const m = line.match(/^(#{1,3})\s+(.+?)\s*#*\s*$/);
+      if (m) {
+        const text = m[2].trim();
+        let id = slugify(text);
+        if (seen.has(id)) {
+          let i = 2;
+          while (seen.has(`${id}-${i}`)) i++;
+          id = `${id}-${i}`;
+        }
+        seen.add(id);
+        out.push({ level: m[1].length, text, id });
+      }
+    }
+    return out;
+  }, [file?.content]);
+
+  const [tocOpen, setTocOpen] = useState(() =>
+    typeof window !== "undefined"
+      ? localStorage.getItem("mf-toc-open") !== "0"
+      : true,
+  );
+
+  const toggleToc = () => {
+    setTocOpen((prev) => {
+      try {
+        localStorage.setItem("mf-toc-open", prev ? "0" : "1");
+      } catch { /* ignore */ }
+      return !prev;
+    });
+  };
+
+  // Cỡ chữ đọc (A-/A+), lưu localStorage
+  const [fontScale, setFontScale] = useState(() => {
+    if (typeof window === "undefined") return 1;
+    try {
+      const v = parseFloat(localStorage.getItem("mf-font-scale"));
+      return Number.isFinite(v) ? Math.min(1.4, Math.max(0.8, v)) : 1;
+    } catch {
+      return 1;
+    }
+  });
+
+  const changeFontScale = (delta) => {
+    setFontScale((prev) => {
+      const next = Math.min(1.4, Math.max(0.8, +(prev + delta).toFixed(2)));
+      try {
+        localStorage.setItem("mf-font-scale", String(next));
+      } catch { /* ignore */ }
+      return next;
+    });
+  };
+
+  const scrollToHeading = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
 
   useEffect(() => {
     if (isDirty) {
@@ -381,7 +456,28 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
     );
   };
 
-  const FileMarkdownComponents = { ...MarkdownComponents, a: TimestampA };
+  const HEADING_CLASSES = {
+    h1: "text-2xl font-extrabold text-[rgb(var(--color-text-primary))] mt-6 mb-4 pb-2 border-b border-[rgb(var(--color-border))]",
+    h2: "text-xl font-bold text-[rgb(var(--color-text-secondary))] mt-6 mb-3",
+    h3: "text-lg font-bold text-[rgb(var(--color-text-secondary))] mt-4 mb-2",
+  };
+
+  const HeadingWithId = ({ tag: Tag, children }) => {
+    const id = slugify(String(children).replace(/\s*\n\s*/g, " "));
+    return (
+      <Tag id={id} className={`scroll-mt-4 ${HEADING_CLASSES[Tag] || ""}`}>
+        {children}
+      </Tag>
+    );
+  };
+
+  const FileMarkdownComponents = {
+    ...MarkdownComponents,
+    a: TimestampA,
+    h1: (props) => <HeadingWithId tag="h1" {...props} />,
+    h2: (props) => <HeadingWithId tag="h2" {...props} />,
+    h3: (props) => <HeadingWithId tag="h3" {...props} />,
+  };
 
   // Phần Tích hợp Text-to-Speech (TTS)
   const handleToggleSpeech = () => {
@@ -481,7 +577,7 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
     <div className="flex-1 bg-[rgb(var(--color-bg))] flex flex-col h-full overflow-hidden text-[rgb(var(--color-text-secondary))]">
       {/* Header */}
       <header className="h-16 border-b border-[rgb(var(--color-border))] bg-[rgb(var(--color-bg))]/80 px-6 flex items-center justify-between flex-shrink-0 backdrop-blur-md sticky top-0 z-10">
-        <div className="flex items-center space-x-3 min-w-0">
+        <div className="flex items-center space-x-3 min-w-0 shrink-0 max-w-[45%]">
           <div className="w-9 h-9 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
             <FileText className="w-4 h-4 text-indigo-400" />
           </div>
@@ -489,10 +585,16 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
             <h2 className="text-sm font-semibold text-[rgb(var(--color-text-primary))] truncate">
               {file.name}
             </h2>
-            <div className="flex items-center space-x-2 text-[10px] text-[rgb(var(--color-text-muted))] font-medium">
-              <span className="truncate max-w-xs">
+            <div className="flex items-center space-x-2 text-[10px] text-[rgb(var(--color-text-muted))] font-medium min-w-0 overflow-hidden">
+              <button
+                onClick={() => folderId && store.setSelectedFolder(folderId)}
+                className="truncate min-w-0 max-w-[200px] hover:text-indigo-400 transition-colors cursor-pointer"
+                title="Về thư mục này"
+              >
                 {folderName || "Thư mục gốc"}
-              </span>
+              </button>
+              <ChevronRight className="w-3 h-3 shrink-0" />
+              <span className="truncate min-w-0">{file.name}</span>
               <span>•</span>
               <Calendar className="w-3 h-3" />
               <span>Cập nhật {file.createdAt}</span>
@@ -506,7 +608,47 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
         </div>
 
         {/* Actions */}
-        <div className="flex items-center space-x-2">
+        <div className="flex items-center space-x-2 min-w-0 overflow-x-auto scrollbar-thin">
+          {/* Cỡ chữ đọc (A-/A+) */}
+          <div className="flex items-center gap-0.5 rounded-lg border border-[rgb(var(--color-border))] px-0.5 py-0.5">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="!h-6 !w-6"
+              onClick={() => changeFontScale(-0.1)}
+              disabled={fontScale <= 0.8}
+              title="Giảm cỡ chữ"
+            >
+              <Minus className="w-3 h-3" />
+            </Button>
+            <span className="text-[10px] text-[rgb(var(--color-text-muted))] font-semibold w-7 text-center">
+              {Math.round(fontScale * 100)}%
+            </span>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="!h-6 !w-6"
+              onClick={() => changeFontScale(0.1)}
+              disabled={fontScale >= 1.4}
+              title="Tăng cỡ chữ"
+            >
+              <Plus className="w-3 h-3" />
+            </Button>
+          </div>
+
+          {/* Mục lục */}
+          {headings.length > 0 && (
+            <Button
+              id="btn-toc-file"
+              variant={tocOpen ? "primary" : "secondary"}
+              size="icon"
+              onClick={toggleToc}
+              title={tocOpen ? "Ẩn mục lục" : "Hiện mục lục"}
+            >
+              <ListTree className="w-3.5 h-3.5" />
+            </Button>
+          )}
+
           {/* Text-to-Speech (TTS) */}
           {!file.videoUrl && (
             <Button
@@ -665,7 +807,10 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
               placeholder="Nhập nội dung Markdown..."
             />
           ) : (
-            <article className="prose prose-invert max-w-none">
+            <article
+              className="prose prose-invert max-w-none"
+              style={{ fontSize: `${fontScale}em` }}
+            >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={FileMarkdownComponents}
@@ -675,6 +820,32 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
             </article>
           )}
         </div>
+
+        {/* Mục lục (ToC) */}
+        {tocOpen && headings.length > 0 && (
+          <nav className="hidden lg:block w-52 shrink-0 border-l border-[rgb(var(--color-border))] overflow-y-auto scrollbar-thin px-3 py-4">
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-[rgb(var(--color-text-muted))] mb-2 px-1">
+              Mục lục
+            </div>
+            <div className="space-y-0.5">
+              {headings.map((h) => (
+                <button
+                  key={h.id}
+                  onClick={() => scrollToHeading(h.id)}
+                  className={`block w-full text-left rounded px-1.5 py-1 transition-colors hover:text-indigo-400 hover:bg-[rgb(var(--color-surface-1))] ${
+                    h.level === 1
+                      ? "pl-1.5 text-xs font-semibold text-[rgb(var(--color-text-primary))]"
+                      : h.level === 2
+                        ? "pl-4 text-[11px] font-medium text-[rgb(var(--color-text-secondary))]"
+                        : "pl-7 text-[11px] text-[rgb(var(--color-text-muted))]"
+                  }`}
+                >
+                  <span className="line-clamp-2">{h.text}</span>
+                </button>
+              ))}
+            </div>
+          </nav>
+        )}
 
         {/* YouTube Panel */}
         {ytId && (

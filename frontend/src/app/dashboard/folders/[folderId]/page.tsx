@@ -63,6 +63,7 @@ export default function FolderPage({
 
   const [fileDetails, setFileDetails] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [fileLoading, setFileLoading] = useState(false);
   const statusMsgId = useRef<string | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -109,6 +110,7 @@ export default function FolderPage({
       }
 
       try {
+        setFileLoading(true);
         const res = await fileService.getFile(selectedFileId);
         if (res.success) {
           setFileDetails(res.data);
@@ -117,6 +119,8 @@ export default function FolderPage({
         }
       } catch (err) {
         console.error("Lỗi khi tải chi tiết tài liệu:", err);
+      } finally {
+        setFileLoading(false);
       }
     }
     loadFile();
@@ -499,10 +503,32 @@ export default function FolderPage({
               setDocumentSideOpen(true);
             }}
           />
+        ) : selectedFileId && (fileLoading || !fileDetails) ? (
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <div className="h-16 border-b border-[rgb(var(--color-border))] px-6 flex items-center gap-3 flex-shrink-0">
+              <div className="w-9 h-9 rounded-lg bg-[rgb(var(--color-surface-2))] animate-pulse" />
+              <div className="space-y-2 flex-1 max-w-md">
+                <div className="h-3.5 w-2/3 rounded bg-[rgb(var(--color-surface-2))] animate-pulse" />
+                <div className="h-2.5 w-1/2 rounded bg-[rgb(var(--color-surface-2))] animate-pulse" />
+              </div>
+            </div>
+            <div className="flex-1 p-8 space-y-4 overflow-hidden">
+              {[...Array(6)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-3 rounded bg-[rgb(var(--color-surface-2))] animate-pulse ${
+                    i === 2 ? "w-1/3" : i === 4 ? "w-2/3" : "w-full"
+                  }`}
+                  style={{ animationDelay: `${i * 120}ms` }}
+                />
+              ))}
+            </div>
+          </div>
         ) : selectedFileId && fileDetails ? (
           <FileViewer
             file={fileDetails}
             folderName={folder?.name || ""}
+            folderId={folderId}
             onSaveContent={handleSaveContent}
             onAiSummary={handleAiSummary}
             onRestoreContent={(content: string) => {

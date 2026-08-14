@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { ChevronLeft, ChevronRight, X, Presentation } from 'lucide-react';
@@ -50,6 +50,24 @@ export default function SlideViewer({ content, name, onClose }) {
     [content, name],
   );
   const [current, setCurrent] = useState(0);
+  const touchX = useRef(null);
+
+  // Vuốt ngang trên mobile để chuyển slide
+  const onTouchStart = (e) => {
+    touchX.current = e.touches[0].clientX;
+  };
+
+  const onTouchEnd = (e) => {
+    if (touchX.current === null) return;
+    const dx = e.changedTouches[0].clientX - touchX.current;
+    touchX.current = null;
+    if (Math.abs(dx) < 50) return;
+    if (dx < 0) {
+      setCurrent((c) => Math.min(c + 1, slides.length - 1));
+    } else {
+      setCurrent((c) => Math.max(c - 1, 0));
+    }
+  };
 
   useEffect(() => {
     const handler = (e) => {
@@ -83,7 +101,11 @@ export default function SlideViewer({ content, name, onClose }) {
         </Button>
       </header>
 
-      <div className="flex-1 relative overflow-hidden">
+      <div
+        className="flex-1 relative overflow-hidden"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
         <KineticGrid className="absolute inset-0" />
         <div className="relative z-10 h-full overflow-y-auto scrollbar-thin flex items-center justify-center p-8">
           <div className="w-full max-w-3xl">

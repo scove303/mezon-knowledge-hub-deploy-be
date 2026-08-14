@@ -5,6 +5,7 @@ let deleteTimer = null;
 import {
   Folder,
   FolderOpen,
+  FolderPlus,
   FileText,
   FileCode,
   FileJson,
@@ -726,9 +727,36 @@ export default function Sidebar() {
               ))}
             </div>
           ) : folders.length === 0 ? (
-            <div className="text-center py-6 text-sm text-[rgb(var(--color-text-muted))]">
-              Không tìm thấy tài liệu nào
-            </div>
+            searchQuery ? (
+              <div className="text-center py-6 px-4">
+                <div className="text-sm font-medium text-[rgb(var(--color-text-secondary))]">
+                  Không tìm thấy kết quả
+                </div>
+                <div className="text-xs text-[rgb(var(--color-text-muted))] mt-1">
+                  Không có thư mục/tài liệu nào khớp với &quot;{searchQuery}&quot;
+                </div>
+              </div>
+            ) : (
+              <div className="flex flex-col items-center justify-center text-center px-6 py-10">
+                <div className="w-14 h-14 rounded-full bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center mb-3">
+                  <FolderPlus className="w-6 h-6 text-indigo-400" />
+                </div>
+                <p className="text-sm font-semibold text-[rgb(var(--color-text-secondary))]">
+                  Chưa có thư mục nào
+                </p>
+                <p className="text-xs text-[rgb(var(--color-text-muted))] mt-1 max-w-[220px] leading-relaxed">
+                  Tạo thư mục đầu tiên hoặc nhập chủ đề muốn học vào khung chat
+                  để AI biên soạn lộ trình.
+                </p>
+                <button
+                  onClick={() => setShowAddFolder(true)}
+                  className="mt-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-500 transition-colors"
+                >
+                  <Plus className="w-3.5 h-3.5" />
+                  Tạo thư mục mới
+                </button>
+              </div>
+            )
           ) : (
             <Tree
               className="p-0"
