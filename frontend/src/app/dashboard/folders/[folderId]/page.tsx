@@ -51,7 +51,7 @@ export default function FolderPage({
   const {
     folders,
     selectedFileId,
-    setSelectedFileId,
+    setSelectedFile,
     setSidebarOpen,
     isDocumentSideOpen,
     setDocumentSideOpen,
@@ -63,9 +63,12 @@ export default function FolderPage({
 
   const [fileDetails, setFileDetails] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [fileLoading, setFileLoading] = useState(false);
+  const [loadError, setLoadError] = useState(false);
   const statusMsgId = useRef<string | null>(null);
   const uploadInputRef = useRef<HTMLInputElement | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
   const isMobile = useMediaQuery('(max-width: 767px)');
   const [showMindmap, setShowMindmap] = useState(
@@ -105,22 +108,43 @@ export default function FolderPage({
     async function loadFile() {
       if (!selectedFileId) {
         setFileDetails(null);
+        setLoadError(false);
         return;
       }
 
       try {
+        setFileLoading(true);
+        setLoadError(false);
         const res = await fileService.getFile(selectedFileId);
         if (res.success) {
           setFileDetails(res.data);
           setDocumentSideOpen(true);
           setShowMindmap(false);
+        } else {
+          setLoadError(true);
         }
       } catch (err) {
         console.error("Lỗi khi tải chi tiết tài liệu:", err);
+        setLoadError(true);
+      } finally {
+        setFileLoading(false);
       }
     }
     loadFile();
   }, [selectedFileId, setDocumentSideOpen]);
+
+  // Refetch danh sách thư mục khi quay lại tab (dữ liệu có thể đổi ở tab khác)
+  useEffect(() => {
+    const handler = () => {
+      if (document.visibilityState === "visible") {
+        folderService.getFolders().then((res) => {
+          if (res.success) setFolders(res.data);
+        });
+      }
+    };
+    document.addEventListener("visibilitychange", handler);
+    return () => document.removeEventListener("visibilitychange", handler);
+  }, [setFolders]);
 
   // Xuất toàn bộ thư mục thành 1 file Markdown
   const handleExportFolder = async () => {
@@ -161,15 +185,18 @@ export default function FolderPage({
     e.target.value = "";
     if (!file) return;
     setIsUploading(true);
+    setUploadProgress(0);
     try {
-      const res = await fileService.uploadFile(folderId, file);
+      const res = await fileService.uploadFile(folderId, file, (pct: number) =>
+        setUploadProgress(pct),
+      );
       if (res.success) {
         useToastStore
           .getState()
           .addToast(`Đã tải lên "${res.data.name}"`, "success");
         const foldersRes = await folderService.getFolders();
         if (foldersRes.success) setFolders(foldersRes.data);
-        setSelectedFileId(res.data.id);
+        setSelectedFile(res.data.id);
       } else {
         useToastStore.getState().addToast("Tải lên thất bại", "error");
       }
@@ -178,6 +205,7 @@ export default function FolderPage({
       useToastStore.getState().addToast("Tải lên thất bại", "error");
     } finally {
       setIsUploading(false);
+      setUploadProgress(0);
     }
   };
 
@@ -397,6 +425,7 @@ export default function FolderPage({
               disabled={isExporting}
               className="p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors disabled:opacity-40"
               title="Xuất toàn bộ thư mục ra 1 file Markdown"
+              aria-label="Xuất toàn bộ thư mục ra 1 file Markdown"
             >
               {isExporting ? (
                 <Loader2 size={20} className="animate-spin text-indigo-400" />
@@ -409,9 +438,16 @@ export default function FolderPage({
               disabled={isUploading}
               className="p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors disabled:opacity-40"
               title="Tải lên file (md/txt) vào thư mục này"
+              aria-label="Tải lên file (md/txt) vào thư mục này"
             >
               {isUploading ? (
-                <Loader2 size={20} className="animate-spin text-indigo-400" />
+                uploadProgress > 0 ? (
+                  <span className="text-[10px] font-bold text-indigo-400 leading-none min-w-[20px] text-center">
+                    {uploadProgress}%
+                  </span>
+                ) : (
+                  <Loader2 size={20} className="animate-spin text-indigo-400" />
+                )
               ) : (
                 <Upload size={20} />
               )}
@@ -427,6 +463,7 @@ export default function FolderPage({
               onClick={toggleDocumentSide}
               className="p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors"
               title="Bật/Tắt cửa sổ tài liệu"
+              aria-label="Bật/Tắt cửa sổ tài liệu"
             >
               {isDocumentSideOpen ? (
                 <PanelRightClose size={20} />
@@ -485,6 +522,7 @@ export default function FolderPage({
             onClick={toggleDocumentSide}
             className="md:hidden p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors"
             title="Đóng cửa sổ tài liệu"
+            aria-label="Đóng cửa sổ tài liệu"
           >
             <X size={18} />
           </button>
@@ -495,14 +533,91 @@ export default function FolderPage({
             folderId={folderId}
             onOpenLesson={(fileId: string) => {
               setShowMindmap(false);
-              setSelectedFileId(fileId);
+              setSelectedFile(fileId);
               setDocumentSideOpen(true);
             }}
           />
+        ) : selectedFileId && loadError ? (
+          <div className="flex-1 flex flex-col items-center justify-center gap-4 text-center p-8">
+            <div className="w-14 h-14 rounded-full bg-red-500/10 border border-red-500/20 flex items-center justify-center">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="22"
+                height="22"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="text-red-400"
+              >
+                <path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                <line x1="12" x2="12" y1="9" y2="13" />
+                <line x1="12" x2="12.01" y1="17" y2="17" />
+              </svg>
+            </div>
+            <div>
+              <h3 className="text-base font-semibold text-[rgb(var(--color-text-primary))]">
+                Không thể tải tài liệu
+              </h3>
+              <p className="text-xs text-[rgb(var(--color-text-muted))] mt-1 max-w-xs">
+                Có lỗi khi lấy nội dung. Kiểm tra kết nối mạng rồi thử lại.
+              </p>
+            </div>
+            <button
+              onClick={() => {
+                setFileDetails(null);
+                setLoadError(false);
+                setFileLoading(true);
+                const reload = async () => {
+                  try {
+                    const res = await fileService.getFile(selectedFileId);
+                    if (res.success) {
+                      setFileDetails(res.data);
+                      setDocumentSideOpen(true);
+                    } else {
+                      setLoadError(true);
+                    }
+                  } catch {
+                    setLoadError(true);
+                  } finally {
+                    setFileLoading(false);
+                  }
+                };
+                reload();
+              }}
+              className="px-4 py-2 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-500 transition-colors"
+            >
+              Thử lại
+            </button>
+          </div>
+        ) : selectedFileId && (fileLoading || !fileDetails) ? (
+          <div className="flex-1 flex flex-col h-full overflow-hidden">
+            <div className="h-16 border-b border-[rgb(var(--color-border))] px-6 flex items-center gap-3 flex-shrink-0">
+              <div className="w-9 h-9 rounded-lg bg-[rgb(var(--color-surface-2))] animate-pulse" />
+              <div className="space-y-2 flex-1 max-w-md">
+                <div className="h-3.5 w-2/3 rounded bg-[rgb(var(--color-surface-2))] animate-pulse" />
+                <div className="h-2.5 w-1/2 rounded bg-[rgb(var(--color-surface-2))] animate-pulse" />
+              </div>
+            </div>
+            <div className="flex-1 p-8 space-y-4 overflow-hidden">
+              {[...Array(6)].map((_, i) => (
+                <div
+                  key={i}
+                  className={`h-3 rounded bg-[rgb(var(--color-surface-2))] animate-pulse ${
+                    i === 2 ? "w-1/3" : i === 4 ? "w-2/3" : "w-full"
+                  }`}
+                  style={{ animationDelay: `${i * 120}ms` }}
+                />
+              ))}
+            </div>
+          </div>
         ) : selectedFileId && fileDetails ? (
           <FileViewer
             file={fileDetails}
             folderName={folder?.name || ""}
+            folderId={folderId}
             onSaveContent={handleSaveContent}
             onAiSummary={handleAiSummary}
             onRestoreContent={(content: string) => {

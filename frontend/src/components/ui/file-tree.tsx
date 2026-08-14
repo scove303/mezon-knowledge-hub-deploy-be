@@ -271,7 +271,7 @@ const Folder = forwardRef<
             {expandedItems?.includes(value)
               ? openIcon ?? contextOpenIcon ?? <FolderOpenIcon className="size-4 shrink-0" />
               : closeIcon ?? contextCloseIcon ?? <FolderIcon className="size-4 shrink-0" />}
-            <span className="truncate">{element}</span>
+            <span className="min-w-0 truncate">{element}</span>
           </AccordionPrimitive.Trigger>
           {badge && (
             <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[11px] opacity-60 group-hover/folder:hidden">
@@ -312,6 +312,7 @@ const File = forwardRef<
     fileIcon?: React.ReactNode
     actions?: React.ReactNode
     badge?: React.ReactNode
+    preview?: React.ReactNode
   } & React.ComponentPropsWithoutRef<typeof AccordionPrimitive.Trigger>
 >(
   (
@@ -324,6 +325,7 @@ const File = forwardRef<
       fileIcon,
       actions,
       badge,
+      preview,
       children,
       ...props
     },
@@ -339,7 +341,6 @@ const File = forwardRef<
             {...props}
             dir={direction}
             disabled={!isSelectable}
-            aria-label="File"
             className={cn(
               "flex items-center gap-1.5 cursor-pointer text-sm pr-1 rtl:pl-1 rtl:pr-0 rounded-md duration-200 ease-in-out w-full min-w-0 text-left pr-8",
               {
@@ -366,6 +367,11 @@ const File = forwardRef<
           {actions && (
             <div className="absolute right-1.5 top-1/2 -translate-y-1/2 flex items-center gap-0.5 opacity-0 group-hover/file:opacity-100 transition-opacity">
               {actions}
+            </div>
+          )}
+          {preview && (
+            <div className="absolute left-0 right-0 top-full z-50 hidden group-hover/file:block pointer-events-none">
+              {preview}
             </div>
           )}
         </div>

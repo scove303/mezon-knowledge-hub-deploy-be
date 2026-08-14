@@ -147,6 +147,31 @@ body {
 .animate-slide-up        { animation: slideUp     300ms cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 .animate-pulse           { animation: pulse 2s ease-in-out infinite; }
 
+/* ─── Focus Visible (Accessibility) ───────────────────────────────────────── */
+/* Mọi phần tử tương tác được focus bằng bàn phím đều có viền nhìn thấy rõ.
+   Ngoại lệ .outline-none: những nơi đã có indicator riêng (vd. chat bar
+   dùng focus-within ring + border đổi màu) sẽ không bị đè outline. */
+:focus-visible:not(.outline-none) {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+/* ─── Giảm chuyển động theo tùy chọn hệ điều hành ─────────────────────────── */
+/* prefers-reduced-motion: giữ nguyên layout nhưng bỏ animation/transition */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .animate-pulse {
+    animation: none !important;
+  }
+}
+
 /* ─── Glowing Border Animation for AI Loading ──────────────────────────────── */
 @keyframes borderGlow {
   0% { background-position: 0% 50%; }

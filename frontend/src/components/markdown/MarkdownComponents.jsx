@@ -1,5 +1,7 @@
 'use client';
 
+import CodeBlock from './CodeBlock';
+
 export const MarkdownComponents = {
   a: ({ href, children, ...props }) => (
     <a
@@ -75,12 +77,10 @@ export const MarkdownComponents = {
   ),
   code: ({ inline, className, children, ...props }) => {
     const match = /language-(\w+)/.exec(className || '');
-    return !inline && match ? (
-      <pre className="bg-[rgb(var(--color-bg))] border border-[rgb(var(--color-border))] rounded-lg p-4 my-4 overflow-x-auto text-xs font-mono text-[rgb(var(--color-text-secondary))] shadow-inner">
-        <code className={className} {...props}>
-          {children}
-        </code>
-      </pre>
+    return !inline ? (
+      <CodeBlock className={className} {...props}>
+        {children}
+      </CodeBlock>
     ) : (
       <code
         className="px-1.5 py-0.5 rounded bg-[rgb(var(--color-surface-1))] text-indigo-400 text-xs font-mono font-medium border border-[rgb(var(--color-border))]"

@@ -9,6 +9,7 @@ import {
   CheckCircle2,
   Clock,
   FolderOpen,
+  Flame,
 } from 'lucide-react';
 import { useWorkspaceStore } from '@/features/folders/store';
 
@@ -36,9 +37,35 @@ const formatDate = (s) => {
   }
 };
 
+// Đọc danh sách ngày đã học (mf-study-days)
+const readStudyDays = () => {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(localStorage.getItem("mf-study-days") || "[]");
+  } catch {
+    return [];
+  }
+};
+
+// Streak: số ngày liên tiếp có học, kết thúc ở hôm nay (hoặc hôm qua)
+const calcStreak = (days) => {
+  const set = new Set(days);
+  if (set.size === 0) return 0;
+  let streak = 0;
+  const d = new Date();
+  if (!set.has(d.toISOString().slice(0, 10))) {
+    d.setDate(d.getDate() - 1);
+  }
+  while (set.has(d.toISOString().slice(0, 10))) {
+    streak++;
+    d.setDate(d.getDate() - 1);
+  }
+  return streak;
+};
+
 export default function DashboardStats() {
   const router = useRouter();
-  const { folders, setSelectedFile } = useWorkspaceStore();
+  const { folders, setSelectedFile, isLoading } = useWorkspaceStore();
 
   const [doneCount, setDoneCount] = useState(() => {
     if (typeof window === "undefined") return 0;
@@ -50,6 +77,8 @@ export default function DashboardStats() {
     }
   });
 
+  const [streak, setStreak] = useState(() => calcStreak(readStudyDays()));
+
   useEffect(() => {
     const loadDone = () => {
       try {
@@ -58,6 +87,7 @@ export default function DashboardStats() {
       } catch {
         // ignore
       }
+      setStreak(calcStreak(readStudyDays()));
     };
     window.addEventListener("mf-lessons-changed", loadDone);
     return () => window.removeEventListener("mf-lessons-changed", loadDone);
@@ -77,7 +107,7 @@ export default function DashboardStats() {
     .slice(0, 5);
 
   const openFile = (file) => {
-    setSelectedFileId(file.id);
+    setSelectedFile(file.id);
     router.push(`/dashboard/folders/${file.folderId}`);
   };
 
@@ -105,16 +135,68 @@ export default function DashboardStats() {
       value: doneCount,
       icon: CheckCircle2,
       tint: 'bg-amber-500/10 text-amber-400',
+      streak,
     },
   ];
 
+  // Skeleton trong lúc tải lần đầu
+  if (isLoading && !(folders?.length)) {
+    return (
+      <div className="w-full mt-3 space-y-3">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className="flex items-center gap-3 p-4 rounded-xl bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] animate-pulse"
+            >
+              <div className="w-10 h-10 rounded-lg bg-[rgb(var(--color-surface-2))]" />
+              <div className="space-y-2">
+                <div className="h-5 w-12 rounded bg-[rgb(var(--color-surface-2))]" />
+                <div className="h-2.5 w-20 rounded bg-[rgb(var(--color-surface-2))]" />
+              </div>
+            </div>
+          ))}
+        </div>
+        <div className="rounded-xl bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] p-4 animate-pulse">
+          <div className="h-4 w-32 rounded bg-[rgb(var(--color-surface-2))] mb-4" />
+          {[...Array(4)].map((_, i) => (
+            <div
+              key={i}
+              className={`h-4 rounded bg-[rgb(var(--color-surface-2))] mb-3 ${
+                i % 2 === 0 ? "w-full" : "w-3/4"
+              }`}
+            />
+          ))}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full mt-3 space-y-3">
+      {(!folders || folders.length === 0) && (
+        <div className="rounded-xl bg-[rgb(var(--color-surface-1))] border border-indigo-500/20 p-5 flex items-start gap-4">
+          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+            <FolderOpen size={22} className="text-indigo-400" />
+          </div>
+          <div>
+            <div className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">
+              Bắt đầu hành trình học tập của bạn
+            </div>
+            <div className="text-xs text-[rgb(var(--color-text-muted))] mt-1 leading-relaxed">
+              Nhập chủ đề bạn muốn học (ví dụ: &quot;Lộ trình Python cho người
+              mới&quot;) vào khung chat bên dưới — AI sẽ tự động biên soạn lộ
+              trình, chia bài học và lưu vào thư mục cho bạn.
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {cards.map((card) => (
           <div
             key={card.label}
-            className="flex items-center gap-3 p-4 rounded-xl bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))]"
+            className="flex items-center gap-3 p-4 rounded-xl bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] hover:-translate-y-0.5 hover:shadow-md transition-all duration-[var(--transition-base)]"
           >
             <div
               className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${card.tint}`}
@@ -128,6 +210,12 @@ export default function DashboardStats() {
               <div className="text-[11px] text-[rgb(var(--color-text-muted))] truncate">
                 {card.label}
               </div>
+              {card.streak > 1 && (
+                <div className="text-[11px] font-medium text-orange-400 flex items-center gap-1 mt-0.5">
+                  <Flame size={11} className="fill-orange-400" />
+                  {card.streak} ngày liên tiếp
+                </div>
+              )}
             </div>
           </div>
         ))}

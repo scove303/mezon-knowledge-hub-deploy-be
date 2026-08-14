@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useMemo } from "react";
+import React, { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import {
@@ -22,6 +22,16 @@ import {
   History,
   Presentation,
   Sparkles,
+  ChevronRight,
+  ListTree,
+  Minus,
+  Plus,
+  ChevronUp,
+  ChevronDown,
+  Link2,
+  Maximize2,
+  Minimize2,
+  Ellipsis,
 } from "lucide-react";
 import { Button } from "@/components/base-ui/Button";
 import { Modal } from "@/components/base-ui/Modal";
@@ -36,8 +46,20 @@ import { cn } from "@/utils/formatTailwind";
 
 // Timer hoãn xóa (module scope để React Compiler không chặn việc modify trong handler)
 let deleteTimer = null;
+// Timer lưu vị trí đọc (module scope, tránh mutate ref trong effect)
+let scrollSaveTimer = null;
 
-export default function FileViewer({ file, onSaveContent, onRestoreContent, folderName, onAiSummary }) {
+// Chuyển tiêu đề heading thành id ổn định cho mục lục
+const slugify = (text) =>
+  String(text || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^\w\s-]/g, "")
+    .replace(/[\s_]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+
+export default function FileViewer({ file, onSaveContent, onRestoreContent, folderName, folderId, onAiSummary }) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(file ? file.content : "");
   const [seekTime, setSeekTime] = useState(0);
@@ -108,6 +130,28 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
   // Chế độ trình chiếu (slide) từ markdown
   const [slideOpen, setSlideOpen] = useState(false);
 
+  // Menu thao tác phụ (⋯) — gom các nút ít dùng để header bớt chật
+  const [overflowOpen, setOverflowOpen] = useState(false);
+  const overflowRef = useRef(null);
+
+  useEffect(() => {
+    if (!overflowOpen) return;
+    const onDown = (e) => {
+      if (overflowRef.current && !overflowRef.current.contains(e.target)) {
+        setOverflowOpen(false);
+      }
+    };
+    const onKey = (e) => {
+      if (e.key === "Escape") setOverflowOpen(false);
+    };
+    document.addEventListener("mousedown", onDown);
+    document.addEventListener("keydown", onKey);
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", onKey);
+    };
+  }, [overflowOpen]);
+
   // Tóm tắt nội dung bằng AI → hiển thị trong khung chat (nối tiếp hội thoại)
   const handleSummarize = () => {
     onAiSummary?.(file);
@@ -132,6 +176,11 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
       const raw = JSON.parse(localStorage.getItem("mf-lessons-done") || "{}");
       if (next) {
         raw[file.id] = true;
+        // Ghi nhật ký ngày học (cho streak)
+        const today = new Date().toISOString().slice(0, 10);
+        const days = JSON.parse(localStorage.getItem("mf-study-days") || "[]");
+        if (!days.includes(today)) days.push(today);
+        localStorage.setItem("mf-study-days", JSON.stringify(days));
       } else {
         delete raw[file.id];
       }
@@ -152,6 +201,190 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
 
   const isDirty = isEditing && editedContent !== (file?.content ?? "");
 
+  // Thời điểm lưu thành công cuối cùng (hiển thị "Đã lưu HH:mm")
+  const [lastSavedAt, setLastSavedAt] = useState(null);
+  const markSaved = useCallback(() => setLastSavedAt(new Date()), []);
+  const formatSavedTime = (d) =>
+    d
+      ? d.toLocaleTimeString("vi-VN", { hour: "2-digit", minute: "2-digit" })
+      : "";
+
+  // Chế độ đọc tập trung (zen): ẩn mục lục + căn giữa cột nội dung
+  const [zenOpen, setZenOpen] = useState(
+    () =>
+      typeof window !== "undefined" &&
+      localStorage.getItem("mf-zen") === "1",
+  );
+  const toggleZen = () => {
+    setZenOpen((prev) => {
+      try {
+        localStorage.setItem("mf-zen", prev ? "0" : "1");
+      } catch { /* ignore */ }
+      return !prev;
+    });
+  };
+
+  // Panel cuộn nội dung tài liệu
+  const docPanelRef = useRef(null);
+
+  // Nhớ vị trí đọc: lưu scrollTop sau khi ngừng cuộn 400ms
+  useEffect(() => {
+    if (!file?.id) return;
+    const el = docPanelRef.current;
+    if (!el) return;
+    const handler = () => {
+      clearTimeout(scrollSaveTimer);
+      scrollSaveTimer = setTimeout(() => {
+        try {
+          localStorage.setItem(`mf-scroll-${file.id}`, String(el.scrollTop));
+        } catch { /* ignore */ }
+      }, 400);
+    };
+    el.addEventListener("scroll", handler);
+    return () => {
+      el.removeEventListener("scroll", handler);
+      clearTimeout(scrollSaveTimer);
+    };
+  }, [file?.id]);
+
+  // Khôi phục vị trí đọc khi mở file
+  useEffect(() => {
+    if (!file?.id) return;
+    const el = docPanelRef.current;
+    if (!el) return;
+    let saved = 0;
+    try {
+      saved =
+        parseInt(localStorage.getItem(`mf-scroll-${file.id}`) || "0", 10) ||
+        0;
+    } catch { /* ignore */ }
+    const frame = requestAnimationFrame(() => {
+      if (docPanelRef.current) docPanelRef.current.scrollTop = saved;
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [file?.id]);
+
+  // Tìm kiếm từ sidebar → nhảy tới từ khóa đầu tiên khớp + highlight tạm thời
+  useEffect(() => {
+    if (!file?.id || isEditing) return;
+    const q = (store.searchQuery || "").trim().toLowerCase();
+    if (!q) return;
+    if (!(file.content || "").toLowerCase().includes(q)) return;
+    const panel = docPanelRef.current;
+    const article = panel?.querySelector("article");
+    if (!article) return;
+
+    const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT);
+    let targetNode = null;
+    while (walker.nextNode()) {
+      if ((walker.currentNode.nodeValue || "").toLowerCase().includes(q)) {
+        targetNode = walker.currentNode;
+        break;
+      }
+    }
+    if (!targetNode) return;
+
+    const full = targetNode.nodeValue || "";
+    const idx = full.toLowerCase().indexOf(q);
+    if (idx === -1) return;
+
+    const mark = document.createElement("mark");
+    mark.className = "bg-amber-400/40 text-[rgb(var(--color-text-primary))] rounded px-0.5";
+    const range = document.createRange();
+    range.setStart(targetNode, idx);
+    range.setEnd(targetNode, idx + q.length);
+    range.surroundContents(mark);
+    mark.scrollIntoView({ behavior: "smooth", block: "center" });
+
+    const fade = setTimeout(() => {
+      mark.style.transition = "background-color 700ms ease";
+      mark.style.backgroundColor = "transparent";
+    }, 3000);
+    return () => {
+      clearTimeout(fade);
+      mark.replaceWith(document.createTextNode(full));
+    };
+  }, [file?.id, file?.content, isEditing, store.searchQuery]);
+
+  // Bài trước / bài tiếp theo trong cùng thư mục
+  const folderFiles = store.getSelectedFolder()?.files || [];
+  const fileIndex = folderFiles.findIndex((f) => f.id === file?.id);
+  const prevFileItem = fileIndex > 0 ? folderFiles[fileIndex - 1] : null;
+  const nextFileItem =
+    fileIndex >= 0 && fileIndex < folderFiles.length - 1
+      ? folderFiles[fileIndex + 1]
+      : null;
+
+  const goToFile = (target) => {
+    if (!target) return;
+    if (isDirty) {
+      Promise.resolve(onSaveContent(editedContent)).catch(() => {});
+    }
+    setIsEditing(false);
+    store.setSelectedFile(target.id);
+  };
+
+  // Mục lục tự sinh từ các heading H1-H3 trong nội dung markdown
+  const headings = useMemo(() => {
+    const out = [];
+    const seen = new Set();
+    for (const line of (file?.content || "").split("\n")) {
+      const m = line.match(/^(#{1,3})\s+(.+?)\s*#*\s*$/);
+      if (m) {
+        const text = m[2].trim();
+        let id = slugify(text);
+        if (seen.has(id)) {
+          let i = 2;
+          while (seen.has(`${id}-${i}`)) i++;
+          id = `${id}-${i}`;
+        }
+        seen.add(id);
+        out.push({ level: m[1].length, text, id });
+      }
+    }
+    return out;
+  }, [file?.content]);
+
+  const [tocOpen, setTocOpen] = useState(() =>
+    typeof window !== "undefined"
+      ? localStorage.getItem("mf-toc-open") !== "0"
+      : true,
+  );
+
+  const toggleToc = () => {
+    setTocOpen((prev) => {
+      try {
+        localStorage.setItem("mf-toc-open", prev ? "0" : "1");
+      } catch { /* ignore */ }
+      return !prev;
+    });
+  };
+
+  // Cỡ chữ đọc (A-/A+), lưu localStorage
+  const [fontScale, setFontScale] = useState(() => {
+    if (typeof window === "undefined") return 1;
+    try {
+      const v = parseFloat(localStorage.getItem("mf-font-scale"));
+      return Number.isFinite(v) ? Math.min(1.4, Math.max(0.8, v)) : 1;
+    } catch {
+      return 1;
+    }
+  });
+
+  const changeFontScale = (delta) => {
+    setFontScale((prev) => {
+      const next = Math.min(1.4, Math.max(0.8, +(prev + delta).toFixed(2)));
+      try {
+        localStorage.setItem("mf-font-scale", String(next));
+      } catch { /* ignore */ }
+      return next;
+    });
+  };
+
+  const scrollToHeading = (id) => {
+    document.getElementById(id)?.scrollIntoView({ behavior: "smooth", block: "start" });
+  };
+
   useEffect(() => {
     if (isDirty) {
       const handler = (e) => {
@@ -164,8 +397,10 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
   }, [isDirty]);
 
   const handleSave = () => {
-    onSaveContent(editedContent);
     setIsEditing(false);
+    Promise.resolve(onSaveContent(editedContent))
+      .then(markSaved)
+      .catch(() => {});
   };
 
   useEffect(() => {
@@ -255,10 +490,12 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
     if (!isEditing || !isDirty) return;
     autosaveTimer.current = setTimeout(() => {
       setIsAutosaving(true);
-      onSaveContent(editedContent);
+      Promise.resolve(onSaveContent(editedContent))
+        .then(markSaved)
+        .catch(() => {});
     }, 2000);
     return () => clearTimeout(autosaveTimer.current);
-  }, [editedContent, isDirty, isEditing, onSaveContent]);
+  }, [editedContent, isDirty, isEditing, onSaveContent, markSaved]);
 
   // Thống kê nội dung: số từ + thời gian đọc (khoảng 200 từ/phút)
   const contentStats = useMemo(() => {
@@ -381,7 +618,54 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
     );
   };
 
-  const FileMarkdownComponents = { ...MarkdownComponents, a: TimestampA };
+  const HEADING_CLASSES = {
+    h1: "text-2xl font-extrabold text-[rgb(var(--color-text-primary))] mt-6 mb-4 pb-2 border-b border-[rgb(var(--color-border))]",
+    h2: "text-xl font-bold text-[rgb(var(--color-text-secondary))] mt-6 mb-3",
+    h3: "text-lg font-bold text-[rgb(var(--color-text-secondary))] mt-4 mb-2",
+  };
+
+  const HeadingWithId = ({ tag: Tag, children }) => {
+    const id = slugify(String(children).replace(/\s*\n\s*/g, " "));
+    const copyHeadingLink = () => {
+      const url = `${window.location.origin}${window.location.pathname}#${id}`;
+      navigator.clipboard
+        .writeText(url)
+        .then(() =>
+          useToastStore
+            .getState()
+            .addToast("Đã copy link tới mục này!", "success"),
+        )
+        .catch(() =>
+          useToastStore.getState().addToast("Không thể copy link", "error"),
+        );
+    };
+    return (
+      <Tag
+        id={id}
+        className={`scroll-mt-4 group/heading ${HEADING_CLASSES[Tag] || ""}`}
+      >
+        <span className="inline-flex items-center gap-2 flex-wrap">
+          {children}
+          <button
+            onClick={copyHeadingLink}
+            className="inline-flex items-center opacity-0 group-hover/heading:opacity-100 focus-visible:opacity-100 transition-opacity p-0.5 rounded text-[rgb(var(--color-text-muted))] hover:text-indigo-400 hover:bg-[rgb(var(--color-surface-2))]"
+            title="Copy link tới mục này"
+            aria-label="Copy link tới mục này"
+          >
+            <Link2 className="w-3 h-3" />
+          </button>
+        </span>
+      </Tag>
+    );
+  };
+
+  const FileMarkdownComponents = {
+    ...MarkdownComponents,
+    a: TimestampA,
+    h1: (props) => <HeadingWithId tag="h1" {...props} />,
+    h2: (props) => <HeadingWithId tag="h2" {...props} />,
+    h3: (props) => <HeadingWithId tag="h3" {...props} />,
+  };
 
   // Phần Tích hợp Text-to-Speech (TTS)
   const handleToggleSpeech = () => {
@@ -481,7 +765,7 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
     <div className="flex-1 bg-[rgb(var(--color-bg))] flex flex-col h-full overflow-hidden text-[rgb(var(--color-text-secondary))]">
       {/* Header */}
       <header className="h-16 border-b border-[rgb(var(--color-border))] bg-[rgb(var(--color-bg))]/80 px-6 flex items-center justify-between flex-shrink-0 backdrop-blur-md sticky top-0 z-10">
-        <div className="flex items-center space-x-3 min-w-0">
+        <div className="flex items-center space-x-3 min-w-0 shrink-0 max-w-[40%]">
           <div className="w-9 h-9 rounded-lg bg-indigo-500/10 flex items-center justify-center border border-indigo-500/20">
             <FileText className="w-4 h-4 text-indigo-400" />
           </div>
@@ -489,10 +773,17 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
             <h2 className="text-sm font-semibold text-[rgb(var(--color-text-primary))] truncate">
               {file.name}
             </h2>
-            <div className="flex items-center space-x-2 text-[10px] text-[rgb(var(--color-text-muted))] font-medium">
-              <span className="truncate max-w-xs">
+            {!zenOpen && (
+              <div className="flex items-center space-x-2 text-[10px] text-[rgb(var(--color-text-muted))] font-medium min-w-0 overflow-hidden">
+              <button
+                onClick={() => folderId && store.setSelectedFolder(folderId)}
+                className="truncate min-w-0 max-w-[200px] hover:text-indigo-400 transition-colors cursor-pointer"
+                title="Về thư mục này"
+              >
                 {folderName || "Thư mục gốc"}
-              </span>
+              </button>
+              <ChevronRight className="w-3 h-3 shrink-0" />
+              <span className="truncate min-w-0">{file.name}</span>
               <span>•</span>
               <Calendar className="w-3 h-3" />
               <span>Cập nhật {file.createdAt}</span>
@@ -502,33 +793,62 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
                 {contentStats.words} từ • {contentStats.readingMinutes} phút đọc
               </span>
             </div>
+            )}
           </div>
         </div>
 
         {/* Actions */}
-        <div className="flex items-center space-x-2">
-          {/* Text-to-Speech (TTS) */}
-          {!file.videoUrl && (
-            <Button
-              id="btn-summarize-file"
-              variant="secondary"
-              size="icon"
-              onClick={handleSummarize}
-              title="Tóm tắt nội dung bằng AI"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-            </Button>
-          )}
+        <div className="flex items-center space-x-1.5 min-w-0">
+          {/* Bài trước / Bài tiếp theo trong cùng thư mục */}
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={() => goToFile(prevFileItem)}
+            disabled={!prevFileItem}
+            title={prevFileItem ? `Bài trước: ${prevFileItem.name}` : "Không có bài trước"}
+            aria-label={prevFileItem ? `Bài trước: ${prevFileItem.name}` : "Không có bài trước"}
+          >
+            <ChevronUp className="w-3.5 h-3.5" />
+          </Button>
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={() => goToFile(nextFileItem)}
+            disabled={!nextFileItem}
+            title={nextFileItem ? `Bài tiếp theo: ${nextFileItem.name}` : "Không có bài tiếp theo"}
+            aria-label={nextFileItem ? `Bài tiếp theo: ${nextFileItem.name}` : "Không có bài tiếp theo"}
+          >
+            <ChevronDown className="w-3.5 h-3.5" />
+          </Button>
 
-          {!file.videoUrl && (
+          {/* Chế độ đọc tập trung (zen) */}
+          <Button
+            variant="secondary"
+            size="icon"
+            onClick={toggleZen}
+            title={zenOpen ? "Thoát chế độ đọc tập trung" : "Chế độ đọc tập trung"}
+            aria-label={zenOpen ? "Thoát chế độ đọc tập trung" : "Chế độ đọc tập trung"}
+          >
+            {zenOpen ? (
+              <Minimize2 className="w-3.5 h-3.5" />
+            ) : (
+              <Maximize2 className="w-3.5 h-3.5" />
+            )}
+          </Button>
+
+          {/* Cỡ chữ đọc đã chuyển vào menu ⋯ (btn-overflow-file) */}
+
+          {/* Mục lục */}
+          {headings.length > 0 && (
             <Button
-              id="btn-slide-file"
-              variant="secondary"
+              id="btn-toc-file"
+              variant={tocOpen ? "primary" : "secondary"}
               size="icon"
-              onClick={() => setSlideOpen(true)}
-              title="Trình chiếu slide từ markdown"
+              onClick={toggleToc}
+              title={tocOpen ? "Ẩn mục lục" : "Hiện mục lục"}
+              aria-label={tocOpen ? "Ẩn mục lục" : "Hiện mục lục"}
             >
-              <Presentation className="w-3.5 h-3.5" />
+              <ListTree className="w-3.5 h-3.5" />
             </Button>
           )}
 
@@ -538,6 +858,7 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
             size="icon"
             onClick={toggleDone}
             title={isDone ? "Bỏ đánh dấu đã học" : "Đánh dấu đã học"}
+            aria-label={isDone ? "Bỏ đánh dấu đã học" : "Đánh dấu đã học"}
           >
             <CheckCircle2
               className={cn(
@@ -547,30 +868,19 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
             />
           </Button>
 
-          <Button
-            id="btn-tts-file"
-            variant={isSpeaking ? "primary" : "secondary"}
-            size="icon"
-            onClick={handleToggleSpeech}
-            title={isSpeaking ? "Dừng đọc" : "Đọc văn bản"}
-          >
-            {isSpeaking ? (
-              <VolumeX
-                className={cn("w-3.5 h-3.5 text-rose-400 animate-pulse")}
-              />
-            ) : (
-              <Volume2 className={cn("w-3.5 h-3.5")} />
-            )}
-          </Button>
-
           {isEditing ? (
             <div className="flex items-center gap-2">
-              {isDirty && (
+              {isDirty ? (
                 <span className="text-[10px] text-amber-400 font-medium flex items-center gap-1">
                   <span className="w-1.5 h-1.5 rounded-full bg-amber-400 inline-block" />
                   Chưa lưu
                 </span>
-              )}
+              ) : lastSavedAt ? (
+                <span className="text-[10px] text-emerald-400 font-medium flex items-center gap-1">
+                  <CheckCircle2 className="w-3 h-3" />
+                  Đã lưu {formatSavedTime(lastSavedAt)}
+                </span>
+              ) : null}
               <Button
                 id="btn-save-file"
                 variant="success"
@@ -582,81 +892,205 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
               </Button>
             </div>
           ) : (
-            <Button
-              id="btn-edit-file"
-              variant="secondary"
-              size="sm"
-              onClick={() => setIsEditing(true)}
-            >
-              <Edit3 className="w-3.5 h-3.5" />
-              Chỉnh sửa
-            </Button>
+            <>
+              {lastSavedAt && (
+                <span className="text-[10px] text-emerald-400 font-medium flex items-center gap-1 shrink-0" title={`Lần lưu cuối: ${formatSavedTime(lastSavedAt)}`}>
+                  <CheckCircle2 className="w-3 h-3" />
+                  Đã lưu {formatSavedTime(lastSavedAt)}
+                </span>
+              )}
+              <Button
+                id="btn-edit-file"
+                variant="secondary"
+                size="sm"
+                onClick={() => setIsEditing(true)}
+              >
+                <Edit3 className="w-3.5 h-3.5" />
+                Chỉnh sửa
+              </Button>
+            </>
           )}
 
-          <Button
-            id="btn-download-file"
-            variant="secondary"
-            size="icon"
-            onClick={handleDownloadMarkdown}
-            title="Tải xuống file Markdown"
-          >
-            <Download className="w-3.5 h-3.5" />
-          </Button>
+          {/* Menu thao tác phụ (⋯): gom các nút ít dùng để header gọn gàng */}
+          <div className="relative" ref={overflowRef}>
+            <Button
+              id="btn-overflow-file"
+              variant="secondary"
+              size="icon"
+              onClick={() => setOverflowOpen((v) => !v)}
+              title="Thao tác khác"
+              aria-label="Thao tác khác"
+              aria-expanded={overflowOpen}
+            >
+              <Ellipsis className="w-3.5 h-3.5" />
+            </Button>
+            {overflowOpen && (
+              <div className="absolute right-0 top-full mt-2 w-60 bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] rounded-xl shadow-2xl py-1.5 z-50 animate-in fade-in slide-in-from-top-2 duration-150">
+                {/* Cỡ chữ đọc (A-/A+) */}
+                <div className="px-2.5 py-1.5 mb-1">
+                  <div className="text-[10px] font-semibold text-[rgb(var(--color-text-muted))] uppercase tracking-wide mb-1.5">
+                    Cỡ chữ đọc: {Math.round(fontScale * 100)}%
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      onClick={() => changeFontScale(-0.1)}
+                      disabled={fontScale <= 0.8}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs rounded-lg border border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Minus className="w-3 h-3" />
+                      Nhỏ hơn
+                    </button>
+                    <button
+                      onClick={() => changeFontScale(0.1)}
+                      disabled={fontScale >= 1.4}
+                      className="flex-1 flex items-center justify-center gap-1.5 px-2 py-1.5 text-xs rounded-lg border border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                    >
+                      <Plus className="w-3 h-3" />
+                      Lớn hơn
+                    </button>
+                  </div>
+                </div>
 
-          <Button
-            id="btn-copy-file"
-            variant="secondary"
-            size="icon"
-            onClick={handleCopyContent}
-            title="Copy nội dung"
-          >
-            <Copy className="w-3.5 h-3.5" />
-          </Button>
+                <div className="my-1 border-t border-[rgb(var(--color-border))]" />
 
-          <Button
-            id="btn-history-file"
-            variant="secondary"
-            size="icon"
-            onClick={openRevisions}
-            title="Lịch sử phiên bản"
-          >
-            <History className="w-3.5 h-3.5" />
-          </Button>
+                {/* Text-to-Speech (TTS) */}
+                {!file.videoUrl && (
+                  <button
+                    id="btn-tts-file"
+                    onClick={() => {
+                      setOverflowOpen(false);
+                      handleToggleSpeech();
+                    }}
+                    title={isSpeaking ? "Dừng đọc" : "Đọc văn bản"}
+                    className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:text-[rgb(var(--color-text-primary))] hover:bg-[rgb(var(--color-surface-2))] rounded-lg transition-colors"
+                  >
+                    {isSpeaking ? (
+                      <VolumeX className="w-3.5 h-3.5 text-rose-400 animate-pulse" />
+                    ) : (
+                      <Volume2 className="w-3.5 h-3.5" />
+                    )}
+                    <span className="font-medium">
+                      {isSpeaking ? "Dừng đọc" : "Đọc văn bản"}
+                    </span>
+                  </button>
+                )}
 
-          <Button
-            id="btn-share-file"
-            variant="secondary"
-            size="icon"
-            onClick={() => {
-              navigator.clipboard.writeText(window.location.href);
-              useToastStore
-                .getState()
-                .addToast(
-                  "Đã copy đường dẫn chia sẻ vào clipboard!",
-                  "success",
-                );
-            }}
-            title="Chia sẻ link"
-          >
-            <Share2 className="w-3.5 h-3.5" />
-          </Button>
+                {/* Text-to-Speech (AI tóm tắt) */}
+                {!file.videoUrl && (
+                  <button
+                    id="btn-summarize-file"
+                    onClick={() => {
+                      setOverflowOpen(false);
+                      handleSummarize();
+                    }}
+                    title="Tóm tắt nội dung bằng AI"
+                    className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:text-[rgb(var(--color-text-primary))] hover:bg-[rgb(var(--color-surface-2))] rounded-lg transition-colors"
+                  >
+                    <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                    <span className="font-medium">Tóm tắt bằng AI</span>
+                  </button>
+                )}
 
-          <Button
-            id="btn-delete-file"
-            variant="danger"
-            size="icon"
-            onClick={() => setDeleteConfirmOpen(true)}
-            title="Xoá tài liệu"
-          >
-            <Trash2 className="w-3.5 h-3.5" />
-          </Button>
+                {/* Trình chiếu slide */}
+                {!file.videoUrl && (
+                  <button
+                    id="btn-slide-file"
+                    onClick={() => {
+                      setOverflowOpen(false);
+                      setSlideOpen(true);
+                    }}
+                    title="Trình chiếu slide từ markdown"
+                    className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:text-[rgb(var(--color-text-primary))] hover:bg-[rgb(var(--color-surface-2))] rounded-lg transition-colors"
+                  >
+                    <Presentation className="w-3.5 h-3.5" />
+                    <span className="font-medium">Trình chiếu slide</span>
+                  </button>
+                )}
+
+                <div className="my-1.5 border-t border-[rgb(var(--color-border))]" />
+
+                <button
+                  id="btn-download-file"
+                  onClick={() => {
+                    setOverflowOpen(false);
+                    handleDownloadMarkdown();
+                  }}
+                  title="Tải xuống file Markdown"
+                  className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:text-[rgb(var(--color-text-primary))] hover:bg-[rgb(var(--color-surface-2))] rounded-lg transition-colors"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span className="font-medium">Tải xuống Markdown</span>
+                </button>
+
+                <button
+                  id="btn-copy-file"
+                  onClick={() => {
+                    setOverflowOpen(false);
+                    handleCopyContent();
+                  }}
+                  title="Copy nội dung"
+                  className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:text-[rgb(var(--color-text-primary))] hover:bg-[rgb(var(--color-surface-2))] rounded-lg transition-colors"
+                >
+                  <Copy className="w-3.5 h-3.5" />
+                  <span className="font-medium">Copy nội dung</span>
+                </button>
+
+                <button
+                  id="btn-history-file"
+                  onClick={() => {
+                    setOverflowOpen(false);
+                    openRevisions();
+                  }}
+                  title="Lịch sử phiên bản"
+                  className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:text-[rgb(var(--color-text-primary))] hover:bg-[rgb(var(--color-surface-2))] rounded-lg transition-colors"
+                >
+                  <History className="w-3.5 h-3.5" />
+                  <span className="font-medium">Lịch sử phiên bản</span>
+                </button>
+
+                <button
+                  id="btn-share-file"
+                  onClick={() => {
+                    setOverflowOpen(false);
+                    navigator.clipboard.writeText(window.location.href);
+                    useToastStore
+                      .getState()
+                      .addToast(
+                        "Đã copy đường dẫn chia sẻ vào clipboard!",
+                        "success",
+                      );
+                  }}
+                  title="Chia sẻ link"
+                  className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:text-[rgb(var(--color-text-primary))] hover:bg-[rgb(var(--color-surface-2))] rounded-lg transition-colors"
+                >
+                  <Share2 className="w-3.5 h-3.5" />
+                  <span className="font-medium">Chia sẻ link</span>
+                </button>
+
+                <div className="my-1.5 border-t border-[rgb(var(--color-border))]" />
+
+                <button
+                  id="btn-delete-file"
+                  onClick={() => {
+                    setOverflowOpen(false);
+                    setDeleteConfirmOpen(true);
+                  }}
+                  title="Xoá tài liệu"
+                  className="w-full flex items-center gap-2.5 px-2.5 py-1.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span className="font-medium">Xóa tài liệu</span>
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </header>
 
       {/* Body */}
       <div className="flex-1 flex overflow-hidden">
         {/* Document Panel */}
-        <div className="flex-1 overflow-y-auto px-8 py-6 scrollbar-thin">
+        <div ref={docPanelRef} className="flex-1 overflow-y-auto px-8 py-6 scrollbar-thin">
           {isEditing ? (
             <textarea
               value={editedContent}
@@ -665,7 +1099,14 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
               placeholder="Nhập nội dung Markdown..."
             />
           ) : (
-            <article className="prose prose-invert max-w-none">
+            <article
+              className={`prose prose-invert transition-[max-width,background-color] duration-300 ${
+                zenOpen
+                  ? "mx-auto max-w-[72ch] px-6 py-4 rounded-2xl bg-[rgb(var(--color-surface-1))/50]"
+                  : "max-w-none"
+              }`}
+              style={{ fontSize: `${fontScale}em` }}
+            >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
                 components={FileMarkdownComponents}
@@ -675,6 +1116,32 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
             </article>
           )}
         </div>
+
+        {/* Mục lục (ToC) */}
+        {tocOpen && !zenOpen && headings.length > 0 && (
+          <nav className="hidden lg:block w-52 shrink-0 border-l border-[rgb(var(--color-border))] overflow-y-auto scrollbar-thin px-3 py-4">
+            <div className="text-[10px] font-semibold uppercase tracking-widest text-[rgb(var(--color-text-muted))] mb-2 px-1">
+              Mục lục
+            </div>
+            <div className="space-y-0.5">
+              {headings.map((h) => (
+                <button
+                  key={h.id}
+                  onClick={() => scrollToHeading(h.id)}
+                  className={`block w-full text-left rounded px-1.5 py-1 transition-colors hover:text-indigo-400 hover:bg-[rgb(var(--color-surface-1))] ${
+                    h.level === 1
+                      ? "pl-1.5 text-xs font-semibold text-[rgb(var(--color-text-primary))]"
+                      : h.level === 2
+                        ? "pl-4 text-[11px] font-medium text-[rgb(var(--color-text-secondary))]"
+                        : "pl-7 text-[11px] text-[rgb(var(--color-text-muted))]"
+                  }`}
+                >
+                  <span className="line-clamp-2">{h.text}</span>
+                </button>
+              ))}
+            </div>
+          </nav>
+        )}
 
         {/* YouTube Panel */}
         {ytId && (
@@ -747,6 +1214,7 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
                                 : "text-[rgb(var(--color-text-muted))] hover:text-amber-400 opacity-0 group-hover:opacity-100"
                             }`}
                             title={note ? "Sửa ghi chú" : "Thêm ghi chú"}
+                            aria-label={note ? "Sửa ghi chú" : "Thêm ghi chú"}
                           >
                             <StickyNote className="w-3.5 h-3.5" />
                           </button>
@@ -766,6 +1234,7 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
                                 }}
                                 className="p-0.5 text-[rgb(var(--color-text-muted))] hover:text-amber-400 transition-colors"
                                 title="Sửa ghi chú"
+                                aria-label="Sửa ghi chú"
                               >
                                 <Pencil className="w-3 h-3" />
                               </button>
@@ -777,6 +1246,7 @@ export default function FileViewer({ file, onSaveContent, onRestoreContent, fold
                                 }}
                                 className="p-0.5 text-[rgb(var(--color-text-muted))] hover:text-rose-400 transition-colors"
                                 title="Xóa ghi chú"
+                                aria-label="Xóa ghi chú"
                               >
                                 <Trash2 className="w-3 h-3" />
                               </button>

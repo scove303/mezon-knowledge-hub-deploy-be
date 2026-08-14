@@ -26,13 +26,18 @@ export const fileService = {
     return data;
   },
 
-  async uploadFile(folderId, file) {
+  async uploadFile(folderId, file, onProgress) {
     const formData = new FormData();
     formData.append("folder_id", folderId);
     formData.append("file", file);
     // Content-Type undefined → bỏ header JSON default, browser tự set multipart + boundary
     const { data } = await axiosInstance.post("/files", formData, {
       headers: { "Content-Type": undefined },
+      onUploadProgress: onProgress
+        ? (e) => {
+            if (e.total > 0) onProgress(Math.round((e.loaded / e.total) * 100));
+          }
+        : undefined,
     });
     return data;
   },

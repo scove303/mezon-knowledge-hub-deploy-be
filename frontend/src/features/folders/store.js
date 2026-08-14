@@ -23,6 +23,8 @@ export const useWorkspaceStore = create((set, get) => ({
   folders: [],
   selectedFolderId: null,
   selectedFileId: null,
+  // Multiselect: danh sách file đang chọn (bulk delete)
+  selectedFileIds: [],
   searchQuery: "",
   isLoading: false,
   error: null,
@@ -41,6 +43,15 @@ export const useWorkspaceStore = create((set, get) => ({
   setSearch: (query) => set({ searchQuery: query }),
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
+
+  // Multiselect Setters
+  toggleFileSelection: (id) =>
+    set((state) => ({
+      selectedFileIds: state.selectedFileIds.includes(id)
+        ? state.selectedFileIds.filter((x) => x !== id)
+        : [...state.selectedFileIds, id],
+    })),
+  clearFileSelection: () => set({ selectedFileIds: [] }),
 
   // Layout Setters
   toggleSidebar: () =>

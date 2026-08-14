@@ -237,6 +237,9 @@ export default function CommandPalette() {
   return (
     <div
       className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-start justify-center pt-[15vh] px-4"
+      role="dialog"
+      aria-modal="true"
+      aria-label="Command Palette"
       onMouseDown={(e) => {
         if (e.target === e.currentTarget) setOpen(false);
       }}
@@ -266,6 +269,7 @@ export default function CommandPalette() {
               }
             }}
             placeholder="Tìm tài liệu, thư mục hoặc gõ lệnh..."
+            aria-label="Tìm tài liệu, thư mục hoặc gõ lệnh"
             className="w-full bg-transparent border-0 outline-none pl-11 pr-4 py-4 text-sm text-[rgb(var(--color-text-primary))] placeholder:text-[rgb(var(--color-text-muted))]"
           />
         </div>
