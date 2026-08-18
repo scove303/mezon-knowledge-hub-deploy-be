@@ -18,31 +18,31 @@ PREFIX = "/"
 
 
 
-def get_or_create_user(sender_id: str) -> int:
+def get_or_create_user(message: dict) -> int:
     """Helper đệm xử lý lấy hoặc tạo mới User trong DB."""
     with Session(engine) as session:
         db_user = session.exec(
             select(User).where(
-                (User.username == sender_id)
-                | (User.mezon_id == sender_id)
+                (User.username == message.sender_id)
+                | (User.mezon_id == message.sender_id)
             )
         ).first()
 
         if not db_user:
             # Tạo user mới nếu lần đầu tương tác với Bot
             db_user = User(
-                username=sender_id,
+                username=message.username,
                 hashed_password=get_password_hash("default_pass_123"),
-                display_name=sender_id,
-                mezon_id=sender_id,
+                display_name=message.username,
+                mezon_id=message.sender_id,
                 role="USER",
             )
             session.add(db_user)
             session.commit()
             session.refresh(db_user)
-        elif db_user.mezon_id != sender_id:
+        elif db_user.mezon_id != message.sender_id:
             # Link tài khoản Mezon cho user đã tồn tại
-            db_user.mezon_id = sender_id
+            db_user.mezon_id = message.sender_id
             session.add(db_user)
             session.commit()
 
@@ -89,7 +89,7 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
             )
             return
 
-        user_id = get_or_create_user(message.sender_id)
+        user_id = get_or_create_user(message)
 
         # Phản hồi tức thì cho người dùng
         await channel.send(
@@ -111,7 +111,7 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
     # COMMAND 2: /listallfolders hoặc /folders
     # -----------------------------------------------------------------
     elif text.startswith("/listallfolders") or text.startswith("/folders"):
-        user_id = get_or_create_user(message.sender_id)
+        user_id = get_or_create_user(message)
         response_msg = list_all_folder(user_id=user_id)
         await channel.send(content=ChannelMessageContent(t=response_msg))
 
@@ -131,7 +131,7 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
             )
             return
 
-        user_id = get_or_create_user(message.sender_id)
+        user_id = get_or_create_user(message)
         response_msg = get_folder_by_id(user_id=user_id, folder_id=folder_id)
         await channel.send(content=ChannelMessageContent(t=response_msg))
 
