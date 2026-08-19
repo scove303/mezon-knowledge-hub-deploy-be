@@ -1,7 +1,7 @@
 from typing import Annotated
 
 from fastapi import Depends, Header, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from jose import JWTError
 from sqlmodel import Session, select
 
@@ -10,15 +10,18 @@ from app.core.security import decode_token, get_password_hash
 from app.models.folder import FolderRoot
 from app.models.user import User
 
-oauth2_scheme = OAuth2PasswordBearer(
-    tokenUrl="/api/v1/auth/mezon", auto_error=False
-)
+# HTTPBearer: Swagger Authorize chỉ hiện 1 ô "Value" để dán token,
+# không sinh form username/password/client_id như OAuth2PasswordBearer.
+bearer_scheme = HTTPBearer(auto_error=False)
 
 SessionDep = Annotated[Session, Depends(get_session)]
 
 
 def get_current_user(
-    token: Annotated[str | None, Depends(oauth2_scheme)],
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Depends(bearer_scheme),
+    ],
     session: SessionDep,
 ) -> User:
     credentials_exception = HTTPException(
@@ -31,8 +34,10 @@ def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
 
-    if not token:
+    if not credentials:
         raise credentials_exception
+
+    token = credentials.credentials
 
     try:
         payload = decode_token(token)
@@ -57,15 +62,19 @@ def get_current_user(
 
 
 def get_current_actor(
-    token: Annotated[str | None, Depends(oauth2_scheme)],
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Depends(bearer_scheme),
+    ],
     session: SessionDep,
     x_guest_id: str | None = Header(default=None),
 ) -> User:
     """Trả về user đã đăng nhập, hoặc get-or-create một user khách vãng lai
-    định danh qua header X-Guest-Id (UUID do frontend sinh ra)."""
+    định danh qua header X-Guest-Id (UUID do frontend sinh ra).
+    """
 
-    if token:
-        return get_current_user(token, session)
+    if credentials:
+        return get_current_user(credentials, session)
 
     if x_guest_id and x_guest_id.strip():
         guest_username = f"guest_{x_guest_id.strip()}"
@@ -110,7 +119,8 @@ def merge_guest_into_user(
 ) -> int:
     """Adopt-all: chuyển toàn bộ folder của khách sang tài khoản vừa xác thực,
     xóa folder_root của khách (unique per user) và xóa luôn user khách.
-    Trả về số folder đã gộp."""
+    Trả về số folder đã gộp.
+    """
 
     from app.models.folder import Folder
 
@@ -133,7 +143,8 @@ def merge_guest_into_user(
     for r in roots:
         session.delete(r)
 
-    # Adopt các roadmap job đang chạy của khách sang tài khoản vừa xác thực
+    # Adopt các roadmap job đang chạy của khách
+    # sang tài khoản vừa xác thực.
     from app.core.state import adopt_jobs_for_user
 
     adopt_jobs_for_user(guest_id, user_id)

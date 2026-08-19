@@ -123,7 +123,7 @@ def mezon_callback(
     error: str = Query(""),
 ):
     print("========== MEZON CALLBACK ==========")
-    print("CODE:", code[:10] + "..." if code else None)
+    print("CODE:", code)
     print("STATE:", state)
     print("ERROR:", error)
 
