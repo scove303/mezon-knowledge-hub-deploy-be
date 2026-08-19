@@ -393,6 +393,14 @@ export default function Sidebar() {
     });
   }, [refreshFolders]);
 
+  // Refresh khi có sự kiện bên ngoài yêu cầu (vd: phục hồi dữ liệu backup)
+  useEffect(() => {
+    const onFoldersChanged = () => refreshFolders();
+    window.addEventListener("mf-folders-changed", onFoldersChanged);
+    return () =>
+      window.removeEventListener("mf-folders-changed", onFoldersChanged);
+  }, [refreshFolders]);
+
   // Xử lý phím tắt Xóa (Có kiểm tra tránh kích hoạt khi người dùng đang gõ văn bản)
   useEffect(() => {
     const handler = (e) => {

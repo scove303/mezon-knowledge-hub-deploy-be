@@ -1,9 +1,10 @@
+import asyncio
+
 MODEL_AVAILABLE = False
 _model = None
 
 try:
     from sentence_transformers import SentenceTransformer
-    import asyncio
 
     # Load a fast, lightweight embedding model once at startup
     _model = SentenceTransformer("all-MiniLM-L6-v2")
@@ -19,6 +20,8 @@ def _get_embedding_sync(text: str) -> list[float]:
 
 # Wrap in an async function using asyncio.to_thread
 async def get_embedding(text: str) -> list[float]:
+    if not MODEL_AVAILABLE or _model is None:
+        return []
     return await asyncio.to_thread(_get_embedding_sync, text)
 
 

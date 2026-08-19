@@ -1141,12 +1141,20 @@ export default function FileViewer({
                   id="btn-share-file"
                   onClick={() => {
                     setOverflowOpen(false);
-                    navigator.clipboard.writeText(window.location.href);
-                    useToastStore
-                      .getState()
-                      .addToast(
-                        "Đã copy đường dẫn chia sẻ vào clipboard!",
-                        "success",
+                    navigator.clipboard
+                      .writeText(window.location.href)
+                      .then(() =>
+                        useToastStore
+                          .getState()
+                          .addToast(
+                            "Đã copy đường dẫn chia sẻ vào clipboard!",
+                            "success",
+                          ),
+                      )
+                      .catch(() =>
+                        useToastStore
+                          .getState()
+                          .addToast("Không thể copy đường dẫn", "error"),
                       );
                   }}
                   title="Chia sẻ link"
