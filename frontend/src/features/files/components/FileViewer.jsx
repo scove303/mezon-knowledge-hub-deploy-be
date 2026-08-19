@@ -46,7 +46,6 @@ import { useWorkspaceStore } from "@/features/folders/store";
 import { fileService } from "@/features/files/services";
 import { folderService } from "@/features/folders/services";
 import { useToastStore } from "@/stores/toast";
-import { speakText, stopSpeech } from "@/utils/Speech/speechSystem";
 import { MarkdownComponents } from "@/components/markdown/MarkdownComponents";
 import SlideViewer from "./SlideViewer";
 import { cn } from "@/utils/formatTailwind";
@@ -57,7 +56,7 @@ import {
   stopAllSpeech,
   updateSpeechConfig,
   getSpeechConfig,
-} from "@/utils/Speech/speechSystem"
+} from "@/utils/Speech/speechSystem";
 
 // Timer hoãn xóa (module scope để React Compiler không chặn việc modify trong handler)
 let deleteTimer = null;
@@ -691,7 +690,11 @@ export default function FileViewer({
   const FileMarkdownComponents = {
     ...MarkdownComponents,
     pre: ({ children }) => <>{children}</>,
-    p: ({ children, ...props }) => <div className="mb-4 last:mb-0" {...props}>{children}</div>,
+    p: ({ children, ...props }) => (
+      <div className="mb-4 last:mb-0" {...props}>
+        {children}
+      </div>
+    ),
     a: TimestampA,
     h1: (props) => <HeadingWithId tag="h1" {...props} />,
     h2: (props) => <HeadingWithId tag="h2" {...props} />,
@@ -1053,16 +1056,23 @@ export default function FileViewer({
                   </button>
                 )}
 
-                {/* Nút Mở Bảng Cài đặt Thông số Đọc */}
-                <Button
-                  id="btn-tts-settings"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowTtsSettings(!showTtsSettings)}
-                  title="Cấu hình giọng đọc"
-                >
-                  <Settings2 className="w-3.5 h-3.5 text-[rgb(var(--color-text-muted))]" />
-                </Button>
+                {/* Cấu hình giọng đọc */}
+                {!file.videoUrl && (
+                  <button
+                    id="btn-tts-settings"
+                    onClick={() => setShowTtsSettings((v) => !v)}
+                    title="Cấu hình giọng đọc"
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:text-[rgb(var(--color-text-primary))] hover:bg-[rgb(var(--color-surface-2))] rounded-lg transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Settings2 className="w-3.5 h-3.5 text-[rgb(var(--color-text-muted))]" />
+                      <span className="font-medium">Cấu hình giọng đọc</span>
+                    </div>
+                    <span className="text-[10px] text-[rgb(var(--color-text-muted))] font-mono">
+                      {speechRate}x
+                    </span>
+                  </button>
+                )}
 
                 {/* Text-to-Speech (AI tóm tắt) */}
                 {!file.videoUrl && (
@@ -1254,7 +1264,7 @@ export default function FileViewer({
             >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
-                components={  FileMarkdownComponents}
+                components={FileMarkdownComponents}
               >
                 {file.content}
               </ReactMarkdown>
