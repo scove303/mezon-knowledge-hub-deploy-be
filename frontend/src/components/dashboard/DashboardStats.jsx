@@ -67,17 +67,9 @@ export default function DashboardStats() {
   const router = useRouter();
   const { folders, setSelectedFile, isLoading } = useWorkspaceStore();
 
-  const [doneCount, setDoneCount] = useState(() => {
-    if (typeof window === "undefined") return 0;
-    try {
-      const raw = localStorage.getItem("mf-lessons-done");
-      return raw ? Object.keys(JSON.parse(raw)).length : 0;
-    } catch {
-      return 0;
-    }
-  });
+  const [doneCount, setDoneCount] = useState(0);
 
-  const [streak, setStreak] = useState(() => calcStreak(readStudyDays()));
+  const [streak, setStreak] = useState(0);
 
   useEffect(() => {
     const loadDone = () => {
