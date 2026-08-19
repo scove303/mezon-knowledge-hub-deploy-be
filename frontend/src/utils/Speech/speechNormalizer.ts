@@ -118,3 +118,30 @@ export const normalizeTextForSpeech = (markdownText: string): string => {
   // 8. Làm sạch khoảng trắng thừa
   return text.replace(/\s+/g, " ").trim();
 };
+
+/**
+ * Chia nhỏ văn bản thành các đoạn ngắn đảm bảo thời gian xử lý API < 2 giây/đoạn
+ */
+export const splitTextIntoChunks = (
+  text: string,
+  maxLength: number = 250,
+): string[] => {
+  if (!text) return [];
+  const cleanText = normalizeTextForSpeech(text);
+
+  // Tách theo dấu ngắt câu
+  const sentences = cleanText.match(/[^.!?;\n]+[.!?;\n]+/g) || [cleanText];
+  const chunks: string[] = [];
+  let currentChunk = "";
+
+  for (const sentence of sentences) {
+    if ((currentChunk + sentence).length <= maxLength) {
+      currentChunk += sentence + " ";
+    } else {
+      if (currentChunk.trim()) chunks.push(currentChunk.trim());
+      currentChunk = sentence + " ";
+    }
+  }
+  if (currentChunk.trim()) chunks.push(currentChunk.trim());
+  return chunks;
+};

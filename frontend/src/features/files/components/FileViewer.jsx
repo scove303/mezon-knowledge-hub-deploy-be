@@ -46,7 +46,6 @@ import { useWorkspaceStore } from "@/features/folders/store";
 import { fileService } from "@/features/files/services";
 import { folderService } from "@/features/folders/services";
 import { useToastStore } from "@/stores/toast";
-import { speakText, stopSpeech } from "@/utils/Speech/speechSystem";
 import { MarkdownComponents } from "@/components/markdown/MarkdownComponents";
 import SlideViewer from "./SlideViewer";
 import { cn } from "@/utils/formatTailwind";
@@ -57,7 +56,7 @@ import {
   stopAllSpeech,
   updateSpeechConfig,
   getSpeechConfig,
-} from "@/utils/Speech/speechSystem"
+} from "@/utils/Speech/speechSystem";
 
 // Timer hoãn xóa (module scope để React Compiler không chặn việc modify trong handler)
 let deleteTimer = null;
@@ -691,7 +690,11 @@ export default function FileViewer({
   const FileMarkdownComponents = {
     ...MarkdownComponents,
     pre: ({ children }) => <>{children}</>,
-    p: ({ children, ...props }) => <div className="mb-4 last:mb-0" {...props}>{children}</div>,
+    p: ({ children, ...props }) => (
+      <div className="mb-4 last:mb-0" {...props}>
+        {children}
+      </div>
+    ),
     a: TimestampA,
     h1: (props) => <HeadingWithId tag="h1" {...props} />,
     h2: (props) => <HeadingWithId tag="h2" {...props} />,
@@ -1246,7 +1249,7 @@ export default function FileViewer({
             >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm]}
-                components={  FileMarkdownComponents}
+                components={FileMarkdownComponents}
               >
                 {file.content}
               </ReactMarkdown>
