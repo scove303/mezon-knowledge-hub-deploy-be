@@ -1,6 +1,6 @@
-// Bổ sung cờ dừng isCancelled và chuyển sang cơ chế xử lý hàng chờ đoạn âm thanh speakWithEdgeTtsQueue.
 /**
  * Engine phát âm thanh đa nguồn Cloud (Edge-TTS + Google TTS Fallback)
+ * Đã tích hợp Pre-fetching bộ đệm âm thanh và giải phóng bộ nhớ tự động.
  */
 
 export interface SpeechOptions {
@@ -11,6 +11,16 @@ export interface SpeechOptions {
 
 let currentAudio: HTMLAudioElement | null = null;
 let isCancelled = false;
+const activeBlobUrls: string[] = [];
+
+const cleanupBlobUrls = (): void => {
+  while (activeBlobUrls.length > 0) {
+    const url = activeBlobUrls.pop();
+    if (url && url.startsWith("blob:")) {
+      URL.revokeObjectURL(url);
+    }
+  }
+};
 
 export const stopEdgeSpeech = (): void => {
   isCancelled = true;
@@ -19,18 +29,24 @@ export const stopEdgeSpeech = (): void => {
     currentAudio.currentTime = 0;
     currentAudio = null;
   }
+  cleanupBlobUrls();
 };
 
 /**
- * Gọi Google Translate TTS (Kênh dự phòng miễn phí, độ khả dụng 99.9%)
+ * Gọi Google Translate TTS với cơ chế kiểm tra kết nối luồng thật
  */
 const fetchGoogleTtsAudio = async (text: string): Promise<string> => {
   const url = `https://translate.google.com/translate_tts?ie=UTF-8&tl=vi&client=tw-ob&q=${encodeURIComponent(text)}`;
-  return url;
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`Google TTS Error ${response.status}`);
+  const audioBlob = await response.blob();
+  const blobUrl = URL.createObjectURL(audioBlob);
+  activeBlobUrls.push(blobUrl);
+  return blobUrl;
 };
 
 /**
- * Gọi Edge-TTS API (Kênh chính)
+ * Gọi Edge-TTS API
  */
 const fetchEdgeTtsAudio = async (
   text: string,
@@ -45,7 +61,25 @@ const fetchEdgeTtsAudio = async (
 
   if (!response.ok) throw new Error(`Edge-TTS Error ${response.status}`);
   const audioBlob = await response.blob();
-  return URL.createObjectURL(audioBlob);
+  const blobUrl = URL.createObjectURL(audioBlob);
+  activeBlobUrls.push(blobUrl);
+  return blobUrl;
+};
+
+/**
+ * Lấy âm thanh linh hoạt (Edge-TTS trước, Google TTS sau)
+ */
+const fetchAudioWithFallback = async (
+  text: string,
+  voice: string,
+  rateFormatted: string,
+): Promise<string> => {
+  try {
+    return await fetchEdgeTtsAudio(text, voice, rateFormatted);
+  } catch (e1) {
+    console.warn("Edge-TTS Cloud bận, chuyển sang Google Cloud TTS...");
+    return await fetchGoogleTtsAudio(text);
+  }
 };
 
 export const speakWithEdgeTtsQueue = async (
@@ -56,6 +90,7 @@ export const speakWithEdgeTtsQueue = async (
 ): Promise<boolean> => {
   isCancelled = false;
   stopEdgeSpeech();
+  isCancelled = false;
 
   const voice = options.voice || "vi-VN-HoaiMyNeural";
   const rate = options.rate || 1.0;
@@ -64,53 +99,58 @@ export const speakWithEdgeTtsQueue = async (
     ? ratePercent
     : `+${ratePercent}`;
 
-  for (let i = 0; i < chunks.length; i++) {
-    if (isCancelled) return false;
+  if (chunks.length === 0) {
+    if (onEnd) onEnd();
+    return true;
+  }
 
-    let audioUrl = "";
+  try {
+    // Tải trước đoạn đầu tiên
+    let currentPromise = fetchAudioWithFallback(
+      chunks[0],
+      voice,
+      formattedRate,
+    );
 
-    // Thử Nguồn 1: Edge-TTS Cloud
-    try {
-      audioUrl = await fetchEdgeTtsAudio(chunks[i], voice, formattedRate);
-    } catch (e1) {
-      console.warn(
-        `Nguồn Edge-TTS lỗi đoạn ${i + 1}, tự động chuyển sang Nguồn 2 (Google Cloud)...`,
-      );
+    for (let i = 0; i < chunks.length; i++) {
+      if (isCancelled) return false;
 
-      // Thử Nguồn 2: Google Translate TTS Fallback
-      try {
-        audioUrl = await fetchGoogleTtsAudio(chunks[i]);
-      } catch (e2) {
-        console.error(`Tất cả nguồn Cloud TTS đều thất bại ở đoạn ${i + 1}`);
-        if (onError) onError();
-        return false;
+      const audioUrl = await currentPromise;
+
+      // Nối dòng trước đoạn tiếp theo (Pre-fetch) nếu còn đoạn trong hàng chờ
+      if (i + 1 < chunks.length) {
+        currentPromise = fetchAudioWithFallback(
+          chunks[i + 1],
+          voice,
+          formattedRate,
+        );
       }
-    }
 
-    // Phát âm thanh của đoạn hiện tại
-    try {
+      if (isCancelled) return false;
+
+      // Phát âm thanh đoạn hiện tại
       await new Promise<void>((resolve, reject) => {
         if (isCancelled) return reject(new Error("Cancelled"));
 
         currentAudio = new Audio(audioUrl);
         currentAudio.onended = () => {
-          if (audioUrl.startsWith("blob:")) URL.revokeObjectURL(audioUrl);
           currentAudio = null;
           resolve();
         };
         currentAudio.onerror = () => {
-          if (audioUrl.startsWith("blob:")) URL.revokeObjectURL(audioUrl);
           currentAudio = null;
-          reject(new Error("Audio Playback Error"));
+          reject(new Error("Playback Error"));
         };
         currentAudio.play().catch(reject);
       });
-    } catch (err) {
-      if (onError) onError();
-      return false;
     }
-  }
 
-  if (onEnd && !isCancelled) onEnd();
-  return true;
+    cleanupBlobUrls();
+    if (onEnd && !isCancelled) onEnd();
+    return true;
+  } catch (err) {
+    cleanupBlobUrls();
+    if (onError && !isCancelled) onError();
+    return false;
+  }
 };
