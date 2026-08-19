@@ -33,7 +33,7 @@ export const stopAllSpeech = (): void => {
 };
 
 /**
- * Tìm giọng đọc Tiếng Việt nội cục của trình duyệt
+ * Tìm chính xác giọng đọc Tiếng Việt chuẩn (Chặn tuyệt đối các giọng giả mạo tiếng Anh)
  */
 const getLocalVietnameseVoice = (): Promise<SpeechSynthesisVoice | null> => {
   return new Promise((resolve) => {
@@ -45,26 +45,38 @@ const getLocalVietnameseVoice = (): Promise<SpeechSynthesisVoice | null> => {
     const synth = window.speechSynthesis;
     let voices = synth.getVoices();
 
-    const findVoice = (list: SpeechSynthesisVoice[]) => {
+    const findStrictVietnameseVoice = (list: SpeechSynthesisVoice[]) => {
+      // Chỉ tìm các giọng có chứa từ khóa 'Vietnamese' hoặc 'vi-VN' rõ ràng,
+      // đồng thời tên phải thuộc Microsoft hoặc Google để tránh mấy giọng đọc tiếng Anh giả.
       return (
-        list.find((v) => v.lang === "vi-VN" && v.name.includes("Google")) ||
-        list.find((v) => v.lang === "vi-VN" || v.lang.startsWith("vi")) ||
+        list.find(
+          (v) =>
+            (v.lang === "vi-VN" || v.lang.startsWith("vi")) &&
+            (v.name.includes("Google") ||
+              v.name.includes("Natural") ||
+              v.name.includes("HoaiMy") ||
+              v.name.includes("NamMinh")),
+        ) ||
+        list.find(
+          (v) =>
+            v.lang === "vi-VN" && !v.name.toLowerCase().includes("english"),
+        ) ||
         null
       );
     };
 
-    const voice = findVoice(voices);
+    const voice = findStrictVietnameseVoice(voices);
     if (voice) {
       resolve(voice);
       return;
     }
 
     synth.onvoiceschanged = () => {
-      resolve(findVoice(synth.getVoices()));
+      resolve(findStrictVietnameseVoice(synth.getVoices()));
     };
 
     setTimeout(() => {
-      resolve(findVoice(synth.getVoices()));
+      resolve(findStrictVietnameseVoice(synth.getVoices()));
     }, 800);
   });
 };
