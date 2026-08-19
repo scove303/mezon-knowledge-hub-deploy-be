@@ -1056,16 +1056,23 @@ export default function FileViewer({
                   </button>
                 )}
 
-                {/* Nút Mở Bảng Cài đặt Thông số Đọc */}
-                <Button
-                  id="btn-tts-settings"
-                  variant="ghost"
-                  size="icon"
-                  onClick={() => setShowTtsSettings(!showTtsSettings)}
-                  title="Cấu hình giọng đọc"
-                >
-                  <Settings2 className="w-3.5 h-3.5 text-[rgb(var(--color-text-muted))]" />
-                </Button>
+                {/* Cấu hình giọng đọc */}
+                {!file.videoUrl && (
+                  <button
+                    id="btn-tts-settings"
+                    onClick={() => setShowTtsSettings((v) => !v)}
+                    title="Cấu hình giọng đọc"
+                    className="w-full flex items-center justify-between px-2.5 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:text-[rgb(var(--color-text-primary))] hover:bg-[rgb(var(--color-surface-2))] rounded-lg transition-colors"
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Settings2 className="w-3.5 h-3.5 text-[rgb(var(--color-text-muted))]" />
+                      <span className="font-medium">Cấu hình giọng đọc</span>
+                    </div>
+                    <span className="text-[10px] text-[rgb(var(--color-text-muted))] font-mono">
+                      {speechRate}x
+                    </span>
+                  </button>
+                )}
 
                 {/* Text-to-Speech (AI tóm tắt) */}
                 {!file.videoUrl && (
