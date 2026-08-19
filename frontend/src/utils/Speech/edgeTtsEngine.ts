@@ -1,3 +1,4 @@
+// Bổ sung cờ dừng isCancelled và chuyển sang cơ chế xử lý hàng chờ đoạn âm thanh speakWithEdgeTtsQueue.
 /**
  * Dịch vụ phát âm thanh Neural TTS qua Edge-TTS API theo cơ chế Hàng chờ (Audio Queue)
  */

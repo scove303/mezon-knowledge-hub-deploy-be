@@ -1,3 +1,4 @@
+// Nội dung thêm mới: Thêm hàm splitTextIntoChunks để cắt nhỏ đoạn văn thành các đoạn có độ dài tối đa 250 ký tự.
 /**
  * Bộ chuẩn hóa văn bản chuyên sâu cho giọng đọc Tiếng Việt
  * Xử lý Markdown, LaTeX Toán học và Từ mượn Tiếng Anh.

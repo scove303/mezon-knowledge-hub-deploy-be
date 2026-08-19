@@ -1,3 +1,5 @@
+// Nếu máy tính không có sẵn giọng đọc Tiếng Việt, hệ thống sẽ dừng ngay và bật thông báo lỗi Toast màu đỏ thay vì tự ép đọc bằng giọng Tiếng Anh của hệ điều hành.
+// Xử lý trên mây (Cloud): Giọng đọc vi-VN-HoaiMyNeural nằm ở máy chủ đám mây (Cloud Server), nơi đã được cài sẵn bộ tổng hợp giọng nói tiếng Việt cực kỳ mượt mà và tự nhiên.
 import {
   splitTextIntoChunks,
   normalizeTextForSpeech,
