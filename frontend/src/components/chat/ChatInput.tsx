@@ -36,15 +36,8 @@ export default function ChatInput({
 }: ChatInputProps) {
   const [message, setMessage] = useState("");
   const [file, setFile] = useState<File | null>(null);
-  const [mounted, setMounted] = useState(false); // ✅ 1. Thêm state mounted
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const theme = useThemeStore((s) => s.theme);
-
-  // ✅ 2. Đánh dấu đã mount phía Client
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
   const handleInput = () => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
