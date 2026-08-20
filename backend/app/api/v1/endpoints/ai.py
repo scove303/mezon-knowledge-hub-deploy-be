@@ -2,7 +2,8 @@ import asyncio
 import json
 import uuid
 
-from fastapi import APIRouter, File, Form, UploadFile, HTTPException, status
+from fastapi import APIRouter, File, Form, UploadFile, HTTPException, status,BackgroundTasks
+from app.workers.tasks.youtube_task import process_youtube_native_pipeline
 from fastapi.responses import StreamingResponse
 from sqlmodel import select
 from sqlalchemy.orm import selectinload
@@ -356,16 +357,24 @@ async def digest_document(
 @router.post("/youtube")
 async def summarize_youtube(
     url: str,
-    folder_id: str,
     session: SessionDep,
     current_user: CurrentActor,
+    background_tasks: BackgroundTasks,
 ):
-    """
-    Tóm tắt video YouTube + trích xuất timestamps.
-    TODO: Tích hợp youtube-transcript-api + Gemini summarization
-    """
-    file_id = f"file-{uuid.uuid4().hex[:8]}"
+
+    if "youtube.com" not in url and "youtu.be" not in url:
+        raise HTTPException(status_code=400, detail="URL YouTube không hợp lệ!")
+
+    # Offload processing & DB saving to background task
+    background_tasks.add_task(
+        process_youtube_native_pipeline,
+        session=session,
+        user_id=current_user.id,
+        youtube_url=url,
+        on_event=None
+    )
+
     return success_response(
-        message="Đang lấy phụ đề và tóm tắt video...",
-        data={"file_id": file_id, "name": "Video_Summary.md", "folder_id": folder_id},
+        message="Đang phân tích video và tạo lộ trình học tập mới...",
+        data={"status": "processing", "user_id": current_user.id}
     )

@@ -131,9 +131,7 @@ async def roadmap_service(
 
     roadmap_data = await parse_context_to_structure(topic, tavily_context, folder_name=folder_name, on_event=on_event)
 
-    # ---------------------------------------------------------
-    # STEP 4: Store New Folder in DB + Save Prompt Embedding
-    # ---------------------------------------------------------
+
     new_folder = await asyncio.to_thread(
         store_folder_structure_roadmap,
         session=session,
