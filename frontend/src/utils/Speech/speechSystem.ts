@@ -3,7 +3,6 @@ import {
   normalizeTextForSpeech,
 } from "./speechNormalizer";
 import { speakWithEdgeTtsQueue, stopEdgeSpeech } from "./edgeTtsEngine";
-import { useToastStore } from "@/stores/toast";
 
 export interface SystemSpeechConfig {
   rate: number;
@@ -30,6 +29,9 @@ export const stopAllSpeech = (): void => {
   }
 };
 
+/**
+ * Tìm giọng đọc Tiếng Việt nội cục của trình duyệt
+ */
 const getLocalVietnameseVoice = (): Promise<SpeechSynthesisVoice | null> => {
   return new Promise((resolve) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
@@ -40,40 +42,33 @@ const getLocalVietnameseVoice = (): Promise<SpeechSynthesisVoice | null> => {
     const synth = window.speechSynthesis;
     const voices = synth.getVoices();
 
-    const findStrictVietnameseVoice = (list: SpeechSynthesisVoice[]) => {
+    const findVoice = (list: SpeechSynthesisVoice[]) => {
       return (
-        list.find(
-          (v) =>
-            (v.lang === "vi-VN" || v.lang.startsWith("vi")) &&
-            (v.name.includes("Google") ||
-              v.name.includes("Natural") ||
-              v.name.includes("HoaiMy") ||
-              v.name.includes("NamMinh")),
-        ) ||
-        list.find(
-          (v) =>
-            v.lang === "vi-VN" && !v.name.toLowerCase().includes("english"),
-        ) ||
+        list.find((v) => v.lang === "vi-VN" && v.name.includes("Google")) ||
+        list.find((v) => v.lang === "vi-VN" || v.lang.startsWith("vi")) ||
         null
       );
     };
 
-    const voice = findStrictVietnameseVoice(voices);
+    const voice = findVoice(voices);
     if (voice) {
       resolve(voice);
       return;
     }
 
     synth.onvoiceschanged = () => {
-      resolve(findStrictVietnameseVoice(synth.getVoices()));
+      resolve(findVoice(synth.getVoices()));
     };
 
     setTimeout(() => {
-      resolve(findStrictVietnameseVoice(synth.getVoices()));
-    }, 800);
+      resolve(findVoice(synth.getVoices()));
+    }, 500);
   });
 };
 
+/**
+ * Phát âm thanh cục bộ (Web Speech API Local Fallback - Linh hoạt)
+ */
 const speakLocalWebSpeech = async (
   rawText: string,
   onEnd?: () => void,
@@ -85,23 +80,17 @@ const speakLocalWebSpeech = async (
 
   window.speechSynthesis.cancel();
   const localVoice = await getLocalVietnameseVoice();
-
-  if (!localVoice) {
-    useToastStore
-      .getState()
-      .addToast(
-        "Không thể bật giọng đọc nội cục: Máy tính của bạn chưa cài gói ngôn ngữ Tiếng Việt (vi-VN). Hãy bật kết nối mạng để dùng giọng đọc AI Cloud.",
-        "error",
-        6000,
-      );
-    if (onEnd) onEnd();
-    return;
-  }
-
   const cleanText = normalizeTextForSpeech(rawText);
   const utterance = new SpeechSynthesisUtterance(cleanText);
-  utterance.voice = localVoice;
-  utterance.lang = localVoice.lang;
+
+  // Nếu tìm thấy giọng Tiếng Việt thì dùng, nếu không có sẽ gán giọng mặc định hệ thống
+  if (localVoice) {
+    utterance.voice = localVoice;
+    utterance.lang = localVoice.lang;
+  } else {
+    utterance.lang = "vi-VN"; // Gán mã ngôn ngữ để trình duyệt tự điều phối
+  }
+
   utterance.rate = currentConfig.rate;
   utterance.pitch = currentConfig.pitch;
 
@@ -116,29 +105,31 @@ const speakLocalWebSpeech = async (
   window.speechSynthesis.speak(utterance);
 };
 
+/**
+ * Điều phối chính: Phát giọng đọc đa tầng thông minh
+ */
 export const speakContent = async (
   rawMarkdownText: string,
   onEnd?: () => void,
 ): Promise<void> => {
   stopAllSpeech();
 
-  // Chuẩn hóa ngắt đoạn tối đa 100 ký tự cho nguồn Cloud
-  const chunks = splitTextIntoChunks(rawMarkdownText, 100);
+  // 1. Chia nhỏ văn bản thành các đoạn <= 180 ký tự
+  const chunks = splitTextIntoChunks(rawMarkdownText, 180);
 
   if (chunks.length === 0) {
     if (onEnd) onEnd();
     return;
   }
 
+  // 2. Thử gọi Cloud Neural TTS qua Hàng chờ Đa tuyến (Google TTS / Edge Proxy)
   if (currentConfig.useCloudNeural) {
     const success = await speakWithEdgeTtsQueue(
       chunks,
       { rate: currentConfig.rate, pitch: currentConfig.pitch },
       onEnd,
       () => {
-        console.info(
-          "Kết nối Cloud gián đoạn, đang chuyển hướng sang bộ tổng hợp âm thanh nội cục (Local Fallback)...",
-        );
+        console.info("Đang chuyển hướng sang bộ tổng hợp âm thanh nội cục...");
         speakLocalWebSpeech(rawMarkdownText, onEnd);
       },
     );
@@ -146,5 +137,6 @@ export const speakContent = async (
     if (success) return;
   }
 
+  // 3. Dự phòng cuối cùng: Phát qua Web Speech API
   await speakLocalWebSpeech(rawMarkdownText, onEnd);
 };
