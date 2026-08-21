@@ -10,7 +10,10 @@ try:
     _model = SentenceTransformer("all-MiniLM-L6-v2")
     MODEL_AVAILABLE = True
 except Exception as e:
-    print(f"⚠️ [similarity_checker] sentence-transformers không khả dụng, bỏ qua semantic cache: {e}")
+    print(
+        f"[similarity_checker] sentence-transformers unavailable, disable semantic cache: {e}",
+        flush=True,
+    )
 
 
 def _get_embedding_sync(text: str) -> list[float]:
