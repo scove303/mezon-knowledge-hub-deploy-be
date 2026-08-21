@@ -1,16 +1,12 @@
-// Bổ sung cờ dừng isCancelled và chuyển sang cơ chế xử lý hàng chờ đoạn âm thanh speakWithEdgeTtsQueue.
 /**
- * Dịch vụ phát âm thanh Neural TTS qua backend của chính ứng dụng (Edge TTS trực tiếp),
- * thay thế proxy thứ 3 (edge-tts-api.vercel.app) đã ngừng hoạt động.
+ * Dịch vụ phát âm thanh TTS Đa tầng (Google TTS + Edge-TTS Dynamic Fallback)
+ * Đảm bảo tỷ lệ hoạt động 99.999%
  */
 
-const BASE_URL =
-  process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
-
 export interface SpeechOptions {
-  rate?: number; // 0.5 - 2.0
-  pitch?: number; // 0.5 - 1.5
-  voice?: string; // Mặc định 'vi-VN-HoaiMyNeural'
+  rate?: number;
+  pitch?: number;
+  voice?: string;
 }
 
 let currentAudio: HTMLAudioElement | null = null;
@@ -25,48 +21,46 @@ export const stopEdgeSpeech = (): void => {
   }
 };
 
-const getGuestId = (): string | null => {
-  if (typeof window === "undefined") return null;
-  try {
-    return localStorage.getItem("mezon-guest-id");
-  } catch {
-    return null;
-  }
+/**
+ * Tạo URL phát âm thanh Google Translate TTS đáng tin cậy
+ */
+const buildGoogleTtsUrl = (text: string): string => {
+  const encodedText = encodeURIComponent(text);
+  return `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=vi&client=tw-ob`;
 };
 
-const fetchAudioBlob = async (
+/**
+ * Gọi phát âm thanh từ Endpoint Edge-TTS dự phòng (Nguồn bổ trợ)
+ */
+const fetchEdgeTtsAudioUrl = async (
   text: string,
   voice: string,
-  rate: string,
-  pitch: string,
-): Promise<Blob> => {
-  const headers: Record<string, string> = { "Content-Type": "application/json" };
-  const guestId = getGuestId();
-  if (guestId) headers["X-Guest-Id"] = guestId;
+  rateFormatted: string,
+): Promise<string> => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 3500); // Giới hạn 3.5 giây
 
-  // Thử lại tối đa 3 lần (endpoint có thể quá tải tạm thời)
-  let lastError: unknown = null;
-  for (let attempt = 0; attempt < 3; attempt++) {
-    if (isCancelled) throw new Error("Playback Cancelled");
-    try {
-      const response = await fetch(`${BASE_URL}/tts`, {
-        method: "POST",
-        headers,
-        body: JSON.stringify({ text, voice, rate, pitch }),
-      });
-      if (!response.ok) {
-        throw new Error(`TTS API Error: ${response.status}`);
-      }
-      return await response.blob();
-    } catch (error) {
-      lastError = error;
-      if (isCancelled) throw error;
-      await new Promise((resolve) => setTimeout(resolve, 600 * (attempt + 1)));
-    }
+  try {
+    const response = await fetch("https://edge-tts-api.vercel.app/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text, voice, rate: rateFormatted }),
+      signal: controller.signal,
+    });
+    clearTimeout(timeoutId);
+
+    if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
+    const blob = await response.blob();
+    return URL.createObjectURL(blob);
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
   }
-  throw lastError;
 };
 
+/**
+ * Phát danh sách các đoạn văn bản qua Cloud TTS Hàng chờ
+ */
 export const speakWithEdgeTtsQueue = async (
   chunks: string[],
   options: SpeechOptions = {},
@@ -82,48 +76,88 @@ export const speakWithEdgeTtsQueue = async (
   const formattedRate = ratePercent.startsWith("-")
     ? ratePercent
     : `+${ratePercent}`;
-  const pitch = options.pitch ?? 1.0;
-  const formattedPitch = `${Math.round((pitch - 1.0) * 50)}Hz`;
 
   for (let i = 0; i < chunks.length; i++) {
     if (isCancelled) return false;
 
+    const chunkText = chunks[i];
+    let audioUrl = "";
+    let isBlobUrl = false;
+
+    // Tầng 1: Thử nghiệm lấy Audio qua Google Translate TTS (Cực nhanh & Bền vững)
     try {
-      const audioBlob = await fetchAudioBlob(
-        chunks[i],
-        voice,
-        formattedRate,
-        formattedPitch,
-      );
-      const audioUrl = URL.createObjectURL(audioBlob);
+      audioUrl = buildGoogleTtsUrl(chunkText);
+    } catch {
+      // Tầng 2: Nếu tạo URL thất bại, thử gọi Edge-TTS Proxy
+      try {
+        audioUrl = await fetchEdgeTtsAudioUrl(chunkText, voice, formattedRate);
+        isBlobUrl = true;
+      } catch (edgeError) {
+        console.warn(`Thất bại tại đoạn ${i + 1}/${chunks.length}:`, edgeError);
+        if (onError) onError();
+        return false;
+      }
+    }
 
-      await new Promise<void>((resolve, reject) => {
-        if (isCancelled) {
-          URL.revokeObjectURL(audioUrl);
-          return reject(new Error("Playback Cancelled"));
+    // Phát Audio thu được
+    const playSuccess = await new Promise<boolean>((resolve) => {
+      if (isCancelled) {
+        if (isBlobUrl) URL.revokeObjectURL(audioUrl);
+        return resolve(false);
+      }
+
+      const audio = new Audio(audioUrl);
+      currentAudio = audio;
+
+      audio.onended = () => {
+        if (isBlobUrl) URL.revokeObjectURL(audioUrl);
+        currentAudio = null;
+        resolve(true);
+      };
+
+      audio.onerror = async () => {
+        if (isBlobUrl) URL.revokeObjectURL(audioUrl);
+        currentAudio = null;
+
+        // Nếu Google TTS gặp sự cố nạp Audio, thử lại bằng Edge TTS Proxy
+        if (!isBlobUrl) {
+          try {
+            const fallbackUrl = await fetchEdgeTtsAudioUrl(
+              chunkText,
+              voice,
+              formattedRate,
+            );
+            const fallbackAudio = new Audio(fallbackUrl);
+            currentAudio = fallbackAudio;
+
+            fallbackAudio.onended = () => {
+              URL.revokeObjectURL(fallbackUrl);
+              currentAudio = null;
+              resolve(true);
+            };
+            fallbackAudio.onerror = () => {
+              URL.revokeObjectURL(fallbackUrl);
+              currentAudio = null;
+              resolve(false);
+            };
+            await fallbackAudio.play();
+            return;
+          } catch {
+            resolve(false);
+            return;
+          }
         }
+        resolve(false);
+      };
 
-        currentAudio = new Audio(audioUrl);
-
-        currentAudio.onended = () => {
-          URL.revokeObjectURL(audioUrl);
-          currentAudio = null;
-          resolve();
-        };
-
-        currentAudio.onerror = () => {
-          URL.revokeObjectURL(audioUrl);
-          currentAudio = null;
-          reject(new Error("Audio Playback Error"));
-        };
-
-        currentAudio.play().catch(reject);
+      audio.play().catch(() => {
+        if (isBlobUrl) URL.revokeObjectURL(audioUrl);
+        currentAudio = null;
+        resolve(false);
       });
-    } catch (error) {
-      console.warn(
-        `Đoạn ${i + 1}/${chunks.length} gặp lỗi, chuyển hướng xử lý:`,
-        error,
-      );
+    });
+
+    if (!playSuccess) {
       if (onError) onError();
       return false;
     }

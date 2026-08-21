@@ -13,6 +13,7 @@ from app.models.user import User
 # Import các hàm service/view vừa viết
 from app.bot.commands.folder import list_all_folder, get_folder_by_id
 from app.bot.commands.file import get_file_by_id
+from app.workers.tasks.youtube_task import process_youtube_native_pipeline
 
 PREFIX = "/"
 
@@ -199,12 +200,42 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
             )
             return
 
-        # TODO: Implement youtube logic
+        # 1. Send initial status message
         await channel.send(
             content=ChannelMessageContent(
                 t=f"🎬 **YouTube Summarizer:** Đang phân tích video `{url}`..."
             )
         )
+
+        # 2. Define non-blocking background task
+        async def run_youtube_processing():
+            try:
+                # Inject/Open your DB Session context here
+                with Session(engine) as session:
+                    await process_youtube_native_pipeline(
+                        session=session,
+                        user_id=sender_id,  # Pass the Mezon user/sender ID
+                        youtube_url=url,
+                        on_event=None
+                    )
+
+                # Send success notification back to Mezon channel
+                await channel.send(
+                    content=ChannelMessageContent(
+                        t=f"✅ **Hoàn thành!** Lộ trình học tập từ video `{url}` đã được tạo thành công vào workspace của bạn!"
+                    )
+                )
+            except Exception as e:
+                print(f"❌ [Mezon Bot Error]: {e}")
+                await channel.send(
+                    content=ChannelMessageContent(
+                        t=f"❌ **Lỗi:** Không thể xử lý video YouTube `{url}`. Vui lòng kiểm tra lại đường dẫn."
+                    )
+                )
+
+        # 3. Create non-blocking task so bot stays responsive
+        asyncio.create_task(run_youtube_processing())
+       
     elif text.startswith("/help") or text.startswith("/start"):
         await channel.send(content=ChannelMessageContent(t=get_help_message()))
 

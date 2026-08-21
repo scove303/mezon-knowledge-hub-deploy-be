@@ -1,11 +1,8 @@
-// Nếu máy tính không có sẵn giọng đọc Tiếng Việt, hệ thống sẽ dừng ngay và bật thông báo lỗi Toast màu đỏ thay vì tự ép đọc bằng giọng Tiếng Anh của hệ điều hành.
-// Xử lý trên mây (Cloud): Giọng đọc vi-VN-HoaiMyNeural nằm ở máy chủ đám mây (Cloud Server), nơi đã được cài sẵn bộ tổng hợp giọng nói tiếng Việt cực kỳ mượt mà và tự nhiên.
 import {
   splitTextIntoChunks,
   normalizeTextForSpeech,
 } from "./speechNormalizer";
 import { speakWithEdgeTtsQueue, stopEdgeSpeech } from "./edgeTtsEngine";
-import { useToastStore } from "@/stores/toast";
 
 export interface SystemSpeechConfig {
   rate: number;
@@ -43,7 +40,7 @@ const getLocalVietnameseVoice = (): Promise<SpeechSynthesisVoice | null> => {
     }
 
     const synth = window.speechSynthesis;
-    let voices = synth.getVoices();
+    const voices = synth.getVoices();
 
     const findVoice = (list: SpeechSynthesisVoice[]) => {
       return (
@@ -65,12 +62,12 @@ const getLocalVietnameseVoice = (): Promise<SpeechSynthesisVoice | null> => {
 
     setTimeout(() => {
       resolve(findVoice(synth.getVoices()));
-    }, 800);
+    }, 500);
   });
 };
 
 /**
- * Phát âm thanh cục bộ (Web Speech API Local Fallback)
+ * Phát âm thanh cục bộ (Web Speech API Local Fallback - Linh hoạt)
  */
 const speakLocalWebSpeech = async (
   rawText: string,
@@ -83,25 +80,17 @@ const speakLocalWebSpeech = async (
 
   window.speechSynthesis.cancel();
   const localVoice = await getLocalVietnameseVoice();
-
-  // BỘ BẢO VỆ (VOICE GUARD):
-  // Chặn không cho tự động chuyển sang giọng mặc định Tiếng Anh nếu hệ điều hành không cài gói vi-VN
-  if (!localVoice) {
-    useToastStore
-      .getState()
-      .addToast(
-        "Không thể đọc Tiếng Việt: Thiết bị của bạn chưa cài gói giọng đọc Tiếng Việt cục bộ và kết nối Cloud AI bị gián đoạn.",
-        "error",
-        6000,
-      );
-    if (onEnd) onEnd();
-    return;
-  }
-
   const cleanText = normalizeTextForSpeech(rawText);
   const utterance = new SpeechSynthesisUtterance(cleanText);
-  utterance.voice = localVoice;
-  utterance.lang = localVoice.lang;
+
+  // Nếu tìm thấy giọng Tiếng Việt thì dùng, nếu không có sẽ gán giọng mặc định hệ thống
+  if (localVoice) {
+    utterance.voice = localVoice;
+    utterance.lang = localVoice.lang;
+  } else {
+    utterance.lang = "vi-VN"; // Gán mã ngôn ngữ để trình duyệt tự điều phối
+  }
+
   utterance.rate = currentConfig.rate;
   utterance.pitch = currentConfig.pitch;
 
@@ -117,7 +106,7 @@ const speakLocalWebSpeech = async (
 };
 
 /**
- * Điều phối chính: Phát giọng đọc thông minh
+ * Điều phối chính: Phát giọng đọc đa tầng thông minh
  */
 export const speakContent = async (
   rawMarkdownText: string,
@@ -125,24 +114,22 @@ export const speakContent = async (
 ): Promise<void> => {
   stopAllSpeech();
 
-  // 1. Chia nhỏ văn bản thành các đoạn <= 250 ký tự
-  const chunks = splitTextIntoChunks(rawMarkdownText, 250);
+  // 1. Chia nhỏ văn bản thành các đoạn <= 180 ký tự
+  const chunks = splitTextIntoChunks(rawMarkdownText, 180);
 
   if (chunks.length === 0) {
     if (onEnd) onEnd();
     return;
   }
 
-  // 2. Thử gọi Cloud Neural TTS theo hàng chờ
+  // 2. Thử gọi Cloud Neural TTS qua Hàng chờ Đa tuyến (Google TTS / Edge Proxy)
   if (currentConfig.useCloudNeural) {
     const success = await speakWithEdgeTtsQueue(
       chunks,
       { rate: currentConfig.rate, pitch: currentConfig.pitch },
       onEnd,
       () => {
-        console.info(
-          "Chuyển hướng sang bộ tổng hợp âm thanh nội cục (Local Fallback)...",
-        );
+        console.info("Đang chuyển hướng sang bộ tổng hợp âm thanh nội cục...");
         speakLocalWebSpeech(rawMarkdownText, onEnd);
       },
     );
@@ -150,6 +137,6 @@ export const speakContent = async (
     if (success) return;
   }
 
-  // 3. Nếu tắt Cloud Neural, phát trực tiếp qua Web Speech API
+  // 3. Dự phòng cuối cùng: Phát qua Web Speech API
   await speakLocalWebSpeech(rawMarkdownText, onEnd);
 };
