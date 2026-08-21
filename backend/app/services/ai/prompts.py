@@ -17,7 +17,7 @@ YÊU CẦU:
 """
 
 # =====================================================================
-# PROMPT: TOM TAT & TU DONG NHOM THANH CAU TRUC FOLDER / TAI LIEU
+# PROMPT: TÓM TẮT & TỰ ĐỘNG NHÓM THÀNH CẤU TRÚC FOLDER / TÀI LIỆU
 # =====================================================================
 SUMMARIZE_AND_GROUP_SYSTEM_PROMPT = """
 Bạn là trợ lý AI biên soạn tài liệu học tập. Bạn nhận được nội dung thô
