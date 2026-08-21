@@ -60,3 +60,4 @@ scratch/
 temp_files/
 API_SUMMARY.md
 segment.txt
+backend/app/tts_cache/

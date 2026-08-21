@@ -8,12 +8,14 @@ export interface SystemSpeechConfig {
   rate: number;
   pitch: number;
   useCloudNeural: boolean;
+  voice: string;
 }
 
 let currentConfig: SystemSpeechConfig = {
   rate: 1.0,
   pitch: 1.0,
   useCloudNeural: true,
+  voice: "vi-VN-HoaiMyNeural",
 };
 
 export const updateSpeechConfig = (newConfig: Partial<SystemSpeechConfig>) => {
@@ -111,11 +113,13 @@ const speakLocalWebSpeech = async (
 export const speakContent = async (
   rawMarkdownText: string,
   onEnd?: () => void,
+  voice?: string,
 ): Promise<void> => {
   stopAllSpeech();
 
   // 1. Chia nhỏ văn bản thành các đoạn <= 180 ký tự
   const chunks = splitTextIntoChunks(rawMarkdownText, 180);
+  console.log("[TTS] speakContent - raw length:", rawMarkdownText.length, "chunks:", chunks.length, chunks);
 
   if (chunks.length === 0) {
     if (onEnd) onEnd();
@@ -126,7 +130,7 @@ export const speakContent = async (
   if (currentConfig.useCloudNeural) {
     const success = await speakWithEdgeTtsQueue(
       chunks,
-      { rate: currentConfig.rate, pitch: currentConfig.pitch },
+      { rate: currentConfig.rate, pitch: currentConfig.pitch, voice: voice || currentConfig.voice },
       onEnd,
       () => {
         console.info("Đang chuyển hướng sang bộ tổng hợp âm thanh nội cục...");

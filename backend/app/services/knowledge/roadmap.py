@@ -8,11 +8,8 @@ from sqlmodel import Session, select
 
 from app.models.folder import Folder
 from app.models.knowledge_file import KnowledgeFile
-from app.services.document.parser import (
-    parse_context_to_structure,
-    _generate_content_with_retry,
-)
-from app.services.ai.prompts import REVISE_SYSTEM_PROMPT
+from app.services.document.parser import parse_context_to_structure, _generate_content_with_retry
+from app.services.ai.domain_prompts import build_revise_prompt, detect_domain
 from app.services.search.tavily import tavily_search
 from app.services.storage.file_storage import store_folder_structure_roadmap
 from app.utils.similarity_checker import get_embedding, cosine_similarity
@@ -354,16 +351,17 @@ async def revise_roadmap(
             }
         )
 
-    prompt = (
-        f"Folder hiện tại: {folder.name}\n"
-        f"Yêu cầu của người dùng: {topic}\n\n"
-        f"Tài liệu tìm thấy trong folder:\n{doc_block}"
+    prompt = build_revise_prompt(
+        topic=topic,
+        folder_name=folder.name,
+        user_query=topic,
+        relevant_docs=docs,
+        domain=None,  # auto-detect
     )
 
     response = await _generate_content_with_retry(
         prompt,
         types.GenerateContentConfig(
-            system_instruction=REVISE_SYSTEM_PROMPT,
             response_mime_type="application/json",
             temperature=0.4,
         ),

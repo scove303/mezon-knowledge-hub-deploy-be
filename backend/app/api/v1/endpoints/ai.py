@@ -22,12 +22,11 @@ from app.models.folder import Folder
 from app.models.knowledge_file import KnowledgeFile
 from app.schemas.ai import RoadmapCreateRequest, RoadmapFollowUpRequest
 from app.schemas.common import success_response
-from app.services.ai.prompts import SUMMARIZE_SYSTEM_PROMPT
+from app.services.ai.domain_prompts import build_summarize_prompt, detect_domain
 from app.services.document.parser import _generate_content_with_retry
 from app.services.knowledge.roadmap import roadmap_service, revise_roadmap
 from app.workers.tasks.youtube_task import process_youtube_native_pipeline
 from app.core.database import get_session
-
 
 router = APIRouter()
 
@@ -465,16 +464,12 @@ async def summarize_file(
             + "\n...(bị cắt gọn)"
         )
 
-    prompt = (
-        f"Tiêu đề bài học: {file.name}\n\n"
-        f"Nội dung bài học (Markdown):\n{content}"
-    )
+    prompt = build_summarize_prompt(content)
 
     try:
         response = await _generate_content_with_retry(
             prompt,
             types.GenerateContentConfig(
-                system_instruction=SUMMARIZE_SYSTEM_PROMPT,
                 temperature=0.3,
             ),
         )

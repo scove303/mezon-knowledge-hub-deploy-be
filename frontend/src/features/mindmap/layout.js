@@ -61,17 +61,57 @@ export function buildTree(folderName, files) {
       kind: 'lesson',
       children: [],
     };
-    file.sections.forEach((section, idx) => {
-      lessonNode.children.push({
-        id: `section-${file.id}-${idx}`,
-        label: section,
-        hue,
-        color: shadeColor(hue, 2),
-        depth: 2,
-        kind: 'section',
-        children: [],
+
+    // Ưu tiên dùng mindmapNodes (từ AI anchor) nếu có, fallback về sections (heading)
+    const mindmapNodes = file.mindmapNodes || [];
+    if (mindmapNodes.length > 0) {
+      // Build tree từ anchor hierarchy
+      const nodeMap = new Map();
+      const roots = [];
+
+      for (const anchor of mindmapNodes) {
+        nodeMap.set(anchor.id, {
+          id: `anchor-${anchor.id}`,
+          label: anchor.label,
+          hue,
+          color: shadeColor(hue, anchor.type === 'main' ? 2 : anchor.type === 'sub' ? 3 : 4),
+          depth: anchor.type === 'main' ? 2 : anchor.type === 'sub' ? 3 : 4,
+          kind: anchor.type,
+          children: [],
+        });
+      }
+
+      for (const anchor of mindmapNodes) {
+        const node = nodeMap.get(anchor.id);
+        if (!anchor.parentId) {
+          roots.push(node);
+        } else {
+          const parent = nodeMap.get(anchor.parentId);
+          if (parent) {
+            parent.children.push(node);
+          } else {
+            // parent not found, treat as root
+            roots.push(node);
+          }
+        }
+      }
+
+      lessonNode.children = roots;
+    } else {
+      // Fallback: dùng sections (heading)
+      file.sections.forEach((section, idx) => {
+        lessonNode.children.push({
+          id: `section-${file.id}-${idx}`,
+          label: section,
+          hue,
+          color: shadeColor(hue, 2),
+          depth: 2,
+          kind: 'section',
+          children: [],
+        });
       });
-    });
+    }
+
     root.children.push(lessonNode);
   }
 
