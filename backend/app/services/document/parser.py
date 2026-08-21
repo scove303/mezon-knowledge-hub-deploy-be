@@ -5,6 +5,13 @@ import traceback
 from google import genai
 from google.genai import types
 from app.core.config import settings
+from app.services.ai.domain_prompts import (
+    detect_domain,
+    build_lesson_prompt,
+    build_outline_prompt,
+    build_revise_prompt,
+    build_summarize_prompt,
+)
 
 # 1. Lấy Google API Key từ Config / Env
 api_key = (
@@ -173,32 +180,31 @@ async def _generate_content_with_retry(
     raise last_exc
 
 
-async def generate_single_lesson(topic: str, lesson: dict, tavily_context: str, idx: int, total: int,semaphore) -> dict:
-    """Sinh chi tiết từng bài học trực tiếp qua Google GenAI SDK (Async)"""
+async def generate_single_lesson(topic: str, lesson: dict, tavily_context: str, idx: int, total: int, semaphore) -> dict:
+    """Sinh chi tiết từng bài học trực tiếp qua Google GenAI SDK (Async) — Domain-aware"""
     async with semaphore:
         lesson_title = lesson["title"]
         lesson_summary = lesson["summary"]
         
         print(f"    [+ Processing] ({idx}/{total}) Đang soạn bài với Gemini Flash: '{lesson_title}'...")
 
-        detail_prompt = f"""
-        Chủ đề tổng thể: {topic}
-        Tên bài học hiện tại: {lesson_title}
-        Tóm tắt mục tiêu bài này: {lesson_summary}
+        # Auto-detect domain from topic + context
+        domain = detect_domain(topic, tavily_context)
+        print(f"    [Domain] Detected: {domain}")
 
-        Dữ liệu tham khảo bổ sung từ Internet (Tavily Context):
-        {tavily_context}
-
-        Hãy soạn thảo bài học này theo phong cách W3Schools siêu chi tiết!
-        """
+        detail_prompt = build_lesson_prompt(
+            topic=topic,
+            lesson_title=lesson_title,
+            lesson_summary=lesson_summary,
+            tavily_context=tavily_context,
+            domain=None,  # Auto-detect inside
+        )
 
         try:
             async with asyncio.timeout(180.0):
-                # Gọi API thông qua client.aio (Async Client) kèm retry 503
                 response = await _generate_content_with_retry(
                     detail_prompt,
                     types.GenerateContentConfig(
-                        system_instruction=LESSON_DETAIL_SYSTEM_PROMPT,
                         temperature=0.4,
                     ),
                 )
@@ -239,12 +245,11 @@ async def parse_context_to_structure(
     if on_event:
         on_event({"type": "status", "message": "Đang lập khung lộ trình với Gemini..."})
 
-    outline_prompt = f"Chủ đề: {topic}\nNgữ cảnh Tavily:\n{tavily_context}"
+    outline_prompt = build_outline_prompt(topic, tavily_context)
 
     outline_res = await _generate_content_with_retry(
         outline_prompt,
         types.GenerateContentConfig(
-            system_instruction=OUTLINE_SYSTEM_PROMPT,
             response_mime_type="application/json",  # Ép trả về JSON chuẩn
             temperature=0.3,
         ),
