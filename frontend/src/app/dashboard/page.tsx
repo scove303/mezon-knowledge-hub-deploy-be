@@ -330,7 +330,7 @@ export default function DashboardIndex() {
             <ChatInput
               onSubmit={handleSubmit}
               isLoading={isSubmitting}
-              placeholder="Ask a question, paste a YouTube link, or upload a document..."
+              placeholder={currentText.dashboard.chat.placeholder}
             />
           </div>
         </div>

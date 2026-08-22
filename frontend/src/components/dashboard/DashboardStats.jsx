@@ -13,6 +13,15 @@ import {
 } from 'lucide-react';
 import { useWorkspaceStore } from '@/features/folders/store';
 
+import { useLanguage } from '@/localization/LanguageContext';
+import vn from "@/localization/languages/vn.json";
+import en from "@/localization/languages/en.json";
+
+const translation = {
+  en: en,
+  vn: vn
+}
+
 const VIDEO_EXT = /\.(mp4|webm|mov|mkv|avi)$/i;
 
 const parseDate = (s) => {
@@ -71,6 +80,9 @@ export default function DashboardStats() {
 
   const [streak, setStreak] = useState(0);
 
+  const {currentLanguage, setCurrentLanguage} = useLanguage();
+  const currentText = translation[currentLanguage];
+
   useEffect(() => {
     const loadDone = () => {
       try {
@@ -105,25 +117,25 @@ export default function DashboardStats() {
 
   const cards = [
     {
-      label: 'Thư mục lộ trình',
+      label: currentText.dashboard.roadmap_folder,
       value: folders?.length || 0,
       icon: Folder,
       tint: 'bg-indigo-500/10 text-indigo-400',
     },
     {
-      label: 'Tài liệu học tập',
+      label: currentText.dashboard.learning_materials,
       value: allFiles.length,
       icon: FileText,
       tint: 'bg-emerald-500/10 text-emerald-400',
     },
     {
-      label: 'Video bài giảng',
+      label: currentText.dashboard.lecture_videos,
       value: videoCount,
       icon: Video,
       tint: 'bg-purple-500/10 text-purple-400',
     },
     {
-      label: 'Bài đã học',
+      label: currentText.dashboard.completed_lessons,
       value: doneCount,
       icon: CheckCircle2,
       tint: 'bg-amber-500/10 text-amber-400',
@@ -173,12 +185,10 @@ export default function DashboardStats() {
           </div>
           <div>
             <div className="text-sm font-semibold text-[rgb(var(--color-text-primary))]">
-              Bắt đầu hành trình học tập của bạn
+              {currentText.dashboard.getting_started_banner.header}
             </div>
             <div className="text-xs text-[rgb(var(--color-text-muted))] mt-1 leading-relaxed">
-              Nhập chủ đề bạn muốn học (ví dụ: &quot;Lộ trình Python cho người
-              mới&quot;) vào khung chat bên dưới — AI sẽ tự động biên soạn lộ
-              trình, chia bài học và lưu vào thư mục cho bạn.
+              {currentText.dashboard.getting_started_banner.body}
             </div>
           </div>
         </div>
@@ -205,7 +215,7 @@ export default function DashboardStats() {
               {card.streak > 1 && (
                 <div className="text-[11px] font-medium text-orange-400 flex items-center gap-1 mt-0.5">
                   <Flame size={11} className="fill-orange-400" />
-                  {card.streak} ngày liên tiếp
+                  {card.streak} {currentText.dashboard.streak}
                 </div>
               )}
             </div>
@@ -216,12 +226,11 @@ export default function DashboardStats() {
       <div className="rounded-xl bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] p-4">
         <div className="flex items-center gap-1.5 text-sm font-semibold text-[rgb(var(--color-text-secondary))] mb-2">
           <Clock size={14} className="text-indigo-400" />
-          Tài liệu gần đây
+          {currentText.dashboard.recent_folders.header}
         </div>
         {recent.length === 0 ? (
           <p className="text-xs text-[rgb(var(--color-text-muted))] py-2">
-            Chưa có tài liệu nào — hãy tạo lộ trình đầu tiên ở khung chat bên
-            dưới!
+            {currentText.dashboard.recent_folders.no_recent_documents}
           </p>
         ) : (
           <div className="flex flex-col divide-y divide-[rgb(var(--color-border))]">

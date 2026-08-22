@@ -735,7 +735,7 @@ export default function Sidebar() {
         {/* Header Section Label */}
         <div className="flex items-center justify-between px-6 py-3 border-b border-[rgb(var(--color-border))]/40 shrink-0">
           <span className="text-[11px] font-semibold uppercase tracking-widest text-[rgb(var(--color-text-muted))] truncate">
-            Thư Mục Của {`<USER>`}
+            {currentText.sidebar.file_list.header} {`<USER>`}
           </span>
           <div className="flex items-center gap-1 shrink-0">
             <span className="text-[11px] opacity-60 text-[rgb(var(--color-text-muted))] mr-0.5">
@@ -825,18 +825,17 @@ export default function Sidebar() {
                   <FolderPlus className="w-6 h-6 text-indigo-400" />
                 </div>
                 <p className="text-sm font-semibold text-[rgb(var(--color-text-secondary))]">
-                  Chưa có thư mục nào
+                  {currentText.sidebar.empty_file_list.header}
                 </p>
                 <p className="text-xs text-[rgb(var(--color-text-muted))] mt-1 max-w-[220px] leading-relaxed">
-                  Tạo thư mục đầu tiên hoặc nhập chủ đề muốn học vào khung chat
-                  để AI biên soạn lộ trình.
+                  {currentText.sidebar.empty_file_list.body}
                 </p>
                 <button
                   onClick={() => setShowAddFolder(true)}
                   className="mt-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-500 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  Tạo thư mục mới
+                  {currentText.sidebar.empty_file_list.button}
                 </button>
               </div>
             )
