@@ -523,6 +523,7 @@ async def summarize_youtube(
     session: SessionDep,
     current_user: CurrentActor,
     background_tasks: BackgroundTasks,
+    folder_id: str = None,
 ):
     if "youtube.com" not in url and "youtu.be" not in url:
         raise HTTPException(
@@ -530,6 +531,9 @@ async def summarize_youtube(
             detail="URL YouTube không hợp lệ!",
         )
 
+    # Capture folder_id explicitly before background task
+    target_folder_id = folder_id
+    
     # Offload processing & DB saving to background task
     background_tasks.add_task(
         process_youtube_native_pipeline,
@@ -537,14 +541,19 @@ async def summarize_youtube(
         user_id=current_user.id,
         youtube_url=url,
         on_event=None,
+        folder_id=target_folder_id,
     )
 
+    if target_folder_id:
+        message = "Đang phân tích video và tóm tắt vào thư mục hiện tại..."
+    else:
+        message = "Đang phân tích video và tạo lộ trình học tập mới..."
+
     return success_response(
-        message=(
-            "Đang phân tích video và tạo lộ trình học tập mới..."
-        ),
+        message=message,
         data={
             "status": "processing",
             "user_id": current_user.id,
+            "folder_id": target_folder_id,
         },
     )
