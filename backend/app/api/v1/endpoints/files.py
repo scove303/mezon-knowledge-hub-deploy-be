@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, s
 from sqlmodel import Session, select
 
 from app.core.database import get_session
-from app.api.deps import CurrentUser, CurrentActor
+from app.api.deps import CurrentActor
 from app.crud import file as file_crud
 from app.crud import folder as folder_crud
 from app.models.folder import Folder
@@ -120,7 +120,7 @@ def restore_file_revision(
 @router.post("/summarize-folder")
 async def summarize_folder(
     session: SessionDep,
-    current_user: CurrentUser,
+    current_user: CurrentActor,
     folder_id: str,
     file: UploadFile = File(...),
     prompt: str | None = Form(
@@ -233,7 +233,7 @@ async def summarize_folder(
 
 
 @router.get("/{file_id}")
-def get_file(file_id: str, session: SessionDep, current_user: CurrentUser):
+def get_file(file_id: str, session: SessionDep, current_user: CurrentActor):
     file = file_crud.get_file(session, file_id)
     if not file:
         raise HTTPException(
@@ -256,7 +256,7 @@ def get_file(file_id: str, session: SessionDep, current_user: CurrentUser):
 
 @router.put("/{file_id}")
 def update_file(
-    file_id: str, data: FileUpdate, session: SessionDep, current_user: CurrentUser
+    file_id: str, data: FileUpdate, session: SessionDep, current_user: CurrentActor
 ):
     file = file_crud.update_file(session, file_id, data)
     if not file:
@@ -300,7 +300,7 @@ def move_file(
 
 
 @router.delete("/{file_id}")
-def delete_file(file_id: str, session: SessionDep, current_user: CurrentUser):
+def delete_file(file_id: str, session: SessionDep, current_user: CurrentActor):
     deleted = file_crud.delete_file(session, file_id)
     if not deleted:
         raise HTTPException(
