@@ -17,6 +17,10 @@ from app.workers.tasks.youtube_task import process_youtube_native_pipeline
 
 PREFIX = "/"
 
+# Lưu trạng thái chờ xác nhận từ người dùng (khi video không có transcript)
+# key: (channel_id, sender_id) -> {"url": ..., "user_id": ..., "video_title": ...}
+pending_confirmations: dict = {}
+
 
 
 def get_or_create_user(message: dict) -> int:
@@ -71,11 +75,37 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
                 text = message.content
 
     text = text.strip()
-    if not text.startswith(PREFIX):
-        return  # Bỏ qua nếu không phải tin nhắn dạng Command
+    is_youtube_link = "youtube.com" in text.lower() or "youtu.be" in text.lower()
+
+    # -----------------------------------------------------------------
+    # PENDING CONFIRMATION HANDLER: xử lý "có"/"không" sau khi bot hỏi xác nhận
+    # (chạy trước tất cả command check để không bị bỏ qua)
+    # -----------------------------------------------------------------
+    pending_key = (message.channel_id, message.sender_id)
+    if pending_key in pending_confirmations and not is_youtube_link and not text.startswith(PREFIX):
+        reply = text.lower().strip()
+        if reply in ("có", "co", "yes", "y", "ừ", "ok", "được", "gen đi", "gen"):
+            job = pending_confirmations.pop(pending_key)
+            channel = await client.channels.fetch(message.channel_id)
+            await channel.send(
+                content=ChannelMessageContent(
+                    t=f"⏳ Đang tạo lộ trình từ thông tin video **'{job['video_title']}'** (dùng tìm kiếm web)..."
+                )
+            )
+            asyncio.create_task(_run_youtube_pipeline(channel, job["url"], job["user_id"], job["video_title"]))
+            return
+        elif reply in ("không", "khong", "no", "n", "thôi", "bỏ", "bo", "cancel"):
+            pending_confirmations.pop(pending_key)
+            channel = await client.channels.fetch(message.channel_id)
+            await channel.send(content=ChannelMessageContent(t="✅ Đã huỷ. Không tạo lộ trình từ video này."))
+            return
+
+    if not text.startswith(PREFIX) and not is_youtube_link:
+        return  # Bỏ qua nếu không phải tin nhắn dạng Command và không chứa link YouTube
 
     # Lấy sẵn channel object để phản hồi
     channel = await client.channels.fetch(message.channel_id)
+
 
     # -----------------------------------------------------------------
     # COMMAND 1: /roadmap <topic>
@@ -188,10 +218,10 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
         )
 
     # -----------------------------------------------------------------
-    # COMMAND 7: /youtube <url>
+    # COMMAND 7: /youtube <url> hoặc trực tiếp gửi link YouTube
     # -----------------------------------------------------------------
-    elif text.startswith("/youtube"):
-        url = text[8:].strip()
+    elif text.startswith("/youtube") or is_youtube_link:
+        url = text[8:].strip() if text.startswith("/youtube") else text
         if not url:
             await channel.send(
                 content=ChannelMessageContent(
@@ -200,48 +230,76 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
             )
             return
 
-        # 1. Send initial status message
-        await channel.send(
-            content=ChannelMessageContent(
-                t=f"🎬 **YouTube Summarizer:** Đang phân tích video `{url}`..."
+        user_id = get_or_create_user(message)
+
+        # Pre-check transcript ngay, không chờ vào background
+        async def check_and_dispatch():
+            from app.services.knowledge.youtube import (
+                extract_youtube_video_id, get_youtube_transcript, get_youtube_video_info
             )
-        )
+            video_id = extract_youtube_video_id(url)
+            info = get_youtube_video_info(url)
+            video_title = info.get("title", url)
+            transcript = get_youtube_transcript(video_id) if video_id else ""
 
-        # 2. Define non-blocking background task
-        async def run_youtube_processing():
-            try:
-                # Inject/Open your DB Session context here
-                with Session(engine) as session:
-                    await process_youtube_native_pipeline(
-                        session=session,
-                        user_id=sender_id,  # Pass the Mezon user/sender ID
-                        youtube_url=url,
-                        on_event=None
-                    )
-
-                # Send success notification back to Mezon channel
+            if transcript:
+                # Có transcript → chạy thẳng, không hỏi
                 await channel.send(
                     content=ChannelMessageContent(
-                        t=f"✅ **Hoàn thành!** Lộ trình học tập từ video `{url}` đã được tạo thành công vào workspace của bạn!"
+                        t=f"🎬 **YouTube Summarizer:** Đang phân tích video **'{video_title}'**..."
                     )
                 )
-            except Exception as e:
-                print(f"❌ [Mezon Bot Error]: {e}")
+                asyncio.create_task(_run_youtube_pipeline(channel, url, user_id, video_title))
+            else:
+                # Không có transcript → hỏi xác nhận trước
+                pending_confirmations[pending_key] = {
+                    "url": url,
+                    "user_id": user_id,
+                    "video_title": video_title,
+                }
                 await channel.send(
                     content=ChannelMessageContent(
-                        t=f"❌ **Lỗi:** Không thể xử lý video YouTube `{url}`. Vui lòng kiểm tra lại đường dẫn."
+                        t=(
+                            f"⚠️ **Video '{video_title}' không có phụ đề/transcript** (có thể là nhạc, video riêng tư, hoặc chưa có caption).\n\n"
+                            f"Nếu tiếp tục, bot sẽ dùng **tìm kiếm web** để tạo lộ trình — kết quả có thể **không phản ánh đúng nội dung thực** của video.\n\n"
+                            f"👉 Bạn có muốn tiếp tục không? Trả lời **có** hoặc **không**."
+                        )
                     )
                 )
 
-        # 3. Create non-blocking task so bot stays responsive
-        asyncio.create_task(run_youtube_processing())
-       
+        asyncio.create_task(check_and_dispatch())
+
     elif text.startswith("/help") or text.startswith("/start"):
         await channel.send(content=ChannelMessageContent(t=get_help_message()))
 
 
+async def _run_youtube_pipeline(channel, url: str, user_id: int, video_title: str):
+    """Helper chạy full YouTube pipeline và gửi thông báo kết quả."""
+    try:
+        with Session(engine) as session:
+            await process_youtube_native_pipeline(
+                session=session,
+                user_id=user_id,
+                youtube_url=url,
+                on_event=None
+            )
+        await channel.send(
+            content=ChannelMessageContent(
+                t=f"✅ **Hoàn thành!** Lộ trình học tập từ video **'{video_title}'** đã được tạo vào workspace của bạn!"
+            )
+        )
+    except Exception as e:
+        print(f"[Mezon Bot Error]: {e}")
+        await channel.send(
+            content=ChannelMessageContent(
+                t=f"❌ **Lỗi:** Không thể xử lý video YouTube. Vui lòng kiểm tra lại đường dẫn."
+            )
+        )
+
+
 async def checklog(message: api_pb2.ChannelMessage):
     print(f"[BOT] Message received from sender: {message.sender_id}", flush=True)
+
 
 
 # get help message

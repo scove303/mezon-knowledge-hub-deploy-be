@@ -1,3 +1,87 @@
+# =====================================================================
+# PROMPT HOI TIEP / CHINH SUA NOI DUNG CU (FOLLOW-UP PROMPT)
+# =====================================================================
+REVISE_SYSTEM_PROMPT = """
+Ban la tro ly AI bien tap tai lieu hoc tap (giong phong cach W3Schools, MDN Web Docs).
+Nguoi dung gui mot cau hoi tiep theo HOAC yeu cau CHINH SUA noi dung cu trong folder tai lieu dang co.
+
+Dua tren tai lieu da tim thay trong folder (kem file_id, tieu de, trich doan), hay xu ly:
+
+1. Neu nguoi dung HOI cau hoi (giai thich, lam ro, tom tat, hoi them kien thuc lien quan):
+   Tra ve JSON duy nhat:
+   {"action": "answer", "text": "Cau tra loi chi tiet, dung trong tam, dua tren tai lieu trong folder (co the bo sung kien thuc chuan neu can)"}
+
+2. Neu nguoi dung yeu cau CHINH SUA / VIET LAI / BO SUNG noi dung cua mot bai hoc cu the
+   (vi du: "sua bai 2 cho ngan gon", "them vi du vao bai 5", "viet lai phan ..."):
+   - Chon file_id cua bai hoc khop nhat voi yeu cau.
+   - Tra ve JSON duy nhat:
+   {"action": "edit", "file_id": "<file_id>", "title": "<tieu de bai hoc>", "content": "<TOAN BO noi dung markdown MOI cua bai hoc, giu nguyen cau truc goc nhung da cai thien theo yeu cau, do dai hop ly>"}
+
+YEU CAU CHUNG:
+- LUON tra ve dung 1 JSON hop le, khong kem bat ky van ban nao ngoai JSON.
+- Voi action "edit": phai viet LAI TOAN BO noi dung bai hoc (khong tra ve doan chap va).
+  Neu yeu cau them noi dung moi khong thuoc bai nao, tao bai moi voi file_id = "new".
+- Voi action "answer": cau tra loi bang dung ngon ngu cua cau hoi.
+"""
+
+# =====================================================================
+# PROMPT TOM TAT FILE / BAI HOC
+# =====================================================================
+SUMMARIZE_SYSTEM_PROMPT = """
+Ban la tro ly AI tom tat tai lieu hoc tap.
+Nguoi dung gui noi dung mot bai hoc (Markdown). Hay tom tat:
+
+1. **Tong quan** (2-3 cau ngan gon): bai nay day gi.
+2. **Cac y chinh**: bullet points ngan, suc tich, giu dung thuat ngu ky thuat.
+3. **Kien thuc quan trong can nho**: toi da 5 gach dau dong.
+4. **Bai tap thuc hanh goi y**: 1-2 goi y ngan (neu co vi du/code trong bai thi bam theo).
+
+YEU CAU:
+- Tra ve thuan Markdown (heading ## cho tung muc), khong kem loi dan ngoai.
+- Viet bang ngon ngu chinh cua tai lieu goc (tieng Viet neu tai lieu tieng Viet).
+- Do dai toi da ~500 tu. KHONG in lai nguyen van noi dung tai lieu.
+"""
+
+# =====================================================================
+# PROMPT: TOM TAT & TU DONG NHOM THANH CAU TRUC FOLDER / TAI LIEU
+# =====================================================================
+SUMMARIZE_AND_GROUP_SYSTEM_PROMPT = """
+Ban la tro ly AI bien soan tai lieu hoc tap. Ban nhan duoc noi dung tho
+trich xuat tu 1 file (pdf/docx/txt) nguoi dung tai len, va co the kem
+theo mot yeu cau tuy chinh (custom prompt) tu nguoi dung.
+
+NHIEM VU:
+1. Doc va hieu noi dung tai lieu duoc cung cap.
+2. Neu co yeu cau tuy chinh tu nguoi dung, uu tien bam sat yeu cau do
+   (vi du: "chi tom tat chuong 2", "chia thanh 5 bai hoc ngan",
+   "tap trung vao phan cong thuc"...).
+3. Tom tat va tu dong NHOM noi dung thanh nhieu "tai lieu bai hoc"
+   (documents) co chu de ro rang, moi tai lieu la 1 phan kien thuc
+   doc lap, mach lac, viet duoi dang Markdown.
+4. Dat 1 ten Folder ngan gon, khai quat toan bo noi dung.
+
+YEU CAU DINH DANG:
+Tra ve DUNG 1 JSON hop le duy nhat, khong kem bat ky van ban nao khac
+ngoai JSON, theo dung cau truc:
+{
+  "folder_name": "Ten khai quat cho toan bo tai lieu",
+  "documents": [
+    {
+      "title": "Tieu de tai lieu/bai hoc 1",
+      "content": "Noi dung markdown day du, co tom tat ro rang, de doc"
+    }
+  ]
+}
+
+LUU Y:
+- So luong "documents" tuy vao do dai & cau truc tu nhien cua tai lieu
+  goc (thuong 1-10 tai lieu), khong co ep chia nho neu noi dung ngan
+  hoac lien mach.
+- Neu noi dung qua ngan hoac khong du y nghia de chia nhom, tra ve
+  dung 1 document duy nhat chua ban tom tat.
+- Giu nguyen cac thuat ngu, so lieu, ten rieng quan trong tu tai lieu goc.
+"""
+
 """
 Domain-aware prompt templates for multi-topic lesson generation.
 Auto-detects domain from topic + context, applies domain-specific style.
@@ -56,7 +140,7 @@ DOMAIN_KEYWORDS = {
         "quan he quoc te", "geopolitics", "dia chinh tri", "triet hoc", "philosophy",
         "dao duc", "logic", "argumentation",
     ],
-"arts_culture_language": [
+    "arts_culture_language": [
         "nghệ thuật", "art", "văn học", "literature", "thơ", "poetry", "tiểu thuyết",
         "novel", "văn hóa", "culture", "di sản", "heritage", "bảo tàng", "museum",
         "âm nhạc", "music", "hòa nhạc", "composition", "hát", "singing", "múa",
@@ -156,76 +240,98 @@ COMMON_LESSON_STRUCTURE = """
 CẤU TRÚC BÀI HỌC BẮT BUỘC (Độ dài: 1.500 - 3.000 từ)
 ==================================================
 
-[MINDMAP_NODE: id="root" | label="[Tên Bài Học]" | parent_id="" | type="main"]
+[MINDMAP_NODE: id="root" | label="**AI: điền tên bài học**" | parent_id="root" | type="main"]
 # [Tên Bài Học]
 
 ---
 
 ## 1. 🎯 Tổng quan & Mục tiêu học tập
-[MINDMAP_NODE: id="sec_1" | label="Tổng quan & Mục tiêu" | parent_id="root" | type="main"]
+[MINDMAP_NODE: id="sec_1" | label="**AI: điền ý chính mục 1**" | parent_id="root" | type="main"]
 
 - **Câu hỏi cốt lõi:** Bài học này giải quyết vấn đề gì? Tại sao quan trọng?
 - **Kết quả học tập:** Sau bài này, người học sẽ làm được gì? (Bloom's taxonomy)
+[MINDMAP_NODE: id="sec_1_objectives" | label="**AI: điền kết quả cụ thể**" | parent_id="sec_1" | type="sub"]
 - **Điều kiện tiên quyết:** Kiến thức/công cụ cần có trước khi bắt đầu.
-
-[MINDMAP_NODE: id="sec_1_objectives" | label="Kết quả học tập" | parent_id="sec_1" | type="sub"]
 
 ---
 
 ## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
-[MINDMAP_NODE: id="sec_2" | label="Kiến thức nền tảng" | parent_id="root" | type="main"]
+[MINDMAP_NODE: id="sec_2" | label="**AI: điền khái niệm then chốt nhất**" | parent_id="root" | type="main"]
 
 - **Định nghĩa & Bản chất:** Giải thích chính xác các khái niệm then chốt.
+[MINDMAP_NODE: id="sec_2_definitions" | label="**AI: điền 1-2 khái niệm cụ thể**" | parent_id="sec_2" | type="sub"]
 - **Nguyên lý/Cơ chế:** Giải thích "tại sao" và "như thế nào" (first principles).
+[MINDMAP_NODE: id="sec_2_principles" | label="**AI: điền nguyên lý cốt lõi**" | parent_id="sec_2" | type="sub"]
 - **Sơ đồ/Mô hình:** Biểu diễn trực quan (bản đồ tư duy, flowchart, mô hình khái niệm).
-[MINDMAP_NODE: id="sec_2_concepts" | label="Các khái niệm then chốt" | parent_id="sec_2" | type="sub"]
+[MINDMAP_NODE: id="sec_2_models" | label="**AI: điền tên mô hình/sơ đồ**" | parent_id="sec_2" | type="sub"]
 
 ---
 
 ## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
-[MINDMAP_NODE: id="sec_3" | label="Quy trình & Framework" | parent_id="root" | type="main"]
+[MINDMAP_NODE: id="sec_3" | label="**AI: điền framework/quy trình chính**" | parent_id="root" | type="main"]
 
 - **Quy trình từng bước (Step-by-step):** 1 → 2 → 3... có checkpoint.
+[MINDMAP_NODE: id="sec_3_steps" | label="**AI: điền tên các bước then chốt**" | parent_id="sec_3" | type="sub"]
 - **Framework/Model áp dụng:** (nếu có) ví dụ: PDCA, SMART, FIRST, DRY, SOLID, v.v.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="**AI: điền tên framework**" | parent_id="sec_3" | type="sub"]
 - **Bảng tham số/Quy tắc quyết định:** (nếu có) ngưỡng, ngân sách, ngưỡng rủi ro.
-[MINDMAP_NODE: id="sec_3_steps" | label="Các bước thực hiện" | parent_id="sec_3" | type="sub"]
 
 ---
 
 ## 4. 💡 Ví dụ minh họa / Case Study thực tế
-[MINDMAP_NODE: id="sec_4" | label="Ví dụ thực tế" | parent_id="root" | type="main"]
+[MINDMAP_NODE: id="sec_4" | label="**AI: điền tên case study/ví dụ**" | parent_id="root" | type="main"]
 
 - **Bối cảnh:** Mô tả tình huống thực tế, ràng buộc, mục tiêu.
+[MINDMAP_NODE: id="sec_4_context" | label="**AI: điền bối cảnh/sự kiện**" | parent_id="sec_4" | type="sub"]
 - **Áp dụng:** Cách dùng kiến thức/framework ở trên để giải quyết.
+[MINDMAP_NODE: id="sec_4_application" | label="**AI: điền cách áp dụng**" | parent_id="sec_4" | type="sub"]
 - **Kết quả & Phân tích:** Đầu ra là gì? Tại sao thành công/thất bại? Lesson learned.
-[MINDMAP_NODE: id="sec_4_case" | label="Phân tích Case Study" | parent_id="sec_4" | type="sub"]
 
 ---
 
 ## 5. ⚠️ Sai lầm thường gặp & Best Practices
-[MINDMAP_NODE: id="sec_5" | label="Sai lầm & Best Practices" | parent_id="root" | type="main"]
+[MINDMAP_NODE: id="sec_5" | label="**AI: điền 1-2 sai lầm/best practice**" | parent_id="root" | type="main"]
 
 - **3-5 Sai lầm phổ biến:** Mô tả sai lầm → Nguyên nhân → Cách khắc phục.
-[MINDMAP_NODE: id="sec_5_pitfalls" | label="Sai lầm thường gặp" | parent_id="sec_5" | type="sub"]
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="**AI: điền sai lầm quan trọng nhất**" | parent_id="sec_5" | type="sub"]
 - **Best Practices / Quy chuẩn:** Checklist, quy tắc vàng, tips từ chuyên gia.
-[MINDMAP_NODE: id="sec_5_best" | label="Best Practices" | parent_id="sec_5" | type="sub"]
+[MINDMAP_NODE: id="sec_5_best" | label="**AI: điền best practice quan trọng**" | parent_id="sec_5" | type="sub"]
 
 ---
 
 ## 6. 🧪 Bài tập thực hành & Tự đánh giá
-[MINDMAP_NODE: id="sec_6" | label="Bài tập thực hành" | parent_id="root" | type="main"]
+[MINDMAP_NODE: id="sec_6" | label="**AI: điền chủ đề bài tập**" | parent_id="root" | type="main"]
 
 - **Bài tập 1 (Áp dụng cơ bản):** Yêu cầu cụ thể + Output kỳ vọng + Gợi ý giải.
-[MINDMAP_NODE: id="sec_6_basic" | label="Bài tập cơ bản" | parent_id="sec_6" | type="sub"]
+[MINDMAP_NODE: id="sec_6_basic" | label="**AI: điền nội dung bài tập**" | parent_id="sec_6" | type="sub"]
 - **Bài tập 2 (Mở rộng/Tư duy phản biện):** Open-ended, what-if, design challenge.
-[MINDMAP_NODE: id="sec_6_advanced" | label="Bài tập nâng cao" | parent_id="sec_6" | type="sub"]
-- **Tự đánh giá:** 3-5 câu hỏi kiểm tra hiểu biết (multiple choice / short answer).
+[MINDMAP_NODE: id="sec_6_advanced" | label="**AI: điền chủ đề bài tập nâng cao**" | parent_id="sec_6" | type="sub"]
 
 ---
 
-YÊU CẦU CHUNG:
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="**AI: điền nguồn quan trọng**" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Docs, RFC, sách giáo khoa, bài báo khoa học.
+[MINDMAP_NODE: id="sec_7_official" | label="**AI: điền tên nguồn cụ thể**" | parent_id="sec_7" | type="sub"]
+
+---
+
+⚠️ QUY TẮC ANCHOR MINDMAP (BẮT BUỘC TUÂN THỦ):
+==================================================
+1. KHÔNG ĐƯỢC GIỮ NGUYÊN label="**AI: ...**". PHẢI THAY BẰNG TỪ KHÓA CỤ THỂ TỪ NỘI DUNG BẠN VỪA VIẾT.
+2. label phải là TỪ KHÓA CỤ THỂ (2-4 từ), KHÔNG phải tên mục chung.
+   ✅ TỐT: "Variables & Data Types", "If/Else & Loops", "List Comprehension", "Decorator Pattern"
+   ❌ KHÔNG: "Định nghĩa then chốt", "Nguyên lý cơ bản", "Các bước thực hiện", "Framework tham khảo"
+3. Mỗi anchor đặt NGAY TRƯỚC đoạn nội dung nó đại diện (heading hoặc bullet point).
+4. CHỈ 1 anchor chính (type="main") mỗi mục lớn (sec_1...sec_7).
+5. CHỈ 1-2 anchor phụ (type="sub") cho khái niệm quan trọng NHẤT trong mục đó.
+6. id giữ nguyên mẫu (sec_1, sec_2_definitions, sec_3_steps, v.v.).
+7. parent_id: "root" cho sec_1..sec_7, hoặc ID của anchor cha.
+
+YÊU CAU CHUNG:
 - Trả về Markdown thuần, KHÔNG bao bọc trong code block.
-- Giữ nguyên các thẻ [MINDMAP_NODE:...] đúng vị trí.
+- Giữ nguyên các thẻ [MINDMAP_NODE:...] đúng vị trí VÀ ĐÃ ĐIỀN ĐÚNG LABEL.
 - Độ dài: 1.500 - 3.000 từ.
 - Ngôn ngữ: Tiếng Việt (hoặc ngôn ngữ của topic).
 - KHÔNG thêm lời dẫn/mô tả ngoài nội dung bài học.
@@ -233,8 +339,6 @@ YÊU CẦU CHUNG:
 
 # ─── Helper Functions ───────────────────────────────────────────────────────
 
-
-import unicodedata
 
 def _normalize_text(text: str) -> str:
     """Remove diacritics and normalize for keyword matching."""
@@ -302,6 +406,7 @@ NGỮ CẢNH THAM KHẢO (Tavily):
 
 ---
 HÃY SOẠN THẢO BÀI HỌC THEO ĐÚNG CẤU TRÚC VÀ PHONG CÁCH TRÊN.
+NHỚ: PHẢI THAY THẾ TẤT CẢ label="**AI: ...**" BẰNG TỪ KHÓA CỤ THỂ TỪ NỘI DUNG BẠN VIẾT!
 """
     return prompt
 
@@ -381,8 +486,8 @@ YÊU CẦU:
 - Với action "edit": content phải là TOÀN BỘ bài học mới, không phải đoạn vởn vẹn.
 """
 
-
 # ─── Summarize Prompt (Domain-Aware) ────────────────────────────────────────
+
 
 def build_summarize_prompt(content: str, domain: DomainType = None) -> str:
     if domain is None:
@@ -401,7 +506,7 @@ Hãy tóm tắt nội dung bài học sau theo cấu trúc:
 3. **Kiến thức quan trọng cần nhớ** (tối đa 5 gạch đầu dòng).
 4. **Bài tập thực hành gợi ý** (1-2 ý ngắn, nếu có ví dụ/code thì bám theo).
 
-YÊU CẦU:
+YÊU CAU:
 - Trả về Markdown (heading ## cho từng mục).
 - Không lặp lại nguyên văn.
 - Độ dài tối đa ~500 từ.
@@ -410,7 +515,6 @@ YÊU CẦU:
 NỘI DUNG CẦN TÓM TẮT:
 {content}
 """
-
 
 # ─── Export ─────────────────────────────────────────────────────────────────
 

@@ -300,46 +300,71 @@ export default function FileViewer({
     return () => cancelAnimationFrame(frame);
   }, [file?.id]);
 
-  // Tìm kiếm từ sidebar → nhảy tới từ khóa đầu tiên khớp + highlight tạm thời
+  // Tìm kiếm / Nhảy tới vị trí từ khóa từ Mindmap hoặc Sidebar
   useEffect(() => {
     if (!file?.id || isEditing) return;
-    const q = (store.searchQuery || "").trim().toLowerCase();
-    if (!q) return;
-    if (!(file.content || "").toLowerCase().includes(q)) return;
+    const rawQ = (store.searchQuery || "").trim();
+    if (!rawQ) return;
     const panel = docPanelRef.current;
     const article = panel?.querySelector("article");
     if (!article) return;
 
-    const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT);
-    let targetNode = null;
-    while (walker.nextNode()) {
-      if ((walker.currentNode.nodeValue || "").toLowerCase().includes(q)) {
-        targetNode = walker.currentNode;
-        break;
+    // Danh sách từ khóa ưu tiên: 1. Nguyên văn -> 2. Cụm 3 từ -> 3. Từ dài nhất
+    const searchTerms = [rawQ.toLowerCase()];
+    const cleanWords = rawQ
+      .replace(/[*_`#>|()\[\]]+/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length >= 3);
+
+    if (cleanWords.length > 2) {
+      for (let i = 0; i <= cleanWords.length - 2; i++) {
+        searchTerms.push(cleanWords.slice(i, i + 3).join(" ").toLowerCase());
       }
     }
-    if (!targetNode) return;
+    cleanWords.sort((a, b) => b.length - a.length);
+    cleanWords.slice(0, 3).forEach((w) => searchTerms.push(w.toLowerCase()));
+
+    let targetNode = null;
+    let matchedTerm = "";
+
+    for (const term of searchTerms) {
+      if (!term || term.length < 2) continue;
+      const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) {
+        const val = (walker.currentNode.nodeValue || "").toLowerCase();
+        if (val.includes(term)) {
+          targetNode = walker.currentNode;
+          matchedTerm = term;
+          break;
+        }
+      }
+      if (targetNode) break;
+    }
+
+    if (!targetNode || !matchedTerm) return;
 
     const full = targetNode.nodeValue || "";
-    const idx = full.toLowerCase().indexOf(q);
+    const idx = full.toLowerCase().indexOf(matchedTerm);
     if (idx === -1) return;
 
     const mark = document.createElement("mark");
     mark.className =
-      "bg-amber-400/40 text-[rgb(var(--color-text-primary))] rounded px-0.5";
+      "bg-amber-400/40 text-[rgb(var(--color-text-primary))] rounded px-1 py-0.5 font-medium transition-all shadow-sm";
     const range = document.createRange();
     range.setStart(targetNode, idx);
-    range.setEnd(targetNode, idx + q.length);
+    range.setEnd(targetNode, idx + matchedTerm.length);
     range.surroundContents(mark);
     mark.scrollIntoView({ behavior: "smooth", block: "center" });
 
     const fade = setTimeout(() => {
-      mark.style.transition = "background-color 700ms ease";
+      mark.style.transition = "background-color 1000ms ease, color 1000ms ease";
       mark.style.backgroundColor = "transparent";
-    }, 3000);
+    }, 3500);
     return () => {
       clearTimeout(fade);
-      mark.replaceWith(document.createTextNode(full));
+      try {
+        mark.replaceWith(document.createTextNode(full));
+      } catch {}
     };
   }, [file?.id, file?.content, isEditing, store.searchQuery]);
 

@@ -12,7 +12,7 @@ class KnowledgeFile(SQLModel, table=True):
     __tablename__ = "knowledge_files"
 
     id: str = Field(primary_key=True, max_length=50)
-    folder_id: str = Field(foreign_key="folders.id", index=True,ondelete="CASCADE")
+    folder_id: str = Field(foreign_key="folders.id", index=True, ondelete="CASCADE")
     name: str = Field(max_length=255)
     summary: Optional[str] = Field(default="", max_length=500)
     markdown_content: str = Field(sa_column=Column(Text, nullable=False, default=""))
@@ -23,6 +23,16 @@ class KnowledgeFile(SQLModel, table=True):
     updated_at: datetime = Field(default_factory=datetime.utcnow)
 
     folder: Optional["Folder"] = Relationship(back_populates="files")
+
+
+class FileLink(SQLModel, table=True):
+    """Obsidian-style bidirectional file links."""
+    __tablename__ = "file_links"
+
+    source_file_id: str = Field(foreign_key="knowledge_files.id", primary_key=True)
+    target_file_id: str = Field(foreign_key="knowledge_files.id", primary_key=True)
+    link_type: str = Field(default="reference")  # "reference", "see_also", "parent", "child"
+    created_at: datetime = Field(default_factory=datetime.utcnow)
 
 
 class FileRevision(SQLModel, table=True):
