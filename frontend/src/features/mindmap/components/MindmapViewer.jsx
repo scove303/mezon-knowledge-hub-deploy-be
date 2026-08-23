@@ -11,14 +11,16 @@ import { toPng } from 'html-to-image';
 import { Loader2, Network, RefreshCw, SplitSquareHorizontal, Orbit, FileQuestion, ImageDown } from 'lucide-react';
 import MindmapNode from './MindmapNode';
 import KineticGrid from '@/components/ui/kinetic-grid';
-import { getMindmapData } from '../services';
-import { buildTree, layoutHorizontal, layoutRadial } from '../layout';
+import { getMindmapData, getConceptMindmap, regenerateConceptMindmap } from '../services';
+import { buildTree, buildConceptTree, layoutHorizontal, layoutRadial } from '../layout';
 
 const nodeTypes = { mindmapNode: MindmapNode };
 
 export default function MindmapViewer({ folderId, onOpenLesson }) {
   const [data, setData] = useState(null);
+  const [isConceptData, setIsConceptData] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [regenerating, setRegenerating] = useState(false);
   const [error, setError] = useState('');
   const [layoutKind, setLayoutKind] = useState('horizontal');
   const [flowKey, setFlowKey] = useState(0);
@@ -30,14 +32,31 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
     let cancelled = false;
     (async () => {
       try {
+        setLoading(true);
+        // Ưu tiên 1: Thử lấy Concept Mindmap từ backend (có AI + cache)
+        const conceptRes = await getConceptMindmap(folderId);
+        if (!cancelled && conceptRes && conceptRes.root) {
+          setData(conceptRes);
+          setIsConceptData(true);
+          setError('');
+          setLoading(false);
+          return;
+        }
+      } catch (err) {
+        console.warn('Lỗi lấy Concept Mindmap, chuyển sang Fallback legacy:', err);
+      }
+
+      // Fallback: Lấy dữ liệu bài học cũ (File/Section based)
+      try {
         const mindmapData = await getMindmapData(folderId);
         if (!cancelled) {
           setData(mindmapData);
+          setIsConceptData(false);
           setError('');
           setLoading(false);
         }
       } catch (err) {
-        console.error('Lỗi tải dữ liệu mindmap:', err);
+        console.error('Lỗi tải dữ liệu mindmap legacy:', err);
         if (!cancelled) {
           setError('Không thể tải dữ liệu sơ đồ tư duy. Vui lòng thử lại.');
           setLoading(false);
@@ -60,6 +79,22 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
     setRefreshKey((k) => k + 1);
   };
 
+  const handleRegenerate = async () => {
+    try {
+      setRegenerating(true);
+      const newConceptData = await regenerateConceptMindmap(folderId);
+      if (newConceptData && newConceptData.root) {
+        setData(newConceptData);
+        setIsConceptData(true);
+        setFlowKey((k) => k + 1);
+      }
+    } catch (err) {
+      console.error('Lỗi tạo lại mindmap:', err);
+    } finally {
+      setRegenerating(false);
+    }
+  };
+
   const exportPng = useCallback(async () => {
     const el = document.querySelector('.mindmap-canvas .react-flow');
     if (!el) return;
@@ -79,9 +114,15 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
 
   const graph = useMemo(() => {
     if (!data) return null;
-    const tree = buildTree(data.folderName, data.files);
+    let tree = null;
+    if (isConceptData) {
+      tree = buildConceptTree(data);
+    } else {
+      tree = buildTree(data.folderName, data.files);
+    }
+    if (!tree) return null;
     return layoutKind === 'radial' ? layoutRadial(tree) : layoutHorizontal(tree);
-  }, [data, layoutKind]);
+  }, [data, isConceptData, layoutKind]);
 
   const childMap = useMemo(() => {
     const map = {};
@@ -175,8 +216,13 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
   );
 
   const onNodeClick = useCallback(
-    (_, node) => {
-      if (node.data?.fileId && onOpenLesson) onOpenLesson(node.data.fileId);
+    (_, flowNode) => {
+      const nodeObj = flowNode.data?.node;
+      const fileId = nodeObj?.fileId || flowNode.data?.fileId;
+      const query = nodeObj?.excerpt || nodeObj?.label || '';
+      if (onOpenLesson) {
+        onOpenLesson(fileId, query, nodeObj);
+      }
     },
     [onOpenLesson],
   );
@@ -257,7 +303,11 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
     );
   }
 
-  if (!data || data.files.length === 0) {
+  const hasContent = isConceptData
+    ? Boolean(data?.root?.label)
+    : Boolean(data?.files && data.files.length > 0);
+
+  if (!data || !hasContent) {
     return (
       <div className="flex-1 flex items-center justify-center text-[rgb(var(--color-text-muted))] p-8">
         <div className="flex flex-col items-center gap-3 text-center max-w-xs">
@@ -271,6 +321,10 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
     );
   }
 
+  const countLabel = isConceptData
+    ? `${data?.root?.children?.length || 0} nhánh ý tưởng`
+    : `${data?.files?.length || 0} bài học`;
+
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <div className="flex items-center justify-between px-4 py-2 border-b border-[rgb(var(--color-border))] shrink-0">
@@ -278,7 +332,7 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
           <Network size={16} className="text-indigo-400" />
           Sơ đồ tư duy
           <span className="text-[11px] font-normal text-[rgb(var(--color-text-muted))]">
-            ({data.files.length} bài học)
+            ({countLabel})
           </span>
         </div>
         <div className="flex items-center gap-1.5">
@@ -307,6 +361,15 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
             Tròn
           </button>
           <button
+            onClick={handleRegenerate}
+            disabled={regenerating}
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-600/30 transition-colors disabled:opacity-50"
+            title="AI Tạo lại sơ đồ ý tưởng mới"
+          >
+            <RefreshCw size={13} className={regenerating ? "animate-spin" : ""} />
+            {regenerating ? "Đang tạo lại..." : "Tạo lại AI"}
+          </button>
+          <button
             onClick={exportPng}
             className="p-1.5 rounded-lg text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] hover:text-indigo-400 transition-colors"
             title="Xuất ảnh PNG"
@@ -316,7 +379,7 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
           <button
             onClick={refresh}
             className="p-1.5 rounded-lg text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] hover:text-indigo-400 transition-colors"
-            title="Làm mới sơ đồ"
+            title="Tải lại từ bộ nhớ tạm"
           >
             <RefreshCw size={15} />
           </button>

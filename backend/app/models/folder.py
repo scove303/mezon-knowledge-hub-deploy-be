@@ -21,6 +21,7 @@ class Folder(SQLModel, table=True):
     type: str = Field(default="general", max_length=20)
     user_id: int = Field(foreign_key="users.id", index=True)
     created_at: datetime = Field(default_factory=datetime.utcnow)
+    order_index: int = Field(default=0)
 
     # Hierarchical structure
     parent_id: Optional[str] = Field(foreign_key="folders.id", index=True, default=None)
@@ -30,6 +31,7 @@ class Folder(SQLModel, table=True):
     files: List["KnowledgeFile"] = Relationship(back_populates="folder", cascade_delete=True)
     root_entry: Optional["FolderRoot"] = Relationship(back_populates="folder", cascade_delete=True)
     prompt_embedding: Optional[str] = Field(default=None, sa_type=JSON)
+    mindmap_json: Optional[str] = Field(default=None)  # Cached AI-generated concept mindmap
 
     # Hierarchical relationships
     parent: Optional["Folder"] = Relationship(

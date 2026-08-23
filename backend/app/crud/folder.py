@@ -17,7 +17,7 @@ def get_folders_by_user(session: Session, user_id: int) -> list[Folder]:
         select(Folder)
         .where(Folder.user_id == user_id)
         .options(selectinload(Folder.files))
-        .order_by(Folder.created_at)
+        .order_by(Folder.order_index, Folder.created_at)
     )
     folders = list(session.exec(statement).all())
     for folder in folders:
@@ -106,6 +106,27 @@ def rename_folder(
     session.refresh(folder)
     
     return folder
+
+
+def reorder_folders(
+    session: Session, folder_ids: list[str], user_id: int
+) -> list[Folder]:
+    """Cập nhật order_index cho các folder theo thứ tự mới."""
+    folders = session.exec(
+        select(Folder).where(Folder.id.in_(folder_ids), Folder.user_id == user_id)
+    ).all()
+    
+    folder_map = {f.id: f for f in folders}
+    
+    for index, folder_id in enumerate(folder_ids):
+        if folder_id in folder_map:
+            folder_map[folder_id].order_index = index
+            session.add(folder_map[folder_id])
+    
+    session.commit()
+    
+    # Return folders in new order
+    return [folder_map[fid] for fid in folder_ids if fid in folder_map]
 
 
 # =====================================================================

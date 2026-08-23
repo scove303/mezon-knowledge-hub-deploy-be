@@ -43,6 +43,15 @@ export const useWorkspaceStore = create((set, get) => ({
   setSearch: (query) => set({ searchQuery: query }),
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
+  setFolderOrder: (folderIds) =>
+    set((state) => {
+      const folderMap = new Map(state.folders.map((f) => [f.id, f]));
+      const reordered = folderIds
+        .map((id) => folderMap.get(id))
+        .filter(Boolean);
+      const remaining = state.folders.filter((f) => !folderIds.includes(f.id));
+      return { folders: [...reordered, ...remaining] };
+    }),
 
   // Multiselect Setters
   toggleFileSelection: (id) =>

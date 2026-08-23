@@ -8,7 +8,7 @@ import FileViewer from '@/features/files/components/FileViewer';
 import ResizeHandle from '@/components/common/ResizeHandle';
 import dynamic from 'next/dynamic';
 import { useEffect, useState, use, useRef } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { MessageProps } from '@/components/chat/ChatMessage';
 import { PanelRightClose, PanelRight, Network, FileText, Upload, Loader2, Download, X } from 'lucide-react';
 import { useToastStore } from '@/stores/toast';
@@ -47,6 +47,8 @@ export default function FolderPage({
   const resolvedParams = params instanceof Promise ? use(params) : params;
   const folderId = resolvedParams.folderId;
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const viewParam = searchParams.get('view');
 
   const {
     folders,
@@ -72,9 +74,7 @@ export default function FolderPage({
   const [isExporting, setIsExporting] = useState(false);
   const isMobile = useMediaQuery('(max-width: 767px)');
   const [showMindmap, setShowMindmap] = useState(
-    () =>
-      typeof window !== "undefined" &&
-      new URLSearchParams(window.location.search).get("view") === "mindmap",
+    () => viewParam === "mindmap",
   );
   const [messages, setMessages] = useState<MessageProps[]>([
     {
@@ -85,7 +85,7 @@ export default function FolderPage({
     },
   ]);
 
-  const folder = folders.find((f: any) => f.id === folderId);
+  const folder = folders.find((f: any) => String(f.id) === String(folderId));
 
   // useEffect (1): Tự động mở Sidebar khi vào phòng chat
   useEffect(() => {
@@ -96,7 +96,14 @@ export default function FolderPage({
     }
   }, [folderId, router, setSidebarOpen]);
 
-  // Deep-link: /dashboard/folders/:id?view=mindmap → mở sẵn khung tài liệu
+  // Deep-link: /dashboard/folders/:id?view=mindmap → mở sẵn khung tài liệu và sơ đồ tư duy
+  useEffect(() => {
+    if (viewParam === "mindmap") {
+      setShowMindmap(true);
+      setDocumentSideOpen(true);
+    }
+  }, [viewParam, setDocumentSideOpen]);
+
   useEffect(() => {
     if (!showMindmap) return;
     const t = setTimeout(() => setDocumentSideOpen(true), 0);
@@ -460,6 +467,22 @@ export default function FolderPage({
               onChange={handleUploadChange}
             />
             <button
+              onClick={() => {
+                const next = !showMindmap;
+                setShowMindmap(next);
+                if (next) setDocumentSideOpen(true);
+              }}
+              className={`p-1.5 hover:bg-[rgb(var(--color-surface-2))] rounded-lg transition-colors ${
+                showMindmap && isDocumentSideOpen
+                  ? "text-indigo-400 bg-indigo-500/10"
+                  : "text-[rgb(var(--color-text-secondary))]"
+              }`}
+              title={showMindmap ? "Đóng sơ đồ tư duy" : "Xem sơ đồ tư duy"}
+              aria-label={showMindmap ? "Đóng sơ đồ tư duy" : "Xem sơ đồ tư duy"}
+            >
+              <Network size={20} />
+            </button>
+            <button
               onClick={toggleDocumentSide}
               className="p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors"
               title="Bật/Tắt cửa sổ tài liệu"
@@ -531,9 +554,35 @@ export default function FolderPage({
         {showMindmap ? (
           <MindmapViewer
             folderId={folderId}
-            onOpenLesson={(fileId: string) => {
+            onOpenLesson={(fileId: string, query?: string) => {
+              let targetFileId = fileId;
+
+              // Nếu chưa có fileId trực tiếp (node concept tổng quát), tìm file chứa từ khóa trong folder
+              if (!targetFileId && query && folder?.files?.length) {
+                const queryLower = query.toLowerCase();
+                const matched = folder.files.find((f: any) =>
+                  String(f.name || '').toLowerCase().includes(queryLower) ||
+                  String(f.markdown_content || '').toLowerCase().includes(queryLower)
+                );
+                if (matched) {
+                  targetFileId = matched.id;
+                }
+              }
+
+              // Nếu vẫn chưa tìm được, lấy file đầu tiên của folder
+              if (!targetFileId && folder?.files?.length) {
+                targetFileId = folder.files[0].id;
+              }
+
+              // Đặt searchQuery trong store để FileViewer tự động scroll & highlight từ khóa
+              if (query) {
+                useWorkspaceStore.getState().setSearch(query);
+              }
+
               setShowMindmap(false);
-              setSelectedFile(fileId);
+              if (targetFileId) {
+                setSelectedFile(targetFileId);
+              }
               setDocumentSideOpen(true);
             }}
           />

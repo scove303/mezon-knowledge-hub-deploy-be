@@ -1,7 +1,7 @@
 """add order_index to knowledge_files table
 
 Revision ID: a1b2c3d4e5f6
-Revises: 3185770ec2a5
+Revises: 
 Create Date: 2026-08-12 00:00:00.000000
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = 'a1b2c3d4e5f6'
-down_revision: Union[str, Sequence[str], None] = '3185770ec2a5'
+down_revision: Union[str, Sequence[str], None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
