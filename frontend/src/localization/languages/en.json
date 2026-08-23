@@ -1,8 +1,13 @@
 {
   "sidebar": {
-    "fileList": {
+    "file_list": {
       "header": "Directory List Of",
       "version": "Test Version"
+    },
+    "empty_file_list": {
+      "header": "No documents yet",
+      "body": "Create the first document or nhập chủ đề muốn học vào khung chat để AI biên soạn lộ trình.",
+      "button": "Create new document"
     }
   },
   "searchBar": {
@@ -22,9 +27,24 @@
     "vietnamese": "Vietnamese"
   },
   "dashboard": {
-    "title": "Hello, what do you want to learn today?",
-    "subtitle": "Explore the Mezon Knowledge Hub",
-    "placeholder": "Ask a question, paste a YouTube link, or upload a document..."
+    "chat": {
+      "title": "Hello, what do you want to learn today?",
+      "subtitle": "Explore the Mezon Knowledge Hub",
+      "placeholder": "Ask a question, paste a YouTube link, or upload a document..."
+    },
+    "getting_started_banner": {
+      "header": "Start your learning journey",
+      "body": "\nEnter the topic you want to learn (e.g., \"Python roadmap for beginners\") into the chat box below—the AI \u200B\u200Bwill automatically compile a roadmap, break it down into lessons, and save it to a folder for you."
+    },
+    "roadmap_folder": "Roadmap folders",
+    "learning_materials": "Learning materials",
+    "lecture_videos": "Lecture videos",
+    "completed_lessons": "Completed lessons",
+    "streak": "consecutive days",
+    "recent_folders": {
+      "header": "Recent documents",
+      "no_recent_documents": "There's no documents yet — create your first roadmap in the chat bar below!"
+    }
   },
   "login": {
     "header": "Login into your knowledge zone",
