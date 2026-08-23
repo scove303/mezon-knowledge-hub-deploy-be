@@ -11,7 +11,11 @@
     }
   },
   "searchBar": {
-    "placeholder": "Tìm kếm tài liệu..."
+    "placeholder": "Tìm kếm tài liệu...",
+    "no_documents_found": {
+      "header": "Không tim thấy kết quả",
+      "body": "Không có thư mục tài liệu nào khớp với "
+    }
   },
   "theme": {
     "header": "Giao diện: ",

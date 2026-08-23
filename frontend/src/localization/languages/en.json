@@ -11,7 +11,11 @@
     }
   },
   "searchBar": {
-    "placeholder": "Search for documents..."
+    "placeholder": "Search for documents...",
+    "no_documents_found": {
+      "header": "No result found",
+      "body": "No documents matches with "
+    }
   },
   "theme": {
     "header": "Theme: ",

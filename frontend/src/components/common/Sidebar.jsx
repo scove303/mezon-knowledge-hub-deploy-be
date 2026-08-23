@@ -813,10 +813,10 @@ export default function Sidebar() {
             searchQuery ? (
               <div className="text-center py-6 px-4">
                 <div className="text-sm font-medium text-[rgb(var(--color-text-secondary))]">
-                  Không tìm thấy kết quả
+                  {currentText.searchBar.no_documents_found.header}
                 </div>
                 <div className="text-xs text-[rgb(var(--color-text-muted))] mt-1">
-                  Không có thư mục/tài liệu nào khớp với &quot;{searchQuery}&quot;
+                  {currentText.searchBar.no_documents_found.body} &quot;{searchQuery}&quot;
                 </div>
               </div>
             ) : (
