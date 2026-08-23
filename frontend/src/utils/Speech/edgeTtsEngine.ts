@@ -94,8 +94,6 @@ export const speakWithEdgeTtsQueue = async (
 
   const isMicrosoftVoice = voice.startsWith("vi-VN-");
 
-  const isMicrosoftVoice = voice.startsWith("vi-VN-");
-
   for (let i = 0; i < chunks.length; i++) {
     if (isCancelled) return false;
 

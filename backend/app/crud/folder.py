@@ -1,11 +1,15 @@
 import uuid
-from typing import Optional
+from typing import Optional, List
+from collections import deque
 
 from sqlmodel import Session, select
+from sqlalchemy.orm import selectinload
 
 from app.models.folder import Folder, FolderRoot
+from app.models.knowledge_file import KnowledgeFile, FileLink, FileRevision
 from app.schemas.folder import FolderCreate
 from sqlalchemy.orm import selectinload
+from sqlalchemy import func
 
 
 def get_folders_by_user(session: Session, user_id: int) -> list[Folder]:
@@ -102,3 +106,295 @@ def rename_folder(
     session.refresh(folder)
     
     return folder
+
+
+# =====================================================================
+# Hierarchical Folder Operations
+# =====================================================================
+
+def create_subfolder(
+    session: Session, 
+    parent_id: str, 
+    data: FolderCreate, 
+    user_id: int
+) -> Optional[Folder]:
+    """Tạo subfolder dưới folder cha."""
+    parent = get_folder(session, parent_id, user_id)
+    if not parent:
+        return None
+    
+    # Validate depth constraint
+    if parent.depth >= 4:
+        return None
+    
+    subfolder = Folder(
+        id=f"folder-{uuid.uuid4().hex[:8]}",
+        name=data.name,
+        type=data.type,
+        user_id=user_id,
+        parent_id=parent.id,
+        depth=parent.depth + 1,
+    )
+    session.add(subfolder)
+    session.commit()
+    session.refresh(subfolder)
+    return subfolder
+
+
+def get_folder_tree(
+    session: Session, 
+    folder_id: str, 
+    user_id: int,
+    max_depth: int = 4
+) -> Optional[Folder]:
+    """Lấy cây thư mục đệ quy đến độ sâu max_depth."""
+    folder = get_folder(session, folder_id, user_id)
+    if not folder:
+        return None
+    
+    # Load children recursively
+    _load_children(session, folder, user_id, max_depth, 0)
+    return folder
+
+
+def _load_children(
+    session: Session, 
+    folder: Folder, 
+    user_id: int, 
+    max_depth: int, 
+    current_depth: int
+) -> None:
+    """Đệ quy load children của folder."""
+    if current_depth >= max_depth:
+        return
+    
+    children = session.exec(
+        select(Folder)
+        .where(Folder.parent_id == folder.id, Folder.user_id == user_id)
+        .options(selectinload(Folder.files))
+        .order_by(Folder.created_at)
+    ).all()
+    
+    folder.children = children
+    
+    for child in children:
+        child.files.sort(key=lambda f: (f.order_index, f.created_at, f.id))
+        _load_children(session, child, user_id, max_depth, current_depth + 1)
+
+
+def get_breadcrumb_path(session: Session, folder_id: str, user_id: int) -> List[Folder]:
+    """Lấy đường dẫn từ root đến folder hiện tại (breadcrumb)."""
+    path = []
+    current_id = folder_id
+    
+    while current_id:
+        folder = get_folder(session, current_id, user_id)
+        if not folder:
+            break
+        path.insert(0, folder)
+        current_id = folder.parent_id
+    
+    return path
+
+
+def get_max_descendant_depth(session: Session, folder_id: str, user_id: int) -> int:
+    """Lấy độ sâu lớn nhất của các con cháu (để validate move)."""
+    max_depth = 0
+    
+    def _check_depth(folder_id: str, current_depth: int) -> int:
+        children = session.exec(
+            select(Folder).where(Folder.parent_id == folder_id, Folder.user_id == user_id)
+        ).all()
+        if not children:
+            return current_depth
+        max_child = current_depth
+        for child in children:
+            child_depth = _check_depth(child.id, current_depth + 1)
+            max_child = max(max_child, child_depth)
+        return max_child
+    
+    return _check_depth(folder_id, 0)
+
+
+def move_folder(
+    session: Session,
+    folder_id: str,
+    new_parent_id: Optional[str],
+    user_id: int
+) -> Optional[Folder]:
+    """Di chuyển folder sang parent mới (validate depth <= 4)."""
+    folder = get_folder(session, folder_id, user_id)
+    if not folder:
+        return None
+    
+    # Validate: không được move vào chính mình hoặc con cháu
+    if new_parent_id == folder_id:
+        return None
+    
+    # Kiểm tra circular reference
+    if new_parent_id:
+        current = new_parent_id
+        while current:
+            if current == folder_id:
+                return None  # Circular reference
+            parent = get_folder(session, current, user_id)
+            current = parent.parent_id if parent else None
+    
+    new_parent = None
+    if new_parent_id:
+        new_parent = get_folder(session, new_parent_id, user_id)
+        if not new_parent:
+            return None
+        
+        # Validate depth
+        max_descendant = get_max_descendant_depth(session, folder_id, user_id)
+        if new_parent.depth + 1 + get_max_descendant_depth(session, folder_id, user_id) > 4:
+            return None
+    
+    # Cập nhật parent_id và depth
+    old_parent_id = folder.parent_id
+    old_depth = folder.depth
+    folder.parent_id = new_parent.id if new_parent else None
+    folder.depth = new_parent.depth + 1 if new_parent else 0
+    
+    # Cập nhật depth cho con cháu
+    def _update_children_depth(folder_id: str, new_depth: int):
+        children = session.exec(
+            select(Folder).where(Folder.parent_id == folder_id, Folder.user_id == user_id)
+        ).all()
+        for child in children:
+            child.depth = new_depth
+            session.add(child)
+            _update_children_depth(child.id, new_depth + 1)
+    
+    _update_children_depth(folder_id, folder.depth + 1)
+    
+    session.add(folder)
+    session.commit()
+    session.refresh(folder)
+    return folder
+
+
+# =====================================================================
+# File Linking Operations (Obsidian-style)
+# =====================================================================
+
+def create_file_link(
+    session: Session,
+    source_file_id: str,
+    target_file_id: str,
+    user_id: int,
+    link_type: str = "reference"
+) -> Optional[FileLink]:
+    """Tạo link hai chiều giữa 2 file (Obsidian-style)."""
+    # Verify both files belong to user
+    from app.models.knowledge_file import KnowledgeFile
+    
+    source = session.exec(
+        select(KnowledgeFile)
+        .where(KnowledgeFile.id == source_file_id)
+        .join(Folder, KnowledgeFile.folder_id == Folder.id)
+        .where(Folder.user_id == user_id)
+    ).first()
+    
+    target = session.exec(
+        select(KnowledgeFile)
+        .where(KnowledgeFile.id == target_file_id)
+        .join(Folder, KnowledgeFile.folder_id == Folder.id)
+        .where(Folder.user_id == user_id)
+    ).first()
+    
+    if not source or not target:
+        return None
+    
+    if source_file_id == target_file_id:
+        return None
+    
+    # Create bidirectional links
+    link1 = FileLink(
+        source_file_id=source_file_id,
+        target_file_id=target_file_id,
+        link_type=link_type,
+    )
+    link2 = FileLink(
+        source_file_id=target_file_id,
+        target_file_id=source_file_id,
+        link_type=link_type,
+    )
+    
+    session.add(link1)
+    session.add(link2)
+    session.commit()
+    session.refresh(link1)
+    return link1
+
+
+def remove_file_link(
+    session: Session,
+    source_file_id: str,
+    target_file_id: str,
+    user_id: int
+) -> bool:
+    """Xóa link giữa 2 file (cả 2 chiều)."""
+    links = session.exec(
+        select(FileLink).where(
+            ((FileLink.source_file_id == source_file_id) & (FileLink.target_file_id == target_file_id)) |
+            ((FileLink.source_file_id == target_file_id) & (FileLink.target_file_id == source_file_id))
+        )
+    ).all()
+    
+    if not links:
+        return False
+    
+    for link in links:
+        session.delete(link)
+    session.commit()
+    return True
+
+
+def get_file_links(
+    session: Session,
+    file_id: str,
+    user_id: int
+) -> List[FileLink]:
+    """Lấy tất cả outgoing links của file."""
+    from app.models.knowledge_file import KnowledgeFile
+    
+    # Verify ownership
+    file = session.exec(
+        select(KnowledgeFile)
+        .where(KnowledgeFile.id == file_id)
+        .join(Folder, KnowledgeFile.folder_id == Folder.id)
+        .where(Folder.user_id == user_id)
+    ).first()
+    
+    if not file:
+        return []
+    
+    return session.exec(
+        select(FileLink).where(FileLink.source_file_id == file_id)
+    ).all()
+
+
+def get_file_backlinks(
+    session: Session,
+    file_id: str,
+    user_id: int
+) -> List[FileLink]:
+    """Lấy tất cả incoming links (backlinks) của file."""
+    from app.models.knowledge_file import KnowledgeFile
+    
+    # Verify ownership
+    file = session.exec(
+        select(KnowledgeFile)
+        .where(KnowledgeFile.id == file_id)
+        .join(Folder, KnowledgeFile.folder_id == Folder.id)
+        .where(Folder.user_id == user_id)
+    ).first()
+    
+    if not file:
+        return []
+    
+    return session.exec(
+        select(FileLink).where(FileLink.target_file_id == file_id)
+    ).all()
