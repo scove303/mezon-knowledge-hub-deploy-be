@@ -63,7 +63,7 @@ import {
 const MINDMAP_ANCHOR_RE = /\[MINDMAP_NODE:[^\]]+\]\s*\n?/g;
 
 function stripMindmapAnchors(content) {
-  return content ? content.replace(MINDMAP_ANCHOR_RE, '') : content;
+  return content ? content.replace(MINDMAP_ANCHOR_RE, "") : content;
 }
 
 // Timer hoãn xóa (module scope để React Compiler không chặn việc modify trong handler)
@@ -92,8 +92,6 @@ export default function FileViewer({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showTtsSettings, setShowTtsSettings] = useState(false);
   const [speechRate, setSpeechRate] = useState(1.0);
-  const [useCloudNeural, setUseCloudNeural] = useState(true);
-  const [ttsVoice, setTtsVoice] = useState("vi-VN-HoaiMyNeural");
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(file ? file.content : "");
   const [seekTime, setSeekTime] = useState(0);
@@ -318,7 +316,12 @@ export default function FileViewer({
 
     if (cleanWords.length > 2) {
       for (let i = 0; i <= cleanWords.length - 2; i++) {
-        searchTerms.push(cleanWords.slice(i, i + 3).join(" ").toLowerCase());
+        searchTerms.push(
+          cleanWords
+            .slice(i, i + 3)
+            .join(" ")
+            .toLowerCase(),
+        );
       }
     }
     cleanWords.sort((a, b) => b.length - a.length);
@@ -764,7 +767,7 @@ export default function FileViewer({
       setIsSpeaking(true);
       speakContent(file.content, () => {
         setIsSpeaking(false);
-      }, ttsVoice);
+      });
     }
   };
 
@@ -1241,7 +1244,7 @@ export default function FileViewer({
             {/* Tốc độ đọc */}
             <div className="flex items-center space-x-2">
               <span className="text-[rgb(var(--color-text-muted))] font-medium">
-                Tốc độ:
+                Tốc độ đọc Google Dịch:
               </span>
               {[0.8, 1.0, 1.25, 1.5].map((rate) => (
                 <button
@@ -1259,39 +1262,12 @@ export default function FileViewer({
             </div>
 
             {/* Chế độ Giọng Neural Cloud vs Local */}
-            <div className="flex items-center space-x-2">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-[rgb(var(--color-text-muted))] font-medium">
-                Giọng AI Neural (Edge):
-              </span>
-              <input
-                type="checkbox"
-                checked={useCloudNeural}
-                onChange={(e) => handleCloudToggle(e.target.checked)}
-                className="rounded border-[rgb(var(--color-border))] bg-[rgb(var(--color-bg))] text-indigo-600 focus:ring-0 cursor-pointer"
-              />
-            </div>
 
-            {/* Chọn giọng đọc */}
-            <div className="flex items-center space-x-2">
-              <Mic className="w-3.5 h-3.5 text-emerald-400" />
-              <span className="text-[rgb(var(--color-text-muted))] font-medium">
-                Giọng:
-              </span>
-              <select
-                value={ttsVoice}
-                onChange={(e) => handleVoiceChange(e.target.value)}
-                className="rounded border-[rgb(var(--color-border))] bg-[rgb(var(--color-bg))] text-[rgb(var(--color-text-primary))] text-xs px-2 py-0.5 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
-              >
-                <option value="vi-VN-HoaiMyNeural">Microsoft - Nữ (Hoài My)</option>
-                <option value="vi-VN-NamMinhNeural">Microsoft - Nam (Nam Minh)</option>
-                <option value="google-translate">Google Translate TTS</option>
-              </select>
-            </div>
+            {/* Chọn giọng đọc trong Bảng cấu hình */}
           </div>
 
           <span className="text-[10px] text-[rgb(var(--color-text-muted))] italic">
-            Tự động làm sạch Markdown & dịch chuyển công thức LaTeX
+            Đang sử dụng Google Translate TTS (Giọng Nữ chuẩn)
           </span>
         </div>
       )}
