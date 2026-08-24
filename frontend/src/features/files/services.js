@@ -1,4 +1,4 @@
-import axiosInstance from '@/libs/axios';
+import axiosInstance from "@/libs/axios";
 
 export const fileService = {
   async getFile(id) {
