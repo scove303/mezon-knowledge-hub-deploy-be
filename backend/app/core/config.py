@@ -63,6 +63,18 @@ class Settings(BaseSettings):
     DEEPSEEK_API_KEY: str = ""
 
     # =========================================================
+    # Transcript API
+    # =========================================================
+    TRANSCRIPT_API_KEY: str = ""
+    TRANSCRIPT_API_BASE: str = "https://transcriptapi.com/api/v1"
+
+    # =========================================================
+    # Supadata API (YouTube transcript REST API)
+    # =========================================================
+    SUPADATA_API_KEY: str = ""
+    SUPADATA_API_BASE: str = "https://api.supadata.ai/v1"
+
+    # =========================================================
     # Mezon OAuth2
     # =========================================================
     MEZON_CLIENT_ID: str = ""

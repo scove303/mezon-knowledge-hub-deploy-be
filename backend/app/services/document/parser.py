@@ -1,4 +1,5 @@
 import os
+import re
 import json
 import asyncio
 import traceback
@@ -78,6 +79,45 @@ Ví dụ vị trí chèn:
 # Bài 1: Hiệu ứng Nhà kính và Biến đổi Khí hậu
 
 ==================================================
+QUY TẮC TẠO LINK TIMESTAMP YOUTUBE (BẮT BUỘC KHI CÓ VIDEO ID)
+==================================================
+Khi ngữ cảnh cung cấp **Video ID** và **PHỤ ĐỀ CÓ TIMESTAMP**, bạn PHẢI tạo link trực tiếp đến vị trí phút trên YouTube cho các khái niệm/ví dụ quan trọng được nhắc đến trong video.
+
+CÚ PHÁP LINK: `[Mô tả ngắn](https://youtu.be/VIDEO_ID?t=GIÂY)`
+
+VÍ DỤ:
+- Video ID: `dQw4w9WgXcQ`, transcript có đoạn tại 02:30 (150 giây) nói về "biến số môi trường"
+- Trong bài học, khi nhắc đến khái niệm này, viết: `biến số môi trường ([xem tại 02:30](https://youtu.be/dQw4w9WgXcQ?t=150))`
+
+QUY TẮC:
+1. CHỈ tạo link khi có Video ID trong ngữ cảnh
+2. Tra cứu timestamp từ **PHỤ ĐỀ CÓ TIMESTAMP** được cung cấp (format: `[{"start": 150, "text": "..."}, ...]`)
+3. Tìm đoạn transcript phù hợp nhất với nội dung bạn đang viết
+4. Format: `[từ khóa](https://youtu.be/VIDEO_ID?t=GIÂY)` - GIÂY là số nguyên (start time)
+5. Mô tả link ngắn gọn: "xem tại MM:SS" hoặc "xem video"
+6. KHÔNG bịa đặt timestamp - CHỈ dùng thời gian thực từ transcript
+
+⚠️ QUAN TRỌNG - QUY TẮC IN ĐẬM (BOLD) CHO TIMESTAMP LINKS:
+==================================================
+ĐỂ HỆ THỐNG TỰ ĐỘNG GẮN TIMESTAMP LINK, BẠN PHẢI VIẾT **IN ĐẬM** (BOLD) CÁC TỪ KHÓA CỤ THỂ TỪ NỘI DUNG VIDEO.
+
+✅ ĐÚNG - In đậm KHÁI NIỆM CỤ THỂ TỪ VIDEO:
+   - **ANSI Lumens**, **Keystone correction**, **Screen Door Effect**, **Pixel Shift**, **Fresnel Effect**, **Color Node**, **Multiply Node**, **PBR Master Node**
+
+❌ KHÔNG ĐÚNG - ĐỪNG IN ĐẬM CÁC TIÊU ĐỀ CHUNG CHUNG:
+   - **Câu hỏi cốt lõi:**, **Kết quả học tập:**, **Điều kiện tiên quyết:**, **Định nghĩa & Bản chất:**, **Nguyên lý/Cơ chế:**
+   - **Tổng quan & Mục tiêu**, **Kiến thức nền tảng**, **Quy trình & Framework**, **Ví dụ thực tế**, **Sai lầm & Best Practices", "Bài tập thực hành"
+   - **Bản chất khái niệm:**, **Bối cảnh ra đời:**, **So sánh & Vị trí:**, **Cấu trúc:**, **Bảng phân tích:**, **Giải thích sâu:**
+
+QUY TẮC:
+- CHỈ in đậm (bold) các KHÁI NIỆM CỤ THỂ, THUẬT NGỮ CHUYÊN NGÀNH, TÊN CÔNG NGHỆ, TÊN NODE, TÊN CÔNG CỤ, THAM SỐ KỸ THUẬT được nhắc trong video
+- KHÔNG BAO GIỜ in đậm các từ khóa chung chung, tiêu đề mục, nhãn phân loại
+- Mỗi từ khóa in đậm nên là 1-4 từ, là danh từ cụ thể (ví dụ: "ANSI Lumens" chứ không phải "Độ sáng")
+- Hệ thống sẽ tự tìm timestamp trong transcript và gán link: `**ANSI Lumens**` → `**ANSI Lumens** ([xem tại 04:30](https://youtu.be/VIDEO_ID?t=270))`
+
+==================================================
+
+==================================================
 CẤU TRÚC BÀI HỌC BẮT BUỘC (Độ dài: 1.500 - 3.000 từ)
 ==================================================
 
@@ -89,21 +129,51 @@ CẤU TRÚC BÀI HỌC BẮT BUỘC (Độ dài: 1.500 - 3.000 từ)
 ## 1. 🎯 Bức tranh toàn cảnh & Bản chất vấn đề
 [MINDMAP_NODE: id="sec_1" | label="Toàn cảnh & Bản chất" | parent_id="root" | type="main"]
 
-- **Bản chất khái niệm:** Định nghĩa chính xác, chuẩn xác theo góc nhìn chuyên gia. Khái niệm này thực chất là gì?
-- **Bối cảnh ra đời & Vấn đề thực tế:** Vấn đề/nỗi đau/thách thức thực tế nào trong xã hội, tự nhiên hoặc hệ thống đã làm phát sinh khái niệm/công cụ/định lý này? Nếu không có nó, điều gì tiêu cực sẽ xảy ra?
+- Bản chất khái niệm: Định nghĩa chính xác, chuẩn xác theo góc nhìn chuyên gia. Khái niệm này thực chất là gì?
+- Bối cảnh ra đời & Vấn đề thực tế: Vấn đề/nỗi đau/thách thức thực tế nào trong xã hội, tự nhiên hoặc hệ thống đã làm phát sinh khái niệm/công cụ/định lý này? Nếu không có nó, điều gì tiêu cực sẽ xảy ra?
 [MINDMAP_NODE: id="sec_1_problem" | label="Vấn đề thực tế giải quyết" | parent_id="sec_1" | type="sub"]
-- **So sánh & Vị trí trong hệ thống:** So sánh ngắn gọn với các giải pháp, lý thuyết hoặc công cụ tương tự/tiền nhiệm. Nêu rõ vị trí của nó trong bức tranh tổng thể của ngành/lĩnh vực.
+- So sánh & Vị trí trong hệ thống: So sánh ngắn gọn với các giải pháp, lý thuyết hoặc công cụ tương tự/tiền nhiệm. Nêu rõ vị trí của nó trong bức tranh tổng thể của ngành/lĩnh vực.
 
 ---
 
 ## 2. 📖 Cấu trúc cốt lõi & Khai phá chi tiết các Khái niệm con
 [MINDMAP_NODE: id="sec_2" | label="Cấu trúc & Cơ chế cốt lõi" | parent_id="root" | type="main"]
 
-- **Cấu trúc / Công thức / Mô hình gốc (Core Framework / Formula / Syntax):** Trình bày dạng khung/khối/sơ đồ chữ rõ ràng đại diện cho cơ chế hoạt động của chủ đề.
-- **Bảng phân tích chi tiết các Thành phần / Tham số / Yếu tố cấu thành:**
+- Cấu trúc / Công thức / Mô hình gốc (Core Framework / Formula / Syntax): Trình bày dạng khung/khối/sơ đồ chữ rõ ràng đại diện cho cơ chế hoạt động của chủ đề.
+- Bảng phân tích chi tiết các Thành phần / Tham số / Yếu tố cấu thành:
   | Tên Thành phần / Yếu tố | Kiểu / Bản chất | Giá trị mặc định / Trạng thái gốc | Ý nghĩa & Cách vận hành chi tiết trong thực tế |
   | --- | --- | --- | --- |
-- **Giải thích sâu từng khái niệm con:**
+- Giải thích sâu từng khái niệm con:
+  [MINDMAP_NODE: id="sec_2_subconcepts" | label="Các khái niệm con cốt lõi" | parent_id="sec_2" | type="sub"]
+  Đào sâu từng khía cạnh, nguyên lý vận hành, quy luật tác động qua lại. Không bỏ sót bất kỳ chi tiết quan trọng nào.
+
+==================================================
+CẤU TRÚC BÀI HỌC BẮT BUỘC (Độ dài: 1.500 - 3.000 từ)
+==================================================
+
+[MINDMAP_NODE: id="root" | label="[Tên Bài Học]" | parent_id="" | type="main"]
+# [Tên Bài Học]
+
+---
+
+## 1. 🎯 Bức tranh toàn cảnh & Bản chất vấn đề
+[MINDMAP_NODE: id="sec_1" | label="Toàn cảnh & Bản chất" | parent_id="root" | type="main"]
+
+- Bản chất khái niệm: Định nghĩa chính xác, chuẩn xác theo góc nhìn chuyên gia. Khái niệm này thực chất là gì?
+- Bối cảnh ra đời & Vấn đề thực tế: Vấn đề/nỗi đau/thách thức thực tế nào trong xã hội, tự nhiên hoặc hệ thống đã làm phát sinh khái niệm/công cụ/định lý này? Nếu không có nó, điều gì tiêu cực sẽ xảy ra?
+[MINDMAP_NODE: id="sec_1_problem" | label="Vấn đề thực tế giải quyết" | parent_id="sec_1" | type="sub"]
+- So sánh & Vị trí trong hệ thống: So sánh ngắn gọn với các giải pháp, lý thuyết hoặc công cụ tương tự/tiền nhiệm. Nêu rõ vị trí của nó trong bức tranh tổng thể của ngành/lĩnh vực.
+
+---
+
+## 2. 📖 Cấu trúc cốt lõi & Khai phá chi tiết các Khái niệm con
+[MINDMAP_NODE: id="sec_2" | label="Cấu trúc & Cơ chế cốt lõi" | parent_id="root" | type="main"]
+
+- Cấu trúc / Công thức / Mô hình gốc (Core Framework / Formula / Syntax): Trình bày dạng khung/khối/sơ đồ chữ rõ ràng đại diện cho cơ chế hoạt động của chủ đề.
+- Bảng phân tích chi tiết các Thành phần / Tham số / Yếu tố cấu thành:
+  | Tên Thành phần / Yếu tố | Kiểu / Bản chất | Giá trị mặc định / Trạng thái gốc | Ý nghĩa & Cách vận hành chi tiết trong thực tế |
+  | --- | --- | --- | --- |
+- Giải thích sâu từng khái niệm con:
   [MINDMAP_NODE: id="sec_2_subconcepts" | label="Các khái niệm con cốt lõi" | parent_id="sec_2" | type="sub"]
   Đào sâu từng khía cạnh, nguyên lý vận hành, quy luật tác động qua lại. Không bỏ sót bất kỳ chi tiết quan trọng nào.
 
@@ -122,9 +192,9 @@ Liệt kê đầy đủ các quy tắc, trường hợp đặc biệt, phương 
 ## 4. 💻 / 🌍 Tình huống minh họa thực tế (Full Comprehensive Case Study / Example)
 [MINDMAP_NODE: id="sec_4" | label="Tình huống thực tế" | parent_id="root" | type="main"]
 
-- **Bối cảnh Bài toán thực tế:** Đưa ra một kịch bản hoàn chỉnh (Nếu là IT/Sự kiện logic: viết Code/Workflow; Nếu là Kinh tế/Chính trị/Môi trường/Xã hội: viết Kịch bản Case Study thực tế chi tiết).
-- **Kết quả diễn tiến / Đầu ra (Expected Outcome / Output):** Mô tả chi tiết kết quả trả về, diễn biến sự kiện hoặc trạng thái đạt được.
-- **Phân tích chi tiết từng bước (Step-by-step Analysis):** 
+- Bối cảnh Bài toán thực tế: Đưa ra một kịch bản hoàn chỉnh (Nếu là IT/Sự kiện logic: viết Code/Workflow; Nếu là Kinh tế/Chính trị/Môi trường/Xã hội: viết Kịch bản Case Study thực tế chi tiết).
+- Kết quả diễn tiến / Đầu ra (Expected Outcome / Output): Mô tả chi tiết kết quả trả về, diễn biến sự kiện hoặc trạng thái đạt được.
+- Phân tích chi tiết từng bước (Step-by-step Analysis): 
   [MINDMAP_NODE: id="sec_4_steps" | label="Các bước phân tích Case Study" | parent_id="sec_4" | type="sub"]
   Đánh số 1, 2, 3... giải thích rõ ràng tại sao từng bước/dòng/hành động lại diễn ra như vậy và nó kích hoạt hệ quả gì.
 
@@ -133,19 +203,19 @@ Liệt kê đầy đủ các quy tắc, trường hợp đặc biệt, phương 
 ## 5. ⚠️ Lỗi thường gặp, Tư duy sai lệch & Quy chuẩn tối ưu (Best Practices & Pitfalls)
 [MINDMAP_NODE: id="sec_5" | label="Lỗi phổ biến & Best Practices" | parent_id="root" | type="main"]
 
-- **3 - 5 Sai lầm / Lỗi phổ biến nhất:** (Đặc biệt là những hiểu lầm của người mới học hoặc tư duy lối mòn) Kèm theo nguyên nhân và cách khắc phục/điều chỉnh.
+- 3 - 5 Sai lầm / Lỗi phổ biến nhất: (Đặc biệt là những hiểu lầm của người mới học hoặc tư duy lối mòn) Kèm theo nguyên nhân và cách khắc phục/điều chỉnh.
   [MINDMAP_NODE: id="sec_5_pitfalls" | label="Sai lầm thường gặp" | parent_id="sec_5" | type="sub"]
-- **Quy chuẩn chuyên nghiệp (Best Practices):** Lưu ý về tối ưu hóa nguồn lực, hiệu năng, tính bền vững hoặc quy chuẩn đạo đức/thực thi khi áp dụng vào dự án/cuộc sống thực tế.
+- Quy chuẩn chuyên nghiệp (Best Practices): Lưu ý về tối ưu hóa nguồn lực, hiệu năng, tính bền vững hoặc quy chuẩn đạo đức/thực thi khi áp dụng vào dự án/cuộc sống thực tế.
 
 ---
 
 ## 6. 🧪 Bài tập tư duy & Luyện tập ứng dụng (Thực hành mở)
 [MINDMAP_NODE: id="sec_6" | label="Bài tập thực hành mở" | parent_id="root" | type="main"]
 
-- **Bài tập 1 (Cơ bản - Nhận biết & Phân tích):** 
+- Bài tập 1 (Cơ bản - Nhận biết & Phân tích): 
   - *Yêu cầu:* Câu hỏi kiểm tra mức độ hiểu sâu kiến thức hoặc bài tập giải quyết tình huống đơn giản.
   - *Hướng dẫn giải / Đáp án gợi ý:* Cung cấp dàn ý chi tiết hoặc logic đáp án chuẩn.
-- **Bài tập 2 (Nâng cao - Tư duy phản biện & Mở rộng/Case Study mở):** 
+- Bài tập 2 (Nâng cao - Tư duy phản biện & Mở rộng/Case Study mở): 
   [MINDMAP_NODE: id="sec_6_adv" | label="Bài tập mở nâng cao" | parent_id="sec_6" | type="sub"]
   - *Yêu cầu mở:* Đưa ra một tình huống tiến thối lưỡng nan, một giả định phản thực tế (What-if scenario), hoặc một bài toán thiết kế hệ thống/chính sách mở. Yêu cầu người học tự đưa ra quan điểm và lập luận.
   - *Gợi ý góc nhìn / Khung phân tích (Framework) & Lời giải mẫu:* Đưa ra các tiêu chí đánh giá, các góc nhìn đa chiều (Kinh tế, Đạo đức, Kỹ thuật, Xã hội,...) và một bài giải mẫu hoàn chỉnh để người học tham khảo.
@@ -205,6 +275,24 @@ QUY TẮC ANCHOR - TUÂN THỦ NGHIÊM NGẨT:
 
 5. id giữ nguyên mẫu: root, sec_1, sec_1_objectives, sec_2, sec_2_definitions, sec_3, sec_3_steps, sec_4, sec_4_context, sec_5, sec_5_pitfalls, sec_6, sec_6_basic, sec_7.
 
+⚠️ QUY TẮC IN ĐẬM (BOLD) CHO YOUTUBE TIMESTAMP LINKS:
+==================================================
+ĐỂ HỆ THỐNG TỰ ĐỘNG GẮN TIMESTAMP LINK, BẠN PHẢI VIẾT **IN ĐẬM** (BOLD) CÁC TỪ KHÓA CỤ THỂ TỪ NỘI DUNG VIDEO.
+
+✅ ĐÚNG - In đậm KHÁI NIỆM CỤ THỂ TỪ VIDEO:
+   - **ANSI Lumens**, **Keystone correction**, **Screen Door Effect**, **Pixel Shift**, **Fresnel Effect**, **Color Node**, **Multiply Node**, **PBR Master Node**
+
+❌ KHÔNG ĐÚNG - ĐỪNG IN ĐẬM CÁC TIÊU ĐỀ CHUNG CHUNG:
+   - **Câu hỏi cốt lõi:**, **Kết quả học tập:**, **Điều kiện tiên quyết:**, **Định nghĩa & Bản chất:**, **Nguyên lý/Cơ chế:**
+   - **Tổng quan & Mục tiêu**, **Kiến thức nền tảng**, **Quy trình & Framework**, **Ví dụ thực tế**, **Sai lầm & Best Practices", "Bài tập thực hành"
+   - **Bản chất khái niệm:**, **Bối cảnh ra đời:**, **So sánh & Vị trí:**, **Cấu trúc:**, **Bảng phân tích:**, **Giải thích sâu:**
+
+QUY TẮC:
+- CHỈ in đậm (bold) các KHÁI NIỆM CỤ THỂ, THUẬT NGỮ CHUYÊN NGÀNH, TÊN CÔNG NGHỆ, TÊN NODE, TÊN CÔNG CỤ, THAM SỐ KỸ THUẬT được nhắc trong video
+- KHÔNG BAO GIỜ in đậm các từ khóa chung chung, tiêu đề mục, nhãn phân loại
+- Mỗi từ khóa in đậm nên là 1-4 từ, là danh từ cụ thể (ví dụ: "ANSI Lumens" chứ không phải "Độ sáng")
+- Hệ thống sẽ tự tìm timestamp trong transcript và gán link: `**ANSI Lumens**` → `**ANSI Lumens** ([xem tại 04:30](https://youtu.be/VIDEO_ID?t=270))`
+
 VÍ DỤ MINH HỌA (Python lesson):
 ==================================================
 [MINDMAP_NODE: id="root" | label="Python Variables & Control Flow" | parent_id="root" | type="main"]
@@ -217,9 +305,9 @@ VÍ DỤ MINH HỌA (Python lesson):
 
 ## 2. Kiến thức nền tảng
 [MINDMAP_NODE: id="sec_2" | label="Variables, Types, Control Flow" | parent_id="root" | type="main"]
-- **Định nghĩa:** Biến (variable) là tên gán cho giá trị trong bộ nhớ...
+- Định nghĩa: **variable** (biến) là tên gán cho giá trị trong bộ nhớ...
 [MINDMAP_NODE: id="sec_2_definitions" | label="Variables & Data Types" | parent_id="sec_2" | type="sub"]
-- **Control flow:** if/elif/else điều khiển nhánh...
+- Control flow: **if/elif/else** điều khiển nhánh...
 [MINDMAP_NODE: id="sec_2_control" | label="If/Else & Loops" | parent_id="sec_2" | type="sub"]
 
 ## 3. Quy trình & Framework
@@ -247,6 +335,85 @@ VÍ DỤ MINH HỌA (Python lesson):
 KHI VIẾT: Sau khi viết xong mỗi đoạn, ĐẶT ANCHOR NGAY TRƯỚC ĐOẠN ĐÓ với label = từ khóa CỤ THỂ trong đoạn đó.
 KHÔNG BAO GIỜ dùng label chung chung như "Định nghĩa", "Nguyên lý", "Các bước".
 """
+
+
+def inject_youtube_timestamp_links(content: str, video_id: str, transcript: list[dict]) -> str:
+    """Post-process generated markdown to inject accurate YouTube timestamp links.
+    
+    Matches key phrases in content with transcript segments and adds 
+    [text](https://youtu.be/VIDEO_ID?t=SECONDS) links.
+    """
+    if not video_id or not transcript:
+        return content
+    
+    # Build searchable transcript segments
+    segments = []
+    for item in transcript:
+        start = int(item.get('start', 0))
+        text = item.get('text', '').strip()
+        if text and len(text) > 10:
+            segments.append({
+                'start': start,
+                'text': text.lower(),
+                'original': item.get('text', '').strip()
+            })
+    
+    if not segments:
+        return content
+    
+    # Common key phrases that would benefit from timestamp links
+    # We'll search for these patterns in the generated content
+    import re
+    
+    def find_best_timestamp(query: str) -> int | None:
+        """Find the best matching timestamp for a query."""
+        query_lower = query.lower()
+        best_match = None
+        best_score = 0
+        
+        for seg in segments:
+            # Simple word overlap scoring
+            query_words = set(query_lower.split())
+            seg_words = set(seg['text'].split())
+            overlap = len(query_words & seg_words)
+            if overlap > best_score and overlap >= 2:
+                best_score = overlap
+                best_match = seg['start']
+        
+        return best_match
+    
+    # Patterns to find and enhance with timestamp links
+    # Match bold terms, technical terms, or quoted phrases that might be in transcript
+    patterns = [
+        # Bold terms: **term**
+        (r'\*\*([^*]{3,50})\*\*', lambda m: f"**{m.group(1)}**"),
+        # Quoted terms: "term" or 'term'
+        (r'"([^"]{3,50})"', lambda m: f'"{m.group(1)}"'),
+        (r"'([^']{3,50})'", lambda m: f"'{m.group(1)}'"),
+    ]
+    
+    result = content
+    
+    # For each bold term, try to find a timestamp and add link
+    # We'll process bold terms as they're likely key concepts
+    bold_pattern = re.compile(r'\*\*([^*]{3,50})\*\*')
+    
+    def replace_bold(match):
+        term = match.group(1)
+        # Skip if already has a YouTube link
+        if 'youtu.be' in match.group(0):
+            return match.group(0)
+        
+        timestamp = find_best_timestamp(term)
+        if timestamp is not None:
+            mins = timestamp // 60
+            secs = timestamp % 60
+            return f"**{term}** ([xem tại {mins:02d}:{secs:02d}](https://youtu.be/{video_id}?t={timestamp}))"
+        return match.group(0)
+    
+    result = bold_pattern.sub(replace_bold, result)
+    
+    return result
 
 
 async def generate_single_lesson(topic: str, lesson: dict, tavily_context: str, idx: int, total: int, semaphore) -> dict:
@@ -289,6 +456,30 @@ async def generate_single_lesson(topic: str, lesson: dict, tavily_context: str, 
             traceback.print_exc()
             text_content = f"# {lesson_title}\n\n*Nội dung bài học này đang được bổ sung.*"
 
+        # Extract video_id and transcript from tavily_context for post-processing
+        video_id = None
+        transcript = []
+        if "Video ID:" in tavily_context:
+            for line in tavily_context.split('\n'):
+                if line.startswith("Video ID:"):
+                    video_id = line.replace("Video ID:", "").strip()
+                if line.startswith("PHỤ ĐỀ CÓ TIMESTAMP"):
+                    # Find JSON after this marker
+                    marker = "PHỤ ĐỀ CÓ TIMESTAMP (dùng để tạo link):"
+                    marker_idx = tavily_context.find(marker)
+                    if marker_idx >= 0:
+                        json_start = tavily_context.find('[', marker_idx)
+                        json_end = tavily_context.find(']', json_start) + 1
+                        if json_start >= 0 and json_end > json_start:
+                            try:
+                                transcript = json.loads(tavily_context[json_start:json_end])
+                            except:
+                                pass
+        
+        # Post-process: inject accurate YouTube timestamp links
+        if video_id and transcript:
+            text_content = inject_youtube_timestamp_links(text_content, video_id, transcript)
+        
         return {
             "title": lesson_title,
             "summary": lesson.get("summary", ""),
@@ -301,6 +492,7 @@ async def parse_context_to_structure(
     tavily_context: str,
     folder_name: str,
     on_event: callable = None,
+    video_id: str = None,
 ) -> dict:
     """
     Quy trình 2 Bước Async sử dụng Google GenAI SDK.
@@ -364,6 +556,38 @@ async def parse_context_to_structure(
 
     print("  ---> [Bước 2/2] Hoàn thành toàn bộ bài học siêu chi tiết!")
 
+    # Write debug output file for inspection
+    import re
+    vid = video_id if video_id else "unknown"
+    # Sanitize folder_name for filename (remove invalid chars)
+    safe_folder = re.sub(r'[<>:"/\\|?*\x00-\x1f]', '_', folder_name)
+    safe_folder = safe_folder[:100]  # Limit length
+    debug_file = f"debug_youtube_{safe_folder}_{vid}.txt"
+    with open(debug_file, 'w', encoding='utf-8') as f:
+        f.write(f"FOLDER: {folder_name}\n")
+        f.write(f"VIDEO ID: {vid}\n")
+        f.write(f"TOPIC: {topic}\n")
+        f.write(f"TOTAL LESSONS: {total_lessons}\n")
+        f.write("="*80 + "\n\n")
+        
+        for i, file in enumerate(final_files, 1):
+            content = file.get("text_content", "")
+            f.write(f"\n\n{'='*80}\n")
+            f.write(f"FILE {i}: {file.get('title')}\n")
+            f.write(f"{'='*80}\n\n")
+            f.write(content)
+            
+            # Check for timestamp links
+            links = re.findall(r'\[xem tại \d{2}:\d{2}\].*?youtu\.be', content)
+            bold_terms = re.findall(r'\*\*([^*]{3,50})\*\*', content)
+            
+            f.write(f"\n\n--- ANALYSIS ---\n")
+            f.write(f"Timestamp links: {len(links)}\n")
+            f.write(f"Bold terms: {bold_terms[:20]}\n")
+            f.write(f"Timestamp links found: {links}\n")
+    
+    print(f"  [Debug] Full AI output saved to: {debug_file}")
+    
     return {
         "folder_name": folder_name,
         "files": final_files,

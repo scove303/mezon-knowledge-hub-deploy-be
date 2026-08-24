@@ -6,7 +6,7 @@ const BASE_URL =
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
-  timeout: 30000,
+  timeout: 60000,
 });
 
 const getTokens = () => {

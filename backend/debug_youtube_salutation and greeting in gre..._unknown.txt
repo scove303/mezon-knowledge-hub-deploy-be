@@ -1,0 +1,1134 @@
+FOLDER: salutation and greeting in gre...
+VIDEO ID: unknown
+TOPIC: salutation and greeting in greek
+TOTAL LESSONS: 12
+================================================================================
+
+
+
+================================================================================
+FILE 1: Bài 1: Tổng quan về văn hóa chào hỏi và giao tiếp Hy Lạp
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Greek Greetings & Culture" | parent_id="root" | type="main"]
+# Bài 1: Tổng quan về văn hóa chào hỏi và giao tiếp Hy Lạp
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Cultural Context of Greetings" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Lời chào trong tiếng Hy Lạp phản ánh những tầng văn hóa và giá trị xã hội nào của người bản địa?
+- **Kết quả học tập:** Người học có thể phân biệt và vận dụng các hình thức chào hỏi từ chính thống đến thân mật, thấu hiểu tư duy **Philoxenia** (lòng hiếu khách) và hệ thống lời chúc phong phú trong đời sống người Hy Lạp.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Philoxenia & Social Etiquette" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Sự cởi mở đối với ngôn ngữ học văn hóa (cultural linguistics) và tinh thần tìm hiểu nhân học xã hội Địa Trung Hải.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Linguistic Etiquette in Greece" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Trong văn hóa Hy Lạp, lời chào không chỉ là công cụ giao tiếp đơn thuần mà là một nghi thức xã hội (social ritual) gắn liền với cấu trúc danh dự, lòng kính trọng và sự kết nối cộng đồng. Từ gốc **Yiasou** (Γεια σου) xuất phát từ cụm từ **Stin igia sou** mang ý nghĩa chúc sức khỏe, biến mỗi cuộc hội ngộ thành một lời cầu chúc bình an.
+[MINDMAP_NODE: id="sec_2_definitions" | label="Yiasou Etymology & Rituals" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Ngôn ngữ Hy Lạp sở hữu một hệ sinh thái từ vựng biểu cảm khổng lồ, nơi mọi bối cảnh từ bữa ăn, sự kiện cuộc sống cho đến các ngày lễ đều đi kèm một câu chúc cụ thể, minh chứng cho triết lý sống gắn bó mật thiết giữa con người với con người.
+- **Sơ đồ/Mô hình:** Cấu trúc phân tầng giao tiếp từ cấp độ trang trọng (**Yassas**) đến thân mật (**Yiasou**) và mạng lưới các lời chúc theo ngữ cảnh tình huống.
+[MINDMAP_NODE: id="sec_2_models" | label="Hierarchical Salutation Grid" | parent_id="sec_2" | type="sub"]
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Greek Greeting Framework" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. Xác định mức độ quan hệ xã hội (người lớn tuổi, người có chức vị hay bạn bè đồng trang lứa).
+  2. Lựa chọn đại từ nhân xưng và hình thức chào phù hợp (**Yassas** cho số nhiều/trang trọng, **Yiasou** cho số ít/thân mật).
+  3. Kết hợp ngôn ngữ cơ thể chuẩn mực như cái bắt tay kiên quyết (**handshake**) kèm ánh mắt giao tiếp trực diện.
+[MINDMAP_NODE: id="sec_3_steps" | label="Formal vs Informal Protocols" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Mô hình **Contextual Salutation Matrix** — cấu trúc đánh giá không gian giao tiếp để áp dụng lời chúc tương ứng như **Kali orexi** trước bữa ăn hay **Geia sta heria sou** để khen ngợi người nấu nướng.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="Contextual Salutation Matrix" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** Quy tắc chuyển đổi giữa các sắc thái trang trọng khi gặp gỡ lần đầu tiên tại các thiết chế văn hóa hoặc công sở tại Athens.
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Taipans & Taverna Hospitality" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Một du khách nước ngoài lần đầu bước vào một quán ăn truyền thống (taverna) tại một ngôi làng ở Hy Lạp và tương tác với chủ quán cùng những thực khách xung quanh.
+[MINDMAP_NODE: id="sec_4_context" | label="Traditional Taverna Setting" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Thay vì chỉ nói lời chào khô khan, du khách sử dụng **Yassas** khi bước vào, nâng ly với câu chúc **Stin igia mas** và bày tỏ sự trân trọng bằng câu **Geia sta heria sou** dành cho người đầu bếp.
+[MINDMAP_NODE: id="sec_4_application" | label="Authentic Toasting Expressions" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Sự am hiểu văn hóa bản địa qua ngôn ngữ giúp phá vỡ bức tường vô hình giữa người nước ngoài và người bản xứ, biến một bữa ăn thông thường thành trải nghiệm giao lưu văn hóa sâu sắc, minh chứng cho sức mạnh của **Philoxenia**.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Cross-Cultural Communication Pitfalls" | parent_id="sec_5" | type="sub"]
+
+- **3-5 Sai lầm phổ biến:** 
+  - Lạm dụng hình thức chào hỏi thân mật **Yiasou** với những người lớn tuổi hoặc người có vị thế xã hội cao thay vì dùng **Yassas**.
+  - Bỏ qua các sắc thái biểu cảm và ngữ điệu đi kèm trong các lời chúc dịp lễ như **Chronia Polla**.
+  - Hiểu sai lời chào chỉ là công cụ trao đổi thông tin thay vì xem đó là hành vi ngoại giao văn hóa.
+- **Best Practices / Quy chuẩn:** Luôn quan sát thái độ của đối phương, ghi nhớ quy tắc danh xưng kết hợp cùng danh hiệu phù hợp, và duy trì tinh thần cởi mở, chân thành trong mọi tương tác giao tiếp tại Hy Lạp.
+[MINDMAP_NODE: id="sec_5_best" | label="Local Etiquette Best Practices" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Practical Roleplay Exercises" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Đóng vai trong tình huống gặp gỡ một đối tác kinh doanh lớn tuổi tại Athens và một người bạn trẻ tuổi tại quán cà phê. Viết ra các câu chào tương ứng (**Yassas** và **Yiasou**) kèm cử chỉ giao tiếp kèm theo.
+[MINDMAP_NODE: id="sec_6_basic" | label="Formal Greeting Simulation" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Phân tích sự khác biệt về mặt ý nghĩa văn hóa giữa lời chào hiện đại của phương Tây và hệ thống lời chúc truyền thống mang đậm tính phước lành (blessings) của người Hy Lạp.
+[MINDMAP_NODE: id="sec_6_advanced" | label="Linguistic Heritage Analysis" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Hellenic Linguistic Resources" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** 
+  - *Greek Salutations: A Glossary to Help You Sound Like a Local* – Greece Is.
+  - Các tài liệu nghiên cứu ngôn ngữ học văn hóa (Cultural Linguistics) về hệ thống định danh xã hội Địa Trung Hải.
+[MINDMAP_NODE: id="sec_7_official" | label="Greece Is Glossary Archive" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'Philoxenia', 'Điều kiện tiên quyết:', 'Định nghĩa & Bản chất:', 'Yiasou', 'Stin igia sou', 'Nguyên lý/Cơ chế:', 'Sơ đồ/Mô hình:', 'Yassas', 'Yiasou', 'Quy trình từng bước (Step-by-step):', 'Yassas', 'Yiasou', 'handshake', 'Framework/Model áp dụng:', 'Contextual Salutation Matrix', 'Kali orexi', 'Geia sta heria sou', 'Bảng tham số/Quy tắc quyết định:']
+Timestamp links found: []
+
+
+================================================================================
+FILE 2: Bài 2: Lời chào cơ bản phổ biến nhất (Yiasas và Yiasou)
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Yiasas & Yiasou Greetings" | parent_id="root" | type="main"]
+# Bài 2: Lời chào cơ bản phổ biến nhất (Yiasas và Yiasou)
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Greek Salutations Overview" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Làm thế nào để mở đầu một cuộc hội thoại bằng tiếng Hy Lạp một cách tự nhiên và chuẩn mực nhất? Tại sao lời chào lại phản ánh cấu trúc xã hội và văn hóa hiếu khách (**philoxenia**) của người Hy Lạp cổ đại lẫn hiện đại?
+- **Kết quả học tập:** Sau bài học này, học viên có thể nắm vững taxonomy giao tiếp sơ cấp của tiếng Hy Lạp, phân biệt chính xác ngữ cảnh sử dụng giữa thể trang trọng và thân mật, áp dụng thành thạo cấu trúc **Yiasas** và **Yiasou** trong cả tình huống chào hỏi lẫn từ biệt (**farewell**).
+[MINDMAP_NODE: id="sec_1_objectives" | label="Yiasas vs Yiasou Mastery" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Đã quen thuộc với bảng chữ cái Hy Lạp cơ bản (**Greek alphabet**) và quy tắc phát âm nguyên âm/phụ âm cơ bản.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Etymology and Health Wishes" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Trong ngữ cảnh ngôn ngữ học văn hóa, các lời chào tiếng Hy Lạp không chỉ đơn thuần là tín hiệu xã giao (**phatic expressions**) mà mang nguyên bản là một lời chúc phúc (**blessing**). Cụ thể, cả **Yiasas** và **Yiasou** đều bắt nguồn từ cụm từ cổ **Stin igia sou** (στην υγειά σου) mang nghĩa nguyên thủy là "cầu mong sức khỏe đến với bạn" hay "vì sức khỏe của bạn".
+[MINDMAP_NODE: id="sec_2_definitions" | label="Stin Igia Sou Origin" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Cơ chế phân chia danh xưng của tiếng Hy Lạp dựa trên hệ thống tôn ti trật tự xã hội và khoảng cách tâm lý (**social distance**). Cơ chế này vận hành qua hai trục ngữ pháp chính: số ít (**singular**) cho sự thân mật và số nhiều tôn kính (**plural/formal**) cho sự tôn trọng. Khi bạn nói **Yiasou**, bạn đang giao tiếp trực diện với một cá nhân có quan hệ gần gũi. Ngược lại, **Yiasas** là công cụ ngôn ngữ thể hiện sự kính trọng đối với người lớn tuổi, người có chức vị, hoặc khiêm nhường đối với một tập thể (**plural addressee**).
+[MINDMAP_NODE: id="sec_2_principles" | label="Grammatical Number Shift" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Bản đồ phân loại lời chào dịch chuyển từ trạng thái vị tha xã hội sang không gian cá nhân.
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Social Context Assessment" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. *Bước 1: Quan sát bối cảnh xã hội và độ tuổi.* Xác định người đối diện là ai (bạn bè đồng trang lứa hay bậc cao niên).
+  2. *Bước 2: Lựa chọn hình thái ngữ pháp.* Chọn **Yiasou** (Γεια σου) cho bạn bè, trẻ em, người quen thân; chọn **Yiasas** (Γεια σας) cho người lạ, người lớn tuổi, hoặc trong môi trường công sở, dịch vụ.
+  3. *Bước 3: Kết hợp ngôn ngữ cơ thể.* Đi kèm một cái bắt tay nhẹ nhàng (**handshake**) hoặc nụ cười ấm áp biểu trưng cho văn hóa hiếu khách Địa Trung Hải.
+[MINDMAP_NODE: id="sec_3_steps" | label="Contextual Selection Steps" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Sử dụng khung phân tích khoảng cách xã hội (**Social Distance Matrix**): Ai là người nhận thông điệp? Mức độ thân thiết đạt cấp độ nào? Có cần sử dụng danh xưng kính trọng bổ trợ (**honorific titles**) hay không?
+[MINDMAP_NODE: id="sec_3_frameworks" | label="Social Distance Matrix" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** 
+  - Tuổi tác > 50 hoặc bề trên $\rightarrow$ **Yiasas**
+  - Đồng nghiệp mới, nhân viên cửa hàng, quan chức $\rightarrow$ **Yiasas**
+  - Bạn bè, người thân trẻ tuổi, trẻ em $\rightarrow$ **Yiasou**
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Athens Taverna Encounter" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Một du khách nước ngoài bước vào một quán ăn truyền thống (**taverna**) tại Plaka, Athens. Anh ta muốn chào người chủ quán lớn tuổi đang đứng sau quầy tính tiền và sau đó gặp lại người bạn Hy Lạp cùng trang lứa ngồi chờ ở bàn ăn.
+[MINDMAP_NODE: id="sec_4_context" | label="Plaka Taverna Setting" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** 
+  - Khi bước vào, du khách cúi đầu nhẹ và chào chủ quán: "**Yiasas**!" (thể hiện sự tôn trọng chủ nhà và người lớn tuổi).
+  - Khi tiến lại bàn và gặp người bạn, anh ấy tươi cười vẫy tay: "**Yiasou**, Nikos!" (thể hiện sự thân mật, bình đẳng).
+[MINDMAP_NODE: id="sec_4_application" | label="Dual Greeting Execution" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Chủ quán nở nụ cười rạng rỡ đáp lại bằng sự cởi mở đặc trưng, trong khi người bạn cảm thấy sự gắn kết tự nhiên. Bài học rút ra là việc sử dụng đúng hình thái **Yiasas** hoặc **Yiasou** ngay lập tức phá vỡ bức tường ngôn ngữ, mở ra không gian giao tiếp ấm cúng và tôn trọng văn hóa bản địa.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Over-familiarity & Pronunciation Pitfalls" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:**
+  1. *Lạm dụng thể thân mật:* Dùng **Yiasou** với người lớn tuổi hoặc người có chức vị cao, gây cảm giác thiếu tôn trọng hoặc quá mức suồng sã (**over-familiarity**).
+  2. *Nhầm lẫn phát âm nguyên âm đôi:* Phát âm sai trọng âm hoặc phát âm nhầm âm "ia" thành âm "ee", khiến từ ngữ mất đi ngữ điệu tự nhiên của tiếng Hy Lạp hiện đại (**Modern Greek intonation**).
+  3. *Quên mất công dụng kép:* Chỉ nhớ rằng **Yiasas/Yiasou** dùng để chào khi gặp mặt mà quên mất chúng cũng hoàn toàn có thể dùng khi tạm biệt (**parting/farewell**).
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Inappropriate Informality" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn mặc định sử dụng hình thái trang trọng **Yiasas** khi không chắc chắn về mối quan hệ. Đợi đến khi đối phương chủ động chuyển sang **Yiasou** hoặc khi mối quan hệ đã trở nên thân thiết thì mới hạ mức độ tôn trọng xuống dạng thân mật.
+[MINDMAP_NODE: id="sec_5_best" | label="Default to Formal Yiasas" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Greeting Scenario Exercises" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Điền vào chỗ trống lời chào thích hợp (**Yiasas** hoặc **Yiasou**) cho các tình huống sau:
+  1. Bạn gặp giáo sư đại học tại hành lang trường học. $\rightarrow$ *(Đáp án: **Yiasas**)*
+  2. Bạn nhắn tin chào một người bạn cùng phòng bằng tuổi vào buổi sáng. $\rightarrow$ *(Đáp án: **Yiasou**)*
+  3. Bạn bước vào một cửa hàng tạp hóa nhỏ và chào người bán hàng trung niên. $\rightarrow$ *(Đáp án: **Yiasas**)*
+[MINDMAP_NODE: id="sec_6_basic" | label="Fill in Salutations" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Đóng vai một hướng dẫn viên du lịch dẫn đoàn khách đến đảo Crete. Hãy thiết kế một đoạn hội thoại ngắn 3 câu sử dụng cả **Yiasas**, **Yiasou**, và từ **Stin igia mas** trong bữa tối chào mừng, đồng thời giải thích lý do lựa chọn từ ngữ dựa trên bối cảnh xã hội của từng nhân vật xuất hiện trong tiểu phẩm.
+[MINDMAP_NODE: id="sec_6_advanced" | label="Crete Taverna Roleplay" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Greek Linguistic Resources" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** 
+  - *Greece Is* – "Greek Salutations: A Glossary to Help You Sound Like a Local" (Paulina Björk Kapsalis).
+  - *GreekPod101* – Basic Greek Greetings & Cultural Etiquette Guides.
+  - Tác phẩm nghiên cứu ngữ học xã hội về văn hóa giao tiếp Địa Trung Hải (**Sociolinguistic studies of Mediterranean hospitality**).
+[MINDMAP_NODE: id="sec_7_official" | label="Greece Is Glossary" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'philoxenia', 'Kết quả học tập:', 'Yiasas', 'Yiasou', 'farewell', 'Điều kiện tiên quyết:', 'Greek alphabet', 'Định nghĩa & Bản chất:', 'phatic expressions', 'blessing', 'Yiasas', 'Yiasou', 'Stin igia sou', 'Nguyên lý/Cơ chế:', 'social distance', 'singular', 'plural/formal', 'Yiasou', 'Yiasas']
+Timestamp links found: []
+
+
+================================================================================
+FILE 3: Bài 3: Ngôn ngữ cơ thể và phép xã giao khi gặp mặt
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Greek Body Language & Greetings" | parent_id="root" | type="main"]
+# Bài 3: Ngôn ngữ cơ thể và phép xã giao khi gặp mặt
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Non-verbal Etiquette Overview" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Làm thế nào để giao tiếp phi ngôn ngữ tại Hy Lạp một cách chân thực, tránh những hiểu lầm văn hóa và thể hiện sự tôn trọng tối đa đối với người bản địa?
+- **Kết quả học tập:** Sau bài học này, người học có thể nắm vững hệ thống cử chỉ vật lý, vận dụng linh hoạt **bắt tay** truyền thống, hiểu rõ ý nghĩa của **nụ cười** ấm áp và làm chủ các sắc thái biểu cảm không lời trong đời sống xã hội Hy Lạp theo khung phân loại văn hóa Địa Trung Hải.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Greek Gesture Mastery" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Đã nắm vững các lời chào cơ bản như **Yassas** hay **Yassou** và có sự cởi mở đối với văn hóa giao tiếp cận cảnh (proxemics) của vùng Nam Âu.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Kinaesthetics & Proxemics in Greece" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Văn hóa giao tiếp Hy Lạp gắn liền với khái niệm **proxemics** (khoảng cách không gian cá nhân) mang tính cởi mở và ấm áp. Sự gặp gỡ ở đây không chỉ dừng lại ở âm thanh mà là một nghi lễ toàn diện bao gồm **kinaesthetics** (vận động học cơ thể) và biểu cảm gương mặt.
+[MINDMAP_NODE: id="sec_2_definitions" | label="Proxemics & Kinaesthetics" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Cơ chế xã giao dựa trên nguyên lý **philoxenia** (tình yêu thương đối với người lạ / lòng hiếu khách). Ngôn ngữ cơ thể đóng vai trò như cầu nối cảm xúc, xác thực mức độ chân thành đằng sau lời chào hỏi.
+[MINDMAP_NODE: id="sec_2_principles" | label="Philoxenia Principle" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Mô hình tương tác ba lớp gồm: Khoảng cách giao tiếp (Social Distance) → Tiếp xúc thị giác (Eye Contact) → Cử chỉ xúc giác (Tactile Gestures).
+[MINDMAP_NODE: id="sec_2_models" | label="Tactile Interaction Model" | parent_id="sec_2" | type="sub"]
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Hellenic Greeting Protocol" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. **Approach & Eye Contact:** Tiến lại gần với ánh nhìn thân thiện, giữ khoảng cách vừa phải không quá lạnh lùng.
+  2. **Verbal Greeting:** Cất lời chào kèm theo **Yassas** (trang trọng) hoặc **Yassou** (thân mật).
+  3. **Physical Gesture:** Thực hiện cái **bắt tay** chắc chắn (handshake) đối với người mới gặp, hoặc cái ôm/hôn má nhẹ (sterea) đối với bạn bè thân thiết.
+[MINDMAP_NODE: id="sec_3_steps" | label="Approach & Handshake Protocol" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Áp dụng **High-Contact Culture Framework** (Khung văn hóa tiếp xúc cao) trong xã hội Hy Lạp, nơi sự gần gũi về thể chất thể hiện sự tin tưởng.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="High-Contact Culture" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** Lực siết tay vừa phải, thời gian duy trì ánh mắt từ 2-3 giây, và việc đọc vị bối cảnh xã hội (kinh doanh hay họp mặt gia đình) để điều chỉnh mức độ thân mật của cử chỉ.
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Taverna Gathering Case Study" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Một du khách nước ngoài lần đầu bước vào một quán ăn truyền thống (**taverna**) tại Athens và gặp gỡ nhóm đối tác địa phương. Nếu chỉ đứng từ xa chào miệng, bầu không khí sẽ trở nên gượng gạo.
+[MINDMAP_NODE: id="sec_4_context" | label="Athens Taverna Meeting" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Du khách chủ động tiến đến từng người, nở **nụ cười** cởi mở, kết hợp lời chào **Yassas** cùng một cái **bắt tay** kiên quyết kèm theo ánh mắt chân thành. Khi không khí đã ấm lên, các cử chỉ vỗ vai nhẹ xuất hiện tự nhiên.
+[MINDMAP_NODE: id="sec_4_application" | label="Active Handshake & Smile" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Sự kết hợp hoàn hảo giữa lời nói và ngôn ngữ cơ thể đã phá vỡ rào cản văn hóa, tạo dựng sự tin cậy tức thì, minh chứng cho sức mạnh của **philoxenia** trong đời sống thực tế.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Non-verbal Pitfalls & Best Practices" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:**
+  - *Sai lầm 1:* Giữ khoảng cách quá xa (khoảng cách Bắc Âu), gây cảm giác lạnh lùng, xa cách cho người Hy Lạp vốn ưa chuộng sự ấm áp.
+  - *Sai lầm 2:* Bắt tay hời hợt, lỏng lẻo (dead fish handshake) làm giảm uy tín cá nhân.
+  - *Sai lầm 3:* Lạm dụng các cử chỉ tay mang tính quốc tế mà không hiểu rõ văn hóa địa phương (một số cử chỉ có thể mang sắc thái khác biệt).
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Distant Posture & Weak Handshake" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn duy trì **eye contact** ổn định, kết hợp nụ cười tự nhiên và sẵn sàng đón nhận sự gần gũi về không gian từ phía người đối diện.
+[MINDMAP_NODE: id="sec_5_best" | label="Eye Contact & Warmth" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Roleplay & Behavioral Exercise" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Thực hành đóng vai (roleplay) cuộc gặp gỡ đầu tiên với một chủ cửa hàng tại làng quê Hy Lạp: Kết hợp lời chào **Yassas**, một cái **bắt tay** đúng mực và ánh mắt thiện cảm.
+[MINDMAP_NODE: id="sec_6_basic" | label="Village Shopkeeper Roleplay" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Phân tích tình huống sự khác biệt giữa văn hóa tiếp xúc thấp (Low-Contact) và văn hóa tiếp xúc cao (High-Contact) khi giao tiếp với người Hy Lạp, đề xuất cách điều chỉnh ngôn ngữ cơ thể khi tham gia một buổi đàm phán thương mại trang trọng tại Thessaloniki.
+[MINDMAP_NODE: id="sec_6_advanced" | label="Cross-cultural Negotiation Analysis" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Hellenic Cultural Guides & References" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Các nghiên cứu nhân học văn hóa Địa Trung Hải, tài liệu hướng dẫn giao tiếp từ *Greece Is*, và các chuyên khảo về **proxemics** trong ngữ cảnh Nam Âu.
+[MINDMAP_NODE: id="sec_7_official" | label="Greece Is Cultural Archives" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'bắt tay', 'nụ cười', 'Điều kiện tiên quyết:', 'Yassas', 'Yassou', 'Định nghĩa & Bản chất:', 'proxemics', 'kinaesthetics', 'Nguyên lý/Cơ chế:', 'philoxenia', 'Sơ đồ/Mô hình:', 'Quy trình từng bước (Step-by-step):', 'Approach & Eye Contact:', 'Verbal Greeting:', 'Yassas', 'Yassou', 'Physical Gesture:', 'bắt tay']
+Timestamp links found: []
+
+
+================================================================================
+FILE 4: Bài 4: Chào hỏi theo thời điểm trong ngày
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Chào hỏi theo thời điểm" | parent_id="root" | type="main"]
+# Bài 4: Chào hỏi theo thời điểm trong ngày
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Mục tiêu chào hỏi thời điểm" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Làm thế nào để điều chỉnh lời chào tiếng Hy Lạp theo đúng khung giờ xã hội và thể hiện sự tinh tế văn hóa xứ sở Hellenic?
+- **Kết quả học tập:** Người học sẽ nắm vững hệ thống các biểu thức chào buổi sáng, buổi trưa, chiều và tối; phân biệt rõ ranh giới giữa ngữ cảnh trang trọng và thân mật dựa trên cấu trúc hình thái học của từ.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Phân biệt ngữ cảnh chào" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Đã làm quen với bảng chữ cái Hy Lạp, quy tắc trọng âm (stress accent) và khái niệm đại từ nhân xưng (formal/informal).
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Hệ thống lời chào theo giờ" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Trong văn hóa Hy Lạp, lời chào không chỉ là tín hiệu giao tiếp bề mặt mà còn là sự ban phước (blessing) và thừa nhận sự hiện diện của người đối diện. Các câu chào theo thời điểm kết hợp giữa tính từ chỉ thời gian và danh từ/tính từ cầu chúc.
+[MINDMAP_NODE: id="sec_2_definitions" | label="Kalimera & Kalispera" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Cấu trúc chung của lời chào thời gian dựa trên công thức: **Kalos** (tốt đẹp) biến đổi kết hợp với **mera** (ngày), **espera** (buổi tối) hoặc **nychta** (ban đêm). Trọng âm đóng vai trò quyết định nghĩa và sắc thái biểu cảm.
+[MINDMAP_NODE: id="sec_2_principles" | label="Cấu trúc hình thái học" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Phân chia thời gian giao tiếp xã hội tại Hy Lạp:
+  - 05:00 - 12:00: **Kalimera** (Καλημέρα)
+  - 12:00 - 17:00: **Kalispera** hoặc dùng **Yassas** tùy không gian
+  - 17:00 đến đêm: **Kalispera** (Καλησπέρα)
+  - Khi chuẩn bị ngủ: **Kalinychta** (Καληνύχτα)
+[MINDMAP_NODE: id="sec_2_models" | label="Biểu đồ phân chia giờ" | parent_id="sec_2" | type="sub"]
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Khung lựa chọn lời chào" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. **Xác định mốc thời gian:** Quan sát đồng hồ sinh học hoặc bối cảnh ánh sáng thực tế.
+  2. **Đánh giá mức độ quan hệ:** Thân mật (gia đình, bạn bè đồng trang lứa) hay trang trọng (người lớn tuổi, đối tác, dịch vụ công cộng).
+  3. **Lựa chọn từ vựng tương thích:** Áp dụng hậu tố hoặc biến thể tôn trọng.
+[MINDMAP_NODE: id="sec_3_steps" | label="Quy trình ba bước chọn từ" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Mô hình **Chronemic Politeness** trong ngôn ngữ học xã hội Hy Lạp, nơi thời gian trong ngày quy định trực tiếp mức độ lịch sự (politeness strategy) của người nói.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="Chronemic Politeness Model" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:**
+  - Bình minh đến trưa: **Kalimera** (Dùng cho mọi đối tượng).
+  - Hoàng hôn về đêm: **Kalispera** (Trang trọng và lịch sự).
+  - Chia tay lúc đêm muộn: **Kalinychta** (Chỉ dùng khi chia tay để đi ngủ, tuyệt đối không dùng làm lời chào khi mới gặp buổi tối).
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Ghé quán cà phê Athens" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Một du khách bước vào một quán cà phê truyền thống (*kafenio*) tại Athens vào lúc 10 giờ sáng để gọi một ly cà phê kiểu Hy Lạp (*ellinikos kafes*).
+[MINDMAP_NODE: id="sec_4_context" | label="Bối cảnh Kafenio buổi sáng" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Thay vì dùng câu chào chung chung, du khách mỉm cười và chào người pha chế lớn tuổi bằng câu **Kalimera sas** (Καλημέρα σας - Chào buổi sáng kính thưa ông/bà) để thể hiện sự kính trọng đối với bậc tiền bối.
+[MINDMAP_NODE: id="sec_4_application" | label="Sử dụng Kalimera sas" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Người chủ quán nở nụ cười ấm áp, đáp lại bằng một thái độ cởi mở đậm chất hiếu khách (*philoxenia*). Việc dùng đúng thời điểm và mức độ trang trọng giúp phá vỡ bức tường ngôn ngữ ngay từ giây phút đầu tiên.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Lỗi nhầm lẫn Kalispera" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:**
+  1. *Nhầm lẫn Kalispera và Kalinychta:* Dùng **Kalinychta** khi vừa bước vào một nhà hàng lúc 8 giờ tối. Nguyên nhân do dịch nghĩa đen "chúc buổi tối tốt lành" từ tiếng Anh (Good evening) sang. Khắc phục: Nhớ rằng **Kalinychta** chỉ có nghĩa là "Good night" (chúc ngủ ngon khi từ biệt).
+  2. *Quên trọng âm (Stress Accent):* Đặt sai trọng âm trong từ **Kalimera**, khiến âm điệu bị biến dạng.
+  3. *Lạm dụng sự thân mật:* Dùng lời chào trống không với người lớn tuổi.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Lỗi nhầm lẫn Good Night" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn lắng nghe cách người bản xứ phản hồi; nếu họ dùng **Kalimera**, hãy ghi nhận ngữ điệu và nhịp điệu của họ để mô phỏng lại một cách tự nhiên nhất.
+[MINDMAP_NODE: id="sec_5_best" | label="Quy chuẩn mô phỏng ngữ điệu" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Thực hành tình huống thời gian" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Điền lời chào thích hợp vào các thời điểm sau:
+  - 08:30 sáng gặp đồng nghiệp: [Đáp án: **Kalimera**]
+  - 19:30 tối gặp bạn bè tại quán ăn: [Đáp án: **Kalispera**]
+  - 23:00 đêm rời khỏi nhà bạn để về khách sạn: [Đáp án: **Kalinychta**]
+[MINDMAP_NODE: id="sec_6_basic" | label="Bài tập ghép nối thời gian" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Tại sao trong văn hóa Hy Lạp, việc chào hỏi sai thời điểm (ví dụ dùng lời chào ban ngày cho ban đêm) lại bị coi là thiếu tinh tế hơn so với việc dùng sai từ vựng ngữ pháp? Hãy phân tích dưới lăng kính văn hóa giao tiếp Địa Trung Hải.
+[MINDMAP_NODE: id="sec_6_advanced" | label="Phân tích văn hóa Địa Trung Hải" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Tài liệu ngữ âm Hy Lạp" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** 
+  - *Greek Salutations: A Glossary to Help You Sound Like a Local* - Greece Is.
+  - *Modern Greek Grammar: Morphology and Sociolinguistics* - University of Athens Academic Press.
+[MINDMAP_NODE: id="sec_7_official" | label="Glossary & Academic Press" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'Điều kiện tiên quyết:', 'Định nghĩa & Bản chất:', 'Nguyên lý/Cơ chế:', 'Kalos', 'mera', 'espera', 'nychta', 'Sơ đồ/Mô hình:', 'Kalimera', 'Kalispera', 'Yassas', 'Kalispera', 'Kalinychta', 'Quy trình từng bước (Step-by-step):', 'Xác định mốc thời gian:', 'Đánh giá mức độ quan hệ:', 'Lựa chọn từ vựng tương thích:', 'Framework/Model áp dụng:']
+Timestamp links found: []
+
+
+================================================================================
+FILE 5: Bài 5: Lời chúc và phép lịch sự trong bữa ăn
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Greek Meal Etiquette" | parent_id="root" | type="main"]
+# Bài 5: Lời chúc và phép lịch sự trong bữa ăn
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Culinary Social Etiquette" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Ngôn ngữ ẩm thực Hy Lạp phản ánh cấu trúc xã hội, sự hiếu khách (**philoxenia**) và nghệ thuật giao tiếp cộng đồng như thế nào qua các nghi thức quanh bàn ăn?
+- **Kết quả học tập:** Sau bài học này, học viên có thể vận dụng chính xác các thành ngữ ẩm thực từ khai vị đến tráng miệng, hiểu sâu sắc tầng nghĩa văn hóa của từng lời chúc, và thực hành phép xã giao bàn ăn (**trapeziki evgenia**) như một người bản xứ thực thụ.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Kali Orexi & Yiamas" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Nắm vững bảng chữ cái Hy Lạp cơ bản, phát âm nguyên âm/phụ âm đôi, và tinh thần cởi mở với văn hóa Địa Trung Hải.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Gastronomic Linguistics" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Trong văn hóa Hy Lạp, bữa ăn không đơn thuần là sự nạp năng lượng sinh học mà là một nghi lễ xã hội mang tính cộng đồng cao (**trapezi**). Ngôn ngữ sử dụng trong không gian này đóng vai trò là chất keo kết nối, thể hiện lòng biết ơn đối với người chuẩn bị và sự tôn trọng đối với thực phẩm. Các câu chúc như **Kali orexi** không chỉ là lời chào mời lịch sự mà còn là lời cầu chúc cho sự gắn kết tinh thần bên mâm cơm gia đình hoặc quán rượu truyền thống (**taverna**).
+[MINDMAP_NODE: id="sec_2_definitions" | label="Kali Orexi & Geia" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Cơ chế ngôn ngữ học xã hội của các lời chúc Hy Lạp dựa trên nguyên lý tương hỗ (**reciprocity**) và lòng hiếu khách (**philoxenia**). Mỗi giai đoạn của bữa ăn — từ khoảnh khắc nâng ly đầu tiên đến khi kết thúc — đều tương ứng với một biểu thức ngôn ngữ đặc thù nhằm tôn vinh sức khỏe (**Stin igia mas**) và công sức lao động (**Geia sta heria sou**).
+[MINDMAP_NODE: id="sec_2_principles" | label="Philoxenia & Reciprocity" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Tiến trình giao tiếp ẩm thực tuần tự từ **Pro-meal Blessings** (trước bữa ăn với **Kali orexi**) đến **Mid-meal Toasts** (nâng ly với **Yiamas**) và khép lại bằng **Post-meal Gratitude** (lời cảm ơn người nấu với **Geia sta heria sou** và chúc tiêu hóa tốt với **Kali honepsi**).
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Culinary Dialogue Framework" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. *Giai đoạn nhập tiệc:* Khi thức ăn được dọn lên bàn, chủ nhà hoặc thực khách chủ động hô to **Kali orexi** (Καλή όρεξη - Chúc ngon miệng) kèm theo ánh mắt giao tiếp ấm áp với mọi người xung quanh.
+  2. *Giai đoạn nâng ly:* Khi ly rượu vang (**krasi**) hoặc ouzo được chạm vào nhau, tất cả đồng thanh **Stin igia mas** (Στην υγειά μας - Vì sức khỏe của chúng ta) hoặc phiên bản ngắn gọn **Yiamas** (Γεια μας), đồng thời nhìn thẳng vào mắt người đối diện theo chuẩn mực văn hóa Địa Trung Hải.
+  3. *Giai đoạn thưởng thức và cảm kích:* Sau khi dùng bữa, đặc biệt khi đứng dậy rời bàn hoặc khen ngợi người nội trợ, sử dụng câu **Geia sta heria sou** (Γεια στα χέρια σου - Sức khỏe cho đôi tay của bạn).
+  4. *Giai đoạn kết thúc:* Chúc phúc cho hệ tiêu hóa và sự thoải mái với câu **Kali honepsi** (Καλή χώνεψη - Tiêu hóa tốt).
+[MINDMAP_NODE: id="sec_3_steps" | label="Toasting & Dining Rituals" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Mô hình giao tiếp ngữ용 học 4 điểm **EDAC** (Engage - Drink - Appreciate - Complete) giúp hệ thống hóa việc sử dụng từ vựng đúng thời điểm trong không gian ẩm thực Hy Lạp.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="EDAC Dining Model" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** Lựa chọn sắc thái trang trọng (**Yiasas** / **Stin igia sas**) khiêm nhường khi giao tiếp với người lớn tuổi, bề trên, hoặc người chưa quen biết; và sắc thái thân mật (**Yiasou** / **Yiamas**) khi dùng bữa cùng gia đình, bạn bè đồng trang lứa.
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Taverna Dining Experience" | parent_id="sec_4" | type="main"]
+
+- **Bối cảnh:** Một du khách phương Tây lần đầu được mời tham gia bữa tối gia đình truyền thống tại một ngôi làng nhỏ trên đảo Crete. Bàn ăn tràn ngập các món đặc sản như moussaka, horiatiki salata và rượu retsina do người bà trong gia đình tự tay chuẩn bị suốt nhiều giờ trong bếp.
+[MINDMAP_NODE: id="sec_4_context" | label="Cretan Family Taverna" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Thay vì cắm cúi ăn ngay khi món ăn vừa dọn lên, vị khách đã chủ động nhìn quanh bàn, nở nụ cười và cất tiếng nói rõ ràng: "**Kali orexi**!" để chào mọi người. Khi ly rượu vang được rót đầy, vị khách chủ động nâng ly chạm vào ly của chủ nhà và hô lớn "**Yiamas!**". Đến cuối bữa ăn, khi đứng dậy, vị khách tiến lại gần người nấu bếp, chạm nhẹ vào vai và dành lời khen chân thành: "**Geia sta heria sou**!", khiến không gian bừng sáng bởi những nụ cười rạng rỡ và sự chấp nhận từ cộng đồng bản địa.
+[MINDMAP_NODE: id="sec_4_application" | label="Cultural Integration Case" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Hành động nhỏ nhưng đúng chuẩn mực văn hóa đã phá vỡ bức tường ngôn ngữ, biến vị khách nước ngoài thành một phần của gia đình. Bài học rút ra là sự am hiểu các thành ngữ xã giao nhỏ nhặt chính là chìa khóa mở ra sự đồng cảm sâu sắc trong văn hóa Hy Lạp.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Etiquette Pitfalls & Tips" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:** 
+  1. *Im lặng khi ăn:* Bắt đầu ăn ngay lập tức mà không nói lời chúc **Kali orexi**, bị coi là thiếu tinh tế và thờ ơ với sự chuẩn bị của người khác.
+  2. *Nâng ly thiếu giao tiếp mắt:* Khi nói **Yiamas** nhưng nhìn xuống đất hoặc nhìn vào điện thoại, phá vỡ năng lượng kết nối của lời chúc tụng.
+  3. *Quên khen người nấu:* Bỏ qua câu thành ngữ **Geia sta heria sou**, khiến người chuẩn bị bữa ăn cảm thấy công sức của họ không được ghi nhận.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Silent Eating & No Eye Contact" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn duy trì ánh mắt (**mati me mati**) khi nâng ly chúc mừng; sử dụng đúng thời điểm các cụm từ; thể hiện thái độ chân thành, nồng nhiệt đặc trưng của người Địa Trung Hải.
+[MINDMAP_NODE: id="sec_5_best" | label="Eye Contact & Sincerity" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Culinary Vocabulary Practice" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Đóng vai trong tình huống bạn đang ngồi tại một quán ăn ven biển ở Athens (**Psistaria**). Hãy viết một kịch bản ngắn đối thoại 4 câu sử dụng lần lượt các từ khóa: **Kali orexi**, **Yiamas**, **Geia sta heria sou**, và **Kali honepsi** đúng theo trình tự thời gian của bữa ăn.
+[MINDMAP_NODE: id="sec_6_basic" | label="Taverna Dialogue Roleplay" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Phân tích sự khác biệt về mặt văn hóa-xã hội giữa lời chúc ăn uống phương Tây (như "Bon appétit" hay "Enjoy your meal") với triết lý gắn kết cộng đồng đằng sau các câu chúc của người Hy Lạp như **Geia sta heria sou**. Tại sao ngôn ngữ Hy Lạp lại tập trung tôn vinh "đôi tay" và "sức khỏe" nhiều đến vậy?
+[MINDMAP_NODE: id="sec_6_advanced" | label="Cultural Philosophy Analysis" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Hellenic Cultural References" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** 
+  - *Greece Is: Greek Salutations: A Glossary to Help You Sound Like a Local* (Paulina Björk Kapsalis).
+  - *The Anthropology of Food and Hospitality in Greece* - Academic Journal of Mediterranean Studies.
+  - *Basic Greek Greetings & Social Etiquette Guide* - Cultural Linguistics Research Papers.
+[MINDMAP_NODE: id="sec_7_official" | label="Greece Is Glossary & Papers" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'philoxenia', 'Kết quả học tập:', 'trapeziki evgenia', 'Điều kiện tiên quyết:', 'Định nghĩa & Bản chất:', 'trapezi', 'Kali orexi', 'taverna', 'Nguyên lý/Cơ chế:', 'reciprocity', 'philoxenia', 'Stin igia mas', 'Geia sta heria sou', 'Sơ đồ/Mô hình:', 'Pro-meal Blessings', 'Kali orexi', 'Mid-meal Toasts', 'Yiamas', 'Post-meal Gratitude']
+Timestamp links found: []
+
+
+================================================================================
+FILE 6: Bài 6: Văn hóa nâng ly và chúc sức khỏe (Stin igia mas)
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Văn hóa nâng ly Hy Lạp" | parent_id="root" | type="main"]
+# Bài 6: Văn hóa nâng ly và chúc sức khỏe (Stin igia mas)
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Nghệ thuật giao tiếp bàn tiệc" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Làm thế nào để hòa nhập vào bầu không khí tiệc tùng tại Hy Lạp thông qua nghệ thuật nâng ly và các lời chúc truyền thống? Tại sao việc nâng ly lại mang ý nghĩa gắn kết cộng đồng sâu sắc trong văn hóa Hellenic?
+- **Kết quả học tập:** Người học sẽ nắm vững cách sử dụng các câu chúc như **Stin igia mas**, **Yiamas**, và **Geia sta heria sou** đúng ngữ cảnh, hiểu rõ các quy tắc xã giao bàn tiệc tại Hy Lạp, từ đó thể hiện sự tôn trọng tinh tế đối với chủ nhà và bạn bè bản địa.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Thành thạo khẩu ngữ nâng ly" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Sự cởi mở đối với văn hóa ẩm thực Địa Trung Hải và tinh thần sẵn sàng tham gia các cuộc vui mang tính cộng đồng cao.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Triết lý Philotimo và Ẩm thực" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Trong văn hóa Hy Lạp, bàn ăn không chỉ là nơi dung nạp dinh dưỡng mà còn là không gian thiêng liêng của sự sẻ chia, lòng hiếu khách (**philoxenia**) và tình bằng hữu. Các lời chúc không đơn thuần là từ ngữ xã giao mà là những lời cầu chúc năng lượng sống và sức khỏe (**igia**).
+[MINDMAP_NODE: id="sec_2_definitions" | label="Khái niệm Stin igia mas" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Cơ chế xã hội của việc nâng ly dựa trên sự bình đẳng và đồng thuận thị giác - thính giác. Khi chạm ly (**tsougrisma**), mọi ánh mắt phải giao nhau, tiếng vang của ly thủy tinh tượng trưng cho sự thanh tẩy và lời khẳng định sự hiện diện trọn vẹn trong khoảnh khắc hiện tại.
+[MINDMAP_NODE: id="sec_2_principles" | label="Nguyên lý chạm ly Tsougrisma" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Bản đồ ngôn ngữ chúc tụng trong bữa ăn Hellenic bao gồm ba trục chính: tri ân người nấu (**Geia sta heria sou**), khơi mào cuộc vui (**Stin igia mas / Yiamas**), và kết thúc viên mãn (**Kali honepsi**).
+[MINDMAP_NODE: id="sec_2_models" | label="Mô hình ngôn ngữ bàn tiệc" | parent_id="sec_2" | type="sub"]
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Framework giao tiếp bàn ăn" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. *Bước 1 - Vinh danh người nấu:* Trước hoặc trong bữa ăn, khi thưởng thức món ăn ngon, hãy bày tỏ lòng biết ơn bằng câu **Geia sta heria sou** (sức khỏe đến đôi tay bạn).
+  2. *Bước 2 - Khởi động nâng ly:* Khi rót rượu vang hoặc Ouzo, người chủ trì hoặc bất kỳ ai muốn kết nối nhóm sẽ nâng ly cao, hô lớn **Stin igia mas!** hoặc phiên bản ngắn gọn **Yiamas!**.
+  3. *Bước 3 - Giao tiếp mắt (Eye Contact):* Khi chạm ly với từng người xung quanh, bắt buộc phải nhìn thẳng vào mắt họ (tránh nhìn xuống ly). Đây là điểm cực kỳ quan trọng trong nghi thức xã giao Địa Trung Hải.
+[MINDMAP_NODE: id="sec_3_steps" | label="Ba bước nâng ly chuẩn mực" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Mô hình **Philoxenia-Toast Protocol** (Nghi thức hiếu khách và chúc tụng) giúp định hình hành vi ứng xử từ lúc bước vào bàn ăn cho đến khi tiệc tàn.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="Philoxenia-Toast Protocol" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** Quy tắc về âm lượng và mức độ trang trọng: Dùng **Stin igia sas** khi đối thoại lịch sự với người lớn tuổi/người mới gặp; dùng **Stin igia sou / Yiasou** khi chúc riêng một cá nhân thân thiết.
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Bữa tiệc gia đình tại Athens" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Mark, một du khách người nước ngoài, được mời tham gia bữa tối gia đình truyền thống tại một ngôi làng ngoại ô Athens. Bàn ăn tràn ngập các món moussaka, souvlaki và rượu vangretsina do chính người bà trong gia đình chuẩn bị công phu.
+[MINDMAP_NODE: id="sec_4_context" | label="Bữa tối gia đình tại Athens" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Ngay khi nếm món moussaka đầu tiên, Mark nhớ lại kiến thức và thốt lên **Geia sta heria sou** với người bà, khiến bà nở nụ cười rạng rỡ. Đến phần nâng ly rượu vang, Mark chủ động đứng dậy, nâng ly hướng về phía mọi người và hô to **Yiamas!**, sau đó tiến lại chạm ly và nhìn thẳng vào mắt từng thành viên, nói **Stin igia sou** với chủ nhà.
+[MINDMAP_NODE: id="sec_4_application" | label="Thực hành khẩu ngữ linh hoạt" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Hành động tinh tế này đã phá vỡ hoàn toàn khoảng cách văn hóa. Mark không chỉ được nhìn nhận như một vị khách thông thường mà được coi là một người bạn tri âm (**filos**). Lesson learned: Sự thấu hiểu các chi tiết văn hóa nhỏ như cách nhìn mắt khi chạm ly tạo ra sức mạnh kết nối vượt biên giới ngôn ngữ.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Sai lầm khi chạm ly Hy Lạp" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:**
+  1. *Thiếu giao tiếp mắt:* Chạm ly mà nhìn đi chỗ khác hoặc nhìn vào ly của mình — Nguyên nhân do thói quen văn hóa phương Tây khác; cách khắc phục là luôn giữ ánh mắt kiên định với người đối diện khi nói **Yiamas**.
+  2. *Dùng sai cấp độ trang trọng:* Dùng từ quá suồng sã **Yiasou** với người lớn tuổi hoặc đối tác kinh doanh — Khắc phục bằng cách sử dụng **Stin igia sas** trong bối cảnh trang trọng.
+  3. *Quên chúc người nấu ăn:* Tập trung vào ăn uống mà quên mất việc khen ngợi đôi tay khéo léo của đầu bếp gia đình bằng câu **Geia sta heria sou**.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Lỗi thiếu giao tiếp mắt" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn đợi chủ nhà nâng ly mở màn trước khi bạn bắt đầu uống ngụm rượu đầu tiên; duy trì không khí vui tươi, hào sảng vì các buổi tiệc Hy Lạp đề cao sự phóng khoáng và nhiệt huyết.
+[MINDMAP_NODE: id="sec_5_best" | label="Quy tắc chờ chủ nhà mở màn" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Thực hành ngữ cảnh bàn tiệc" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Đóng vai trong một tình huống giả định tại một quán ăn truyền thống (taverna) ở Thessaloniki. Bạn hãy viết ra một kịch bản ngắn gồm 3 câu thoại sử dụng lần lượt: **Geia sta heria sou** khi món ăn được dọn lên, **Stin igia mas / Yiamas** khi nâng ly chung, và **Kali honepsi** khi bữa ăn kết thúc.
+[MINDMAP_NODE: id="sec_6_basic" | label="Kịch bản Taverna Thessaloníki" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Tại sao trong văn hóa Hy Lạp, việc chúc sức khỏe lại gắn liền với hầu hết mọi hoạt động xã hội từ ăn uống cho đến hắt hơi (**Yiasou**)? Phân tích mối liên hệ giữa ngôn ngữ, sức khỏe cộng đồng và tinh thần hiếu khách Hellenic.
+[MINDMAP_NODE: id="sec_6_advanced" | label="Phân tích triết học Hellenic" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Tài liệu ngôn ngữ học văn hóa" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Greece Is (Greek Salutations: A Glossary to Help You Sound Like a Local), GreekPod101 (Basic Greek Greetings), và các nghiên cứu nhân học văn hóa về phong tục tập quán Địa Trung Hải.
+[MINDMAP_NODE: id="sec_7_official" | label="Glossary Greece Is" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'Stin igia mas', 'Yiamas', 'Geia sta heria sou', 'Điều kiện tiên quyết:', 'Định nghĩa & Bản chất:', 'philoxenia', 'igia', 'Nguyên lý/Cơ chế:', 'tsougrisma', 'Sơ đồ/Mô hình:', 'Geia sta heria sou', 'Stin igia mas / Yiamas', 'Kali honepsi', 'Quy trình từng bước (Step-by-step):', 'Geia sta heria sou', 'Stin igia mas!', 'Yiamas!', 'Framework/Model áp dụng:']
+Timestamp links found: []
+
+
+================================================================================
+FILE 7: Bài 7: Lời chúc phúc và phản ứng trong các tình huống bất ngờ
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Greek Blessings & Sneezing Etiquette" | parent_id="root" | type="main"]
+# Bài 7: Lời chúc phúc và phản ứng trong các tình huống bất ngờ
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Unexpected Life Events" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Ngôn ngữ Hy Lạp phản ánh sự quan tâm và phung phí những lời chúc phúc ra sao trong các tình huống đời thường và bất ngờ như thế nào?
+- **Kết quả học tập:** Người học nắm vững cách sử dụng từ **Yiasou** không chỉ làm lời chào mà còn dùng như câu **Bless you** khi có ai đó hắt hơi, đồng thời biết cách đáp lại lời chúc đó một cách lịch sự theo văn hóa bản địa.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Yiasou Sneezing Etiquette" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Đã quen với bảng chữ cái Hy Lạp cơ bản và các quy tắc phát âm nguyên âm/phụ âm đơn giản.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Etymology of Yiasou" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Trong kho tàng ngôn ngữ học Hy Lạp, lời nói vượt qua chức năng thông tin thuần túy để trở thành một hình thức trao gửi năng lượng tinh thần và sự bảo hộ cộng đồng. Khái niệm **Yiasou** (Γεια σου) xuất phát từ cụm từ cổ mang nghĩa "sức khỏe của bạn" (to your health).
+[MINDMAP_NODE: id="sec_2_definitions" | label="Yiasou Health Wish" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Khi một hiện tượng sinh lý bất ngờ xảy ra như hắt hơi, văn hóa Hy Lạp cổ đại và hiện đại đều coi đó là một dấu hiệu cần sự can thiệp của lời chúc phúc để xua đuổi điều rủi ro, củng cố thể trạng vật lý thông qua sự kết nối xã hội.
+[MINDMAP_NODE: id="sec_2_principles" | label="Somatic Blessings" | parent_id="sec_2" | type="sub"]
+- **Sơдар/Mô hình:** Mô hình giao tiếp tương hỗ trong văn hóa Hy Lạp bao gồm: Hành động bất ngờ (Hắt hơi) → Lời chúc phúc (**Yiasou**) → Phản hồi ghi nhận (**Na se kala**).
+[MINDMAP_NODE: id="sec_2_models" | label="Reciprocal Blessing Loop" | parent_id="sec_2" | type="sub"]
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Sneezing Response Protocol" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. Lắng nghe âm thanh bất ngờ từ người đối diện (ví dụ: tiếng hắt hơi).
+  2. Ngay lập tức hướng ánh nhìn và sự chú ý về phía họ, thốt lên từ **Yiasou** kèm theo nụ cười ấm áp.
+  3. Người nhận được lời chúc sẽ phản hồi bằng cách cảm ơn thông qua câu **Na se kala** (Chúc bạn luôn khỏe mạnh/tốt lành).
+[MINDMAP_NODE: id="sec_3_steps" | label="Immediate Verbal Response" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Sử dụng **Phonetic Politeness Framework** - hệ thống quy tắc ứng xử bằng ngữ âm nhằm tạo dựng sự thân mật tức thì trong không gian công cộng và riêng tư tại Địa Trung Hải.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="Phonetic Politeness Framework" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** Tùy thuộc vào mức độ thân mật mà điều chỉnh từ **Yiasou** (số ít, thân mật) sang **Yassas** (số nhiều hoặc trang trọng hơn khi đối diện người lớn tuổi).
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Athens Taverna Encounter" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Trong một quán ăn nhỏ (taverna) nhộn nhịp tại Athens, thực khách nước ngoài vô tình hắt hơi mạnh giữa lúc đang thưởng thức món moussaka cùng người bạn bản xứ.
+[MINDMAP_NODE: id="sec_4_context" | label="Taverna Sneezing Incident" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Thay vì phớt lờ như văn hóa phương Tây hiện đại ở một số nơi, người bạn Hy Lạp ngay lập tức quay sang, nâng ly nước và nói lớn **Yiasou**, kết hợp cử chỉ chạm nhẹ vào bàn. Thực khách nước ngoài mỉm cười đáp lại bằng câu **Efcharisto** kèm **Na se kala**.
+[MINDMAP_NODE: id="sec_4_application" | label="Cross-cultural Interaction" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Hành động nhỏ này phá vỡ ngay lập tức rào cản ngôn ngữ, biến một sự cố sinh lý ngẫu nhiên thành cơ hội thể hiện tính hiếu khách (**philoxenia**) đặc trưng của văn hóa Hy Lạp.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Misusing Greeting Formulas" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:** 
+  1. *Nhầm lẫn ngữ cảnh:* Chỉ dùng **Yiasou** để chào hỏi khi gặp mặt hoặc tạm biệt mà quên mất công dụng chúc phúc khi hắt hơi.
+  2. *Phát âm sai trọng âm:* Nhấn sai âm tiết khiến từ ngữ mất đi nhịp điệu tự nhiên của tiếng Hy Lạp.
+  3. *Thiếu phản hồi:* Nhận được lời chúc **Yiasou** nhưng im lặng không đáp lại, gây cảm giác xa cách, thiếu lịch sự.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Phonetic Confusion Errors" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn quan sát biểu cảm khuôn mặt của người đối diện; dùng ánh mắt ấm áp khi trao gửi các lời chúc mang tính gắn kết cộng đồng.
+[MINDMAP_NODE: id="sec_5_best" | label="Warm Eye Contact Etiquette" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Sneezing Roleplay Exercise" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Đóng vai trong tình huống bạn bè ngồi làm việc chung, một người hắt hơi. Hãy thực hành nói **Yiasou** ngay lập tức và hướng dẫn bạn mình cách đáp lại bằng câu **Na se kala**.
+[MINDMAP_NODE: id="sec_6_basic" | label="Roleplay Sneezing Dialogue" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** So sánh ý nghĩa văn hóa của việc chúc sức khỏe khi hắt hơi trong tiếng Hy Lạp (**Yiasou**) với tiếng Anh ("Bless you") hoặc tiếng Đức ("Gesundheit"). Điểm tương đồng và khác biệt cốt lõi về mặt triết lý nhân sinh là gì?
+[MINDMAP_NODE: id="sec_6_advanced" | label="Cultural Comparison Analysis" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Greek Linguistic Heritage Sources" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Tài liệu nghiên cứu văn hóa ngôn ngữ từ *Greece Is*, các hướng dẫn ngữ pháp giao tiếp từ *GreekPod101*, và các chuyên khảo về từ vựng xã hội học Hy Lạp cổ đại lẫn hiện đại.
+[MINDMAP_NODE: id="sec_7_official" | label="Greece Is Publications" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'Yiasou', 'Bless you', 'Điều kiện tiên quyết:', 'Định nghĩa & Bản chất:', 'Yiasou', 'Nguyên lý/Cơ chế:', 'Sơдар/Mô hình:', 'Yiasou', 'Na se kala', 'Quy trình từng bước (Step-by-step):', 'Yiasou', 'Na se kala', 'Framework/Model áp dụng:', 'Phonetic Politeness Framework', 'Bảng tham số/Quy tắc quyết định:', 'Yiasou', 'Yassas', 'Bối cảnh:']
+Timestamp links found: []
+
+
+================================================================================
+FILE 8: Bài 8: Chào hỏi trong dịp đặc biệt và các ngày lễ
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Chỉ dẫn văn hóa Hy Lạp" | parent_id="root" | type="main"]
+# Bài 8: Chào hỏi trong dịp đặc biệt và các ngày lễ
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Mục tiêu ngôn ngữ lễ hội" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Ngôn ngữ chúc mừng trong các dịp lễ hội và kỷ niệm tại Hy Lạp phản ánh cấu trúc xã hội, tư duy cộng đồng và giá trị văn hóa nào của người bản địa?
+- **Kết quả học tập:** Sau bài học này, học viên có khả năng phân tích ngữ cảnh sử dụng, phát âm chuẩn xác và vận dụng linh hoạt các công thức lời chúc phức hợp trong văn hóa giao tiếp Hy Lạp.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Chronia Polla và lời chúc" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Nắm vững hệ thống ngữ âm tiếng Hy Lạp hiện đại, cấu trúc danh từ cách (case system) cơ bản và tinh thần cởi mở đối với nhân học ngôn ngữ.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Bản chất lời chúc Hy Lạp" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Trong bức tranh ngôn ngữ học văn hóa (cultural linguistics) của Địa Trung Hải, lời chúc không đơn thuần là một công cụ trao đổi thông tin chức năng mà đóng vai trò như một **vật phẩm xã hội** (social artifact) gắn kết cộng đồng. 
+[MINDMAP_NODE: id="sec_2_definitions" | label="Chronia Polla định nghĩa" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Khái niệm **Chronia Polla** (Χρόνια Πολλά - "Nhiều năm") hoạt động dựa trên cơ chế ban phúc và kéo dài sự sống, ước vọng trường thọ kết hợp với sự thịnh vượng. Cấu trúc này vượt qua giới hạn của một lời chúc sinh nhật thông thường để bao trùm các dịp lễ thánh (name days), lễ Phục sinh (Pascha), và Giáng sinh (Christougenna).
+[MINDMAP_NODE: id="sec_2_principles" | label="Cơ chế ban phúc xã hội" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Hệ thống phân loại lời chúc Hy Lạp theo trục thời gian chu kỳ (Cyclic Time Axis) và trục sự kiện cá nhân (Milestone Event Axis).
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Framework giao tiếp lễ hội" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. Xác định bản chất sự kiện (Lễ tôn giáo truyền thống hay cột mốc cá nhân).
+  2. Lựa chọn từ khóa cốt lõi (**Chronia Polla** hoặc các biến thể cụ thể theo mùa).
+  3. Áp dụng nghi thức giao tiếp phi ngôn ngữ đi kèm (ôm hôn má hai bên, ánh mắt giao lưu trực diện hoặc trao tặng món quà nhỏ mang tính biểu tượng).
+[MINDMAP_NODE: id="sec_3_steps" | label="Quy trình ba bước chúc mừng" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Mô hình **Philoxenia** (tình yêu đối với khách lạ / sự hiếu khách thiêng liêng) chi phối toàn bộ cấu trúc lời nói, biến không gian giao tiếp thành một nghi lễ tôn vinh tình đoàn kết con người.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="Mô hình Philoxenia truyền thống" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** Lựa chọn sắc thái biểu cảm dựa trên khoảng cách xã hội (Formal vs. Informal) nhưng luôn duy trì sự nồng nhiệt đặc trưng của người miền Nam châu Âu.
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Lễ hội Name Day tại Athens" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Tại một quán cà phê truyền thống (kafeneio) ở Plaka, Athens, vào ngày lễ Thánh George (Yiorgos), không khí tràn ngập tiếng cười và những cái ôm siết chặt. Một vị khách nước ngoài lần đầu tham gia buổi tụ họp cộng đồng nhân dịp **Name Day** của chủ quán.
+[MINDMAP_NODE: id="sec_4_context" | label="Không gian quán Kafeneio" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Thay vì chỉ nói một câu đơn giản, vị khách áp dụng công thức đầy đủ: tiến lại gần, thực hiện nghi thức chạm má và phát âm rõ ràng câu chúc **Na zisis** (Να ζήσεις - "Chúc bạn sống lâu") kết hợp với **Chronia Polla**. 
+[MINDMAP_NODE: id="sec_4_application" | label="Nghi thức chạm má Na zisis" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Phản ứng của người nhận không chỉ là sự lịch sự hình thức mà là một sự bùng nổ cảm xúc của lòng biết ơn và sự chấp nhận văn hóa. Việc sử dụng đúng từ vựng bản xứ phá vỡ bức tường ngoại kiều, biến người học thành một thành viên tạm thời của đại gia đình cộng đồng.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Sai lầm ngữ nghĩa và ngữ điệu" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:** 
+  1. Sử dụng rập khuôn các câu chúc tiếng Anh dịch nghĩa đen sang tiếng Hy Lạp, dẫn đến sự khô khan, thiếu đi chất trữ tình và nhịp điệu của ngôn ngữ Hellenic.
+  2. Bỏ qua các ngày **Name Day** (ngáy lễ thánh bảo mệnh) mà chỉ chú trọng đến sinh nhật cá nhân, một sự thiếu sót lớn trong văn hóa truyền thống Chính thống giáo.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Bỏ quên Name Day truyền thống" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn lắng nghe ngữ điệu từ người bản xứ, kết hợp nhịp nhàng giữa lời nói chúc phúc với ngôn ngữ cơ thể cởi mở, chân thành.
+[MINDMAP_NODE: id="sec_5_best" | label="Kết hợp ngôn ngữ cơ thể" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Thực hành ngữ cảnh lễ hội" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Viết kịch bản ngắn (từ 3 đến 5 câu) trong đó bạn đến dự một bữa tiệc sinh nhật tại Thessaloniki, sử dụng chính xác câu **Chronia Polla** cùng với lời chúc sức khỏe **Ygeia kai eutychia** (Sức khỏe và hạnh phúc).
+[MINDMAP_NODE: id="sec_6_basic" | label="Kịch bản tiệc sinh nhật" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Phân tích sự khác biệt về mặt xã hội học và ngôn ngữ học giữa lời chúc mừng năm mới **Kalh Chronia** và lời chúc sinh nhật **Chronia Polla**, từ đó đánh giá cách mà người Hy Lạp quan niệm về thời gian tuần hoàn.
+[MINDMAP_NODE: id="sec_6_advanced" | label="Phân tích thời gian tuần hoàn" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Tài liệu ngôn ngữ học Hy Lạp" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** 
+  - *Greek Salutations: A Glossary to Help You Sound Like a Local* - Greece Is Research Publications.
+  - Tác phẩm nghiên cứu nhân học văn hóa *The Greeks of the Inner East* về phong tục tập quán và ngôn ngữ lễ hội truyền thống.
+[MINDMAP_NODE: id="sec_7_official" | label="Greece Is Salutations Glossary" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'Điều kiện tiên quyết:', 'Định nghĩa & Bản chất:', 'vật phẩm xã hội', 'Nguyên lý/Cơ chế:', 'Chronia Polla', 'Sơ đồ/Mô hình:', 'Quy trình từng bước (Step-by-step):', 'Chronia Polla', 'Framework/Model áp dụng:', 'Philoxenia', 'Bảng tham số/Quy tắc quyết định:', 'Bối cảnh:', 'Name Day', 'Áp dụng:', 'Na zisis', 'Chronia Polla', 'Kết quả & Phân tích:', '3-5 Sai lầm phổ biến:']
+Timestamp links found: []
+
+
+================================================================================
+FILE 9: Bài 9: Lời chúc cho những khởi đầu mới và sự kiện trong cuộc sống
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Khởi đầu mới và Sự kiện" | parent_id="root" | type="main"]
+# Bài 9: Lời chúc cho những khởi đầu mới và sự kiện trong cuộc sống
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Triết lý lời chúc Hy Lạp" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Làm thế nào để thấu hiểu văn hóa Hy Lạp thông qua hệ thống lời chúc phong phú dành cho mọi ngóc ngách của đời sống thường nhật?
+- **Kết quả học tập:** Người học sẽ nắm vững ngữ nghĩa, hoàn cảnh sử dụng và sắc thái biểu cảm của các câu chúc độc đáo dành cho đồ vật mới, diện mạo mới hay sự khởi đầu tuần làm việc.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Vận dụng lời chúc linh hoạt" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Đã quen thuộc với bảng chữ cái Hy Lạp, cách phát âm cơ bản và các mẫu câu chào hỏi thông dụng (*Yassou*, *Yassas*).
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Euxes và Văn hóa cộng đồng" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Trong thế giới quan Hy Lạp, ngôn từ không chỉ mang tính biểu đạt mà còn chứa đựng năng lượng bảo hộ, sự chia sẻ và tinh thần hiếu khách (*philoxenia*). Khái niệm **euxes** (lời chúc/lời cầu nguyện) đóng vai trò như chất keo kết dính xã hội, nơi mỗi sự kiện dù nhỏ nhặt nhất trong đời sống cá nhân đều nhận được sự đồng cảm từ cộng đồng.
+[MINDMAP_NODE: id="sec_2_definitions" | label="Euxes trong đời sống" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Cơ chế hình thành lời chúc tại Hy Lạp dựa trên nguyên lý đối ứng tình cảm và sự chú tâm đến hiện tại. Người Hy Lạp tin rằng việc cất lên một lời chúc đúng lúc cho mái tóc mới hay món đồ gia dụng vừa tậu sẽ đem lại vận may (*tychi*) và xua đuổi điều rủi.
+[MINDMAP_NODE: id="sec_2_principles" | label="Năng lượng bảo hộ Tychi" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Hệ thống phân loại lời chúc Hy Lạp theo chiều không gian xã hội: từ không gian thân mật gia đình (chúc bữa ăn, chúc ngủ ngon) đến không gian công cộng (chúc đầu tuần, chúc mua sắm).
+[MINDMAP_NODE: id="sec_2_models" | label="Phân loại hệ thống Euxes" | parent_id="sec_2" | type="sub"]
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Ngữ cảnh và Cấu trúc lời chúc" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. Nhận diện sự kiện hoặc sự thay đổi trên cơ thể/tài sản của đối phương (**Kouρεμα** - cắt tóc, **Aγορά** - mua sắm).
+  2. Xác định mức độ thân thiết để chọn cấu trúc biểu đạt phù hợp (thân mật hay trang trọng).
+  3. Trao gửi lời chúc kèm theo cử chỉ ngôn ngữ cơ thể đặc trưng (ánh mắt thiện cảm, cái chạm nhẹ vào vai hoặc tay).
+[MINDMAP_NODE: id="sec_3_steps" | label="Nhận diện và Trao gửi" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Mô hình **Situation-Euxis-Response** (SER) dùng để phân tích cách người bản xứ phản ứng trước các cột mốc vi mô trong cuộc sống hàng ngày.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="Mô hình SER Hy Lạp" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** Lựa chọn từ vựng dựa trên tính chất sở hữu (vật chất hữu hình vs. sự kiện thời gian).
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Tình huống diện mạo và tuần mới" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Bạn đến văn phòng vào sáng thứ Hai và nhận thấy đồng nghiệp người Hy Lạp vừa đổi một kiểu tóc rất ấn tượng, đồng thời cả nhóm đang bước vào một tuần dự án căng thẳng.
+[MINDMAP_NODE: id="sec_4_context" | label="Sáng thứ Hai tại Athens" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** 
+  - Đối với mái tóc mới, bạn sử dụng câu chúc truyền thống mang ý nghĩa vui vẻ, chúc mái tóc mới mang lại sự nhẹ nhõm và tươi mới.
+  - Đối với ngày đầu tuần, bạn trao gửi lời chúc năng lượng tích cực cho toàn bộ chu kỳ làm việc sắp tới.
+[MINDMAP_NODE: id="sec_4_application" | label="Sử dụng Kourema và Kalistisi" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Sự nhạy cảm văn hóa này lập tức phá vỡ khoảng cách ngôn ngữ, tạo ra bầu không khí gắn kết sâu sắc, minh chứng cho việc thấu hiểu **philoxenia** và văn hóa giao tiếp bản địa.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Ngữ âm và Ngữ cảnh sai lầm" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:**
+  - *Dùng sai ngữ cảnh:* Áp dụng lời chúc tang lễ hoặc dịp trang trọng vào các sự kiện đời thường mang tính vui tươi.
+  - *Phát âm sai trọng âm (accent):* Tiếng Hy Lạp rất coi trọng trọng âm; đặt sai vị trí có thể làm thay đổi hoàn toàn ý nghĩa của từ chúc phúc.
+  - *Dịch nghĩa đen:* Cố gắng dịch từng từ từ tiếng Anh sang tiếng Hy Lạp thay vì sử dụng các **idiomatic set phrases** (cành ngữ cố định) có sẵn.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Sai lệch trọng âm từ vựng" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn lắng nghe cách người bản xứ lặp lại các câu chúc trong đời sống hàng ngày, ghi nhớ chúng như những khối ngôn ngữ nguyên vẹn thay vì tách rời từng từ đơn lẻ.
+[MINDMAP_NODE: id="sec_5_best" | label="Học cụm từ nguyên khối" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Đóng vai tình huống thực tế" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Đóng vai trong tình huống một người bạn vừa khoe chiếc xe hơi mới mua. Hãy viết ra câu chúc phù hợp nhất bằng tiếng Hy Lạp kèm theo phiên âm Latin và giải thích nghĩa đen.
+[MINDMAP_NODE: id="sec_6_basic" | label="Chúc mừng tài sản mới" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** So sánh cấu trúc văn hóa đằng sau các lời chúc khởi đầu mới tại Hy Lạp với văn hóa bản địa của bạn; điểm tương đồng và khác biệt cốt lõi nằm ở đâu trong cách cộng đồng nhìn nhận vận may và sự thay đổi?
+[MINDMAP_NODE: id="sec_6_advanced" | label="Phân tích so sánh văn hóa" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Tài nguyên nghiên cứu ngôn ngữ" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Các tài cứu cứu về ngữ dụng học tiếng Hy Lạp hiện đại, từ điển văn hóa dân gian Greece Is, và các nghiên cứu về hệ thống biểu đạt xã hội vùng Địa Trung Hải.
+[MINDMAP_NODE: id="sec_7_official" | label="Greece Is Cultural Archive" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'Điều kiện tiên quyết:', 'Định nghĩa & Bản chất:', 'euxes', 'Nguyên lý/Cơ chế:', 'Sơ đồ/Mô hình:', 'Quy trình từng bước (Step-by-step):', 'Kouρεμα', 'Aγορά', 'Framework/Model áp dụng:', 'Situation-Euxis-Response', 'Bảng tham số/Quy tắc quyết định:', 'Bối cảnh:', 'Áp dụng:', 'Kết quả & Phân tích:', 'philoxenia', '3-5 Sai lầm phổ biến:', 'idiomatic set phrases', 'Best Practices / Quy chuẩn:']
+Timestamp links found: []
+
+
+================================================================================
+FILE 10: Bài 10: Xưng hô phù hợp theo độ tuổi và địa vị xã hội
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Xưng hô tiếng Hy Lạp" | parent_id="root" | type="main"]
+# Bài 10: Xưng hô phù hợp theo độ tuổi và địa vị xã hội
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Mục tiêu xưng hô Hy Lạp" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Làm thế nào để điều chỉnh âm điệu, danh xưng và thái độ khi giao tiếp nhằm thể hiện trọn vẹn văn hóa tôn ti trật tự, lòng kính trọng sâu sắc đối với người lớn tuổi, bậc cao niên hoặc những cá nhân giữ vị thế trọng yếu trong xã hội Hy Lạp truyền thống lẫn hiện đại?
+- **Kết quả học tập:** Sau bài học này, người học đạt được năng lực phân tích ngữ cảnh xã hội, nắm vững cách vận dụng linh hoạt đại từ nhân xưng số nhiều trang trọng, kết hợp cùng các danh hiệu tôn kính như **Kyrios** và **Kyria**, từ đó tránh khỏi những sai lầm sơ đẳng trong giao tiếp liên văn hóa theo chuẩn mực của **cultural linguistics**.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Kyrios và Kyria" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Người học cần nắm vững hệ thống bảng chữ cái tiếng Hy Lạp hiện đại, biết cách phát âm chuẩn xác các âm xát và nguyên âm đôi, đồng thời đã làm quen với các mẫu câu chào hỏi thông dụng như **Yassas** trong các tình huống giao tiếp cơ bản hàng ngày.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Hệ thống danh xưng Hy Lạp" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Trong cấu trúc ngôn ngữ và xã hội học của người Hy Lạp, ngôn từ không chỉ là công cụ trao đổi thông tin thuần túy mà còn là lăng kính phản chiếu cấu trúc gia đình trị và sự tôn trọng tôn ti trật tự (*philoxenia* và *philotimo*). Việc lựa chọn từ ngữ xưng hô phản ánh trực tiếp mối quan hệ giữa người nói và người nghe, phân định rõ ràng giữa không gian giao tiếp thân mật (*οικειότητα*) và không gian giao tiếp trang trọng (*τυπικότητα*).
+[MINDMAP_NODE: id="sec_2_definitions" | label="Yassas và Yassou" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Cơ chế phân định ngôi thứ trong tiếng Hy Lạp hiện đại dựa trên hai nguyên tắc cốt lõi: nguyên tắc quyền lực (*power dynamic*) và nguyên tắc khoảng cách xã hội (*social distance*). Khi đối thoại với người bề trên, người ta bắt buộc phải chuyển từ đại từ số ít sang đại từ số nhiều trang trọng (**Plural of Modesty** / *πληθυντικός ευγενείας*), xem đây là biểu hiện của sự nhún nhường và kính cẩn tuyệt đối trước kinh nghiệm và tuổi tác của đối phương.
+[MINDMAP_NODE: id="sec_2_principles" | label="Plural of Modesty" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Mô hình phân tầng xã hội trong giao tiếp Hy Lạp được chia thành ba vòng tròn đồng tâm: Vòng trong cùng là gia đình và bạn bè thân thiết sử dụng cách gọi tên riêng kèm đại từ thân mật **Yassou**; vòng giữa là đồng nghiệp và người quen dùng hình thức xã giao chuẩn mực; vòng ngoài cùng là người lớn tuổi, giới chức sắc hoặc người lần đầu gặp mặt, đòi hỏi hệ thống danh xưng tôn kính tuyệt đối với **Yassas**.
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Quy trình lựa chọn danh xưng" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. *Bước 1 - Đánh giá sơ bộ:* Quan sát độ tuổi, bối cảnh không gian (công sở, đường phố hay không gian gia đình) và dấu hiệu địa vị xã hội của đối phương.
+  2. *Bước 2 - Lựa chọn đại từ:* Quyết định sử dụng ngôi số ít **esù** (thân mật) hay chuyển sang ngôi số nhiều trang trọng **eseis** (lịch sự).
+  3. *Bước 3 - Gắn kết danh hiệu đi kèm:* Thêm các từ định danh tôn kính như **Kyrios** (dành cho nam giới) hoặc **Kyria** (dành cho nữ giới) đứng trước tên hoặc họ của họ.
+  4. *Bước 4 - Kiểm tra phản hồi:* Quan sát ngôn ngữ cơ thể và thái độ đáp lời của người đối diện để điều chỉnh mức độ trang trọng cho phù hợp trong suốt cuộc trò chuyện.
+[MINDMAP_NODE: id="sec_3_steps" | label="Đánh giá và lựa chọn" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Áp dụng khung phân tích **Social Distance Matrix**, một công cụ giúp người học ngôn ngữ đo lường mức độ quyền lực, khoảng cách thế hệ và mức độ thân thiết trước khi phát ngôn bất kỳ câu chào hỏi nào.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="Social Distance Matrix" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** 
+  - Nếu đối tượng là người lớn tuổi hơn đáng kể hoặc người có chức vị cao: Bắt buộc dùng **Yassas** + **Kyrios/Kyria** + Họ/Tên đầy đủ.
+  - Nếu đối tượng là người bằng tuổi hoặc trẻ hơn, hoặc trong môi trường bạn bè: Dùng **Yassou** + Tên riêng.
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Giao lưu văn hóa Athens" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Một nhà nghiên cứu văn hóa quốc tế lần đầu tiên bước vào một quán cà phê truyền thống (*kafenio*) tại khu phố Plaka, Athens, và muốn chào hỏi một bô lão lớn tuổi đang ngồi thưởng thức ly cà phê kiểu Hy Lạp (*ellinikos kafes*).
+[MINDMAP_NODE: id="sec_4_context" | label="Khafenio tại Plaka" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Thay vì sử dụng câu chào trống không hoặc dùng từ **Yassou** quá phóng túng vốn chỉ dành cho bạn bè đồng trang lứa, nhà nghiên cứu đã chủ động mỉm cười, cúi nhẹ đầu và cất tiếng chào bằng hình thức trang trọng: "**Kalimera sas, Kyrie**" (Chào buổi sáng, thưa ông). Sự kết hợp hoàn hảo giữa âm điệu chuẩn mực và danh xưng đúng mực lập tức phá băng khoảng cách văn hóa.
+[MINDMAP_NODE: id="sec_4_application" | label="Kalimera sas Kyrie" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Bô lão nở nụ cười đáp lại nồng hậu, thể hiện đúng tinh thần hiếu khách truyền thống (*philoxenia*) của người Hy Lạp. Bài học rút ra là việc tuân thủ các quy tắc xưng hô không làm giảm đi sự tự nhiên trong giao tiếp mà ngược lại, mở ra cánh cửa đón nhận sự cởi mở và tôn trọng sâu sắc từ phía cộng đồng bản địa.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Sai lầm và Best Practices" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:**
+  1. *Lạm dụng sự thân mật quá mức:* Sử dụng từ **Yassou** với người lớn tuổi hoặc người có chức vị cao ngay trong lần gặp đầu tiên, gây ra ấn tượng thiếu tôn trọng và bất lịch sự.
+  2. *Nhầm lẫn giữa số ít và số nhiều:* Quên chuyển đổi động từ và đại từ sang dạng số nhiều khi muốn thể hiện sự lịch sự (**Plural of Modesty**).
+  3. *Bỏ quên danh hiệu tôn kính:* Gọi thẳng tên riêng của người bề trên mà không đính kèm **Kyrios** hoặc **Kyria**, vi phạm nghiêm trọng chuẩn mực xã giao truyền thống.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Lạm dụng sự thân mật" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn mặc định sử dụng hình thức trang trọng khi tiếp xúc với người lớn tuổi cho đến khi chính họ là người chủ động đề nghị bạn chuyển sang cách xưng hô thân mật hơn. Hãy kết hợp ánh mắt chân thành, cái bắt tay ấm áp và thái độ khiêm nhường trong mọi tình huống giao tiếp.
+[MINDMAP_NODE: id="sec_5_best" | label="Mặc định trang trọng" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Thực hành xưng hô Hy Lạp" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Đóng vai trong tình huống bạn đến thăm nhà một người đối tác lớn tuổi tại Thessaloniki. Hãy viết một đoạn hội thoại ngắn gồm 3 câu chào hỏi và hỏi thăm sức khỏe, trong đó bắt buộc sử dụng chính xác các đại từ trang trọng và danh xưng **Kyrios** hoặc **Kyria**.
+[MINDMAP_NODE: id="sec_6_basic" | label="Hội thoại Thessaloniki" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Phân tích tình huống: Tại sao việc sử dụng nhầm lẫn giữa **Yassas** và **Yassou** lại có thể ảnh hưởng đến tiến trình đàm phán kinh doanh hoặc quan hệ ngoại giao với một đối tác người Hy Lạp lớn tuổi? Hãy đưa ra lập luận dựa trên nền tảng phong tục tập quán và tâm lý học xã hội của họ.
+[MINDMAP_NODE: id="sec_6_advanced" | label="Phân tích tình huống ngoại giao" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Tài liệu nghiên cứu ngôn ngữ" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Các tài liệu nghiên cứu về ngôn ngữ học văn hóa từ *Greece Is*, hệ thống giáo trình từ *GreekPod101*, cùng các chuyên khảo về văn hóa giao tiếp Địa Trung Hải của các học giả ngôn ngữ học ứng dụng.
+[MINDMAP_NODE: id="sec_7_official" | label="Greece Is và GreekPod101" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'Kyrios', 'Kyria', 'cultural linguistics', 'Điều kiện tiên quyết:', 'Yassas', 'Định nghĩa & Bản chất:', 'Nguyên lý/Cơ chế:', 'Plural of Modesty', 'Sơ đồ/Mô hình:', 'Yassou', 'Yassas', 'Quy trình từng bước (Step-by-step):', 'esù', 'eseis', 'Kyrios', 'Kyria', 'Framework/Model áp dụng:', 'Social Distance Matrix']
+Timestamp links found: []
+
+
+================================================================================
+FILE 11: Bài 11: Giao tiếp nâng cao và cách nói chuyện tự nhiên như người bản địa
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Greek Conversational Mastery" | parent_id="root" | type="main"]
+# Bài 11: Giao tiếp nâng cao và cách nói chuyện tự nhiên như người bản địa
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Idiomatic Greek Fluency" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Làm thế nào để vượt qua ranh giới của một người học ngoại ngữ thông thường, thấu hiểu sâu sắc văn hóa xã hội Hy Lạp thông qua các biểu đạt ngôn ngữ tự phát, và làm chủ ngữ điệu bản địa (*idiomatic fluency*)?
+- **Kết quả học tập:** Sau bài học này, người học có thể vận dụng linh hoạt các câu cửa miệng, lời chúc phúc (*filoxenia*), biểu cảm ngữ cảnh xã hội từ đời thường đến trang trọng, đạt trình độ giao tiếp tự nhiên tương đương người bản ngữ.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Cultural Contextual Mastery" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Đã nắm vững bảng chữ cái Hy Lạp, quy tắc phát âm cơ bản, ngữ pháp vỡ lòng và các cấu trúc câu chào hỏi sơ cấp từ các bài học trước.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Filoxenia & Set Phrases" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Ngôn ngữ giao tiếp hàng ngày của người Hy Lạp không chỉ là công cụ trao đổi thông tin mà còn là bức tranh phản chiếu tinh thần hiếu khách cốt lõi (*filoxenia*). Hệ thống **set phrases** (cụm từ cố định) và lời chúc phúc phản ánh cách người bản xứ kết nối tình cảm, bày tỏ sự tôn trọng và chia sẻ nhịp sống cộng đồng.
+[MINDMAP_NODE: id="sec_2_definitions" | label="Set Phrases Expressions" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Cơ chế ngữ dùng học (*pragmatics*) trong tiếng Hy Lạp dựa trên tính tương tác cảm xúc cao (*affective interaction*). Mỗi thời điểm trong ngày, mỗi bối cảnh sinh hoạt từ bàn ăn, góc cà phê đến lời chúc sức khỏe đều đòi hỏi một mã ngôn ngữ riêng biệt thay vì chỉ dùng một từ chào chung chung như **Yiasou** hay **Yassas**.
+[MINDMAP_NODE: id="sec_2_principles" | label="Affective Pragmatics" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Phân loại mạng lưới giao tiếp xã hội theo trục **Formal vs. Informal** và trục **Situational Blessings** (Lời chúc theo ngữ cảnh).
+[MINDMAP_NODE: id="sec_2_models" | label="Sociolinguistic Matrix" | parent_id="sec_2" | type="sub"]
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Contextual Greeting Framework" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. Xác định không gian xã hội (quán cà phê, bữa ăn gia đình, đường phố).
+  2. Đánh giá mức độ thân thiết với đối phương (người lớn tuổi, bạn bè đồng trang lứa, người mới gặp).
+  3. Lựa chọn **idiomatic expression** hoặc **blessing formula** phù hợp.
+  4. Duy trì ngôn ngữ cơ thể (cử chỉ tay, ánh mắt) tương xứng với mức độ biểu cảm của từ ngữ.
+[MINDMAP_NODE: id="sec_3_steps" | label="Step-by-step Social Navigation" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Sử dụng **PRAGMATIC MODEL** gồm 4 chiều: *Proximity* (Khoảng cách), *Respect* (Tôn trọng), *Affections* (Tình cảm), và *Ritual* (Nghi thức giao tiếp).
+[MINDMAP_NODE: id="sec_3_frameworks" | label="Pragmatic Social Model" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** Lựa chọn từ ngữ theo khung giờ và tình huống cụ thể:
+  - Bắt đầu ngày mới: **Kalimera** kết hợp hỏi thăm sức khỏe gia đình.
+  - Khi dùng bữa: Sử dụng **Kali orexi** trước khi ăn và **Kali honepsi** khi kết thúc.
+  - Khi nâng ly chúc mừng: Khẩu lệnh **Stin igia mas** tạo sự gắn kết tập thể.
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Traditional Taverna Dinner" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Du khách nước ngoài tham gia bữa tối tại một quán ăn truyền thống (*taverna*) vùng Plaka, Athens, được chủ quán và người dân địa phương chào đón nồng nhiệt.
+[MINDMAP_NODE: id="sec_4_context" | label="Athens Taverna Encounter" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Thay vì chỉ nói một câu "Efharisto" đơn điệu, người học sử dụng câu **Geia sta heria sou** để khen ngợi người nấu bếp, chúc **Kali orexi** với bàn bên cạnh, và kết thúc bằng lời chúc **Kali honepsi**. Khi chủ quán mang rượu ra, người học chủ động nâng ly hô lớn **Stin igia mas**.
+[MINDMAP_NODE: id="sec_4_application" | label="Idiomatic Table Etiquette" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Phản ứng từ người bản địa chuyển từ sự lịch sự xã giao sang sự cởi mở, thân tình. Khoảng cách văn hóa bị xóa nhòa nhờ việc thấu hiểu và sử dụng chính xác các **idiomatic expressions**, chứng minh rằng ngôn ngữ chứa đựng chìa khóa mở cửa trái tim cộng đồng.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Literal Translation Pitfalls" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:**
+  1. *Lạm dụng từ chào cơ bản:* Dùng đơn điệu **Yiasou** trong mọi tình huống trang trọng hoặc không phù hợp thời điểm. Nguyên nhân do thiếu vốn từ vựng ngữ cảnh. Khắc phục bằng cách học thuộc các cụm từ theo từng khung giờ và tình huống cụ thể.
+  2. *Dịch nghĩa đen từ ngôn ngữ mẹ đẻ:* Cố gắng dịch word-by-word các câu chúc tiếng Anh sang tiếng Hy Lạp dẫn đến câu nói thiếu tự nhiên.
+  3. *Bỏ qua yếu tố phi ngôn ngữ:* Nói lời chúc mừng nhưng thiếu biểu cảm khuôn mặt và năng lượng nhiệt tình vốn là đặc trưng của văn hóa Địa Trung Hải.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Cultural Context Errors" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn quan sát phản ứng thái độ của người đối thoại (*kefi* - tinh thần vui vẻ, sống động), lắng nghe cách họ phản hồi để điều chỉnh âm lượng và ngữ điệu phù hợp.
+[MINDMAP_NODE: id="sec_5_best" | label="Kefi Spirit Alignment" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Conversational Simulation Exercises" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Đóng vai trong tình huống bạn được mời đến dùng bữa tại một gia đình Hy Lạp. Hãy viết một đoạn hội thoại ngắn từ lúc bước vào nhà, khen ngợi món ăn với câu **Geia sta heria sou**, cho đến lúc nâng ly chúc mừng **Stin igia mas**.
+[MINDMAP_NODE: id="sec_6_basic" | label="Dinner Table Dialogue" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Phân tích sự khác biệt về mặt văn hóa xã hội khi sử dụng câu chào thân mật **Yiasou** với một người lớn tuổi chưa quen biết so với việc sử dụng hình thức trang trọng hơn. Đâu là ranh giới đạo đức giao tiếp trong xã hội Hy Lạp hiện đại?
+[MINDMAP_NODE: id="sec_6_advanced" | label="Sociolinguistic Analysis" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Greek Cultural Linguistics Sources" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** 
+  - *Greece Is: Greek Salutations Glossary* - Tài liệu nghiên cứu văn hóa ngôn ngữ thực địa.
+  - *GreekPod101: Advanced Pragmatics and Greetings Guide*.
+  - Các nghiên cứu nhân học văn hóa về khái niệm **Filoxenia** trong đời sống người Hy Lạp đương đại.
+[MINDMAP_NODE: id="sec_7_official" | label="Greece Is Glossary" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'Điều kiện tiên quyết:', 'Định nghĩa & Bản chất:', 'set phrases', 'Nguyên lý/Cơ chế:', 'Yiasou', 'Yassas', 'Sơ đồ/Mô hình:', 'Formal vs. Informal', 'Situational Blessings', 'Quy trình từng bước (Step-by-step):', 'idiomatic expression', 'blessing formula', 'Framework/Model áp dụng:', 'PRAGMATIC MODEL', 'Bảng tham số/Quy tắc quyết định:', 'Kalimera', 'Kali orexi', 'Kali honepsi']
+Timestamp links found: []
+
+
+================================================================================
+FILE 12: Bài 12: Thực hành tổng hợp và tình huống giao tiếp thực tế
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Thực hành giao tiếp Hy Lạp" | parent_id="root" | type="main"]
+# Bài 12: Thực hành tổng hợp và tình huống giao tiếp thực tế
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Kịch bản giao tiếp thực tế" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Làm thế nào để vận dụng các lời chào hỏi, chúc tụng và phép xã giao tiếng Hy Lạp vào bối cảnh đời thực một cách tự nhiên như người bản xứ?
+- **Kết quả học tập:** Người học sẽ nắm vững kỹ năng nhập vai, làm chủ các tình huống giao tiếp từ quán ăn, đường phố cho đến các dịp lễ hội tại Hy Lạp, đạt chuẩn phân loại nhận thức Bloom ở cấp độ Vận dụng (Application) và Sáng tạo (Synthesis).
+[MINDMAP_NODE: id="sec_1_objectives" | label="Nhập vai và Xã giao" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Đã hoàn thành các bài học về bảng chữ cái, ngữ pháp cơ bản, danh xưng kính trọng và bộ sưu tập 70 lời chào/chúc truyền thống trong văn hóa Hy Lạp.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Văn hóa giao tiếp Hy Lạp" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Lời chào trong tiếng Hy Lạp không chỉ là công cụ trao đổi thông tin ngữ nghĩa mà còn là hiện thân của **Philoxenia** (lòng mến khách) và **social etiquette** (phép xã giao xã hội). Mỗi câu chào đều mang theo một phước lành hoặc một lời cầu chúc tinh tế cho người đối diện.
+[MINDMAP_NODE: id="sec_2_definitions" | label="Philoxenia và Lòng mến khách" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Việc lựa chọn từ ngữ phụ thuộc vào mức độ thân thiết (tôn trọng/thân mật), thời điểm trong ngày, và ngữ cảnh cụ thể (bữa ăn, tiệc tùng, chia tay). Sự chuyển đổi linh hoạt giữa **Yassas** (trang trọng/số nhiều) và **Yassou** (thân mật/số ít) định hình thái độ của người nói.
+- **Sơ đồ/Mô hình:** Mô hình **Contextual Salutation Matrix** minh họa mối quan hệ giữa không gian xã hội (công cộng vs. riêng tư) và mức độ biểu cảm ngôn ngữ.
+[MINDMAP_NODE: id="sec_2_models" | label="Contextual Salutation Matrix" | parent_id="sec_2" | type="sub"]
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Framework giao tiếp bốn bước" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. Xác định không gian và đối tượng (Người lớn tuổi, người lạ, bạn bè).
+  2. Sử dụng danh xưng kính trọng phù hợp kết hợp với **Yassas** hoặc **Yassou**.
+  3. Lắng nghe phản hồi và áp dụng lời chúc theo ngữ cảnh (ví dụ: **Kali orexi** trước bữa ăn hoặc **Geia sta heria sou** khen ngợi người nấu).
+  4. Duy trì sự ấm áp qua ngôn ngữ cơ thể (bắt tay, nụ cười) và kết thúc bằng lời từ biệt trang trọng.
+[MINDMAP_NODE: id="sec_3_steps" | label="Xác định đối tượng và Ngữ cảnh" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Áp dụng mô hình giao tiếp liên văn hóa **Hofstede Dimensions** kết hợp với quy tắc **High-Context Communication** đặc trưng của khu vực Địa Trung Hải.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="High-Context Communication" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** Lựa chọn ngôn từ dựa trên thang đo mức độ trang trọng từ 1 (thân mật đường phố) đến 5 (nghi thức ngoại giao/tôn giáo).
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Tình huống quán ăn truyền thống" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Bạn bước vào một quán ăn gia đình truyền thống (**Taverna**) tại Athens vào một buổi tối mùa hè. Chủ quán đón tiếp bạn với sự nồng nhiệt đặc trưng của văn hóa địa phương.
+[MINDMAP_NODE: id="sec_4_context" | label="Taverna tại Athens" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Thay vì chỉ nói một câu chào đơn giản, bạn chủ động dùng **Yassas** kèm theo danh xưng kính trọng, sau đó khi món ăn được dọn lên, bạn thốt lên **Kali orexi** và khi kết thúc bữa ăn, bạn khen ngợi người đầu bếp bằng câu **Geia sta heria sou**, cuối cùng nâng ly với **Stin igia mas**.
+[MINDMAP_NODE: id="sec_4_application" | label="Sử dụng Geia sta heria sou" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Chủ quán vô cùng cảm kích trước sự tinh tế trong ngôn ngữ của bạn, điều này phá vỡ bức tường ngôn ngữ, biến bạn từ một du khách bình thường thành một vị khách được trân trọng, nhận lại sự hiếu khách tuyệt đối và đôi khi là món tráng miệng miễn phí.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Lỗi lầm và Quy chuẩn giao tiếp" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:** 
+  - Lạm dụng **Yassou** với người lớn tuổi hoặc người có địa vị, gây ra sự thiếu tôn trọng trong văn hóa coi trọng tuổi tác của người Hy Lạp.
+  - Sử dụng sai thời điểm các lời chúc như **Kali orexi** (chúc ăn ngon miệng lại dùng sau bữa ăn thay vì **Kali honepsi**).
+  - Bỏ qua các cử chỉ phi ngôn ngữ như cái bắt tay kiên quyết (**handshaking**) khi gặp gỡ lần đầu.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Lạm dụng Yassou" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn quan sát thái độ của người đối diện, ghi nhớ quy tắc "lắng nghe nhiều hơn nói", và không ngần ngại sử dụng các câu chúc phúc nhỏ để tạo lập thiện cảm tức thì.
+[MINDMAP_NODE: id="sec_5_best" | label="Quan sát và Lắng nghe" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Bài tập nhập vai giao tiếp" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Viết một kịch bản hội thoại ngắn gồm 4 lượt lời giữa một du khách và một người chủ cửa hàng thủ công mỹ nghệ tại Santorini, trong đó phải sử dụng ít nhất một lời chào trang trọng, một câu hỏi thăm sức khỏe và một lời chúc khi ra về.
+[MINDMAP_NODE: id="sec_6_basic" | label="Kịch bản Santorini" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Phân tích tình huống khi một du khách nước ngoài vô tình dùng sai danh xưng với một bô lão tại vùng quê Crete; đề xuất giải pháp cứu vãn tình thế thông qua ngôn ngữ cơ thể và các biểu thức xã giao thay thế.
+[MINDMAP_NODE: id="sec_6_advanced" | label="Xử lý tình huống Crete" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Tài liệu văn hóa Hy Lạp" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Các nghiên cứu về ngôn ngữ học văn hóa từ *Greece Is*, tài liệu dân tộc học về phong tục tập quán Địa Trung Hải, và hướng dẫn giao tiếp thực địa từ các chuyên gia ngôn ngữ học bản xứ.
+[MINDMAP_NODE: id="sec_7_official" | label="Greece Is Glossary" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'Điều kiện tiên quyết:', 'Định nghĩa & Bản chất:', 'Philoxenia', 'social etiquette', 'Nguyên lý/Cơ chế:', 'Yassas', 'Yassou', 'Sơ đồ/Mô hình:', 'Contextual Salutation Matrix', 'Quy trình từng bước (Step-by-step):', 'Yassas', 'Yassou', 'Kali orexi', 'Geia sta heria sou', 'Framework/Model áp dụng:', 'Hofstede Dimensions', 'High-Context Communication', 'Bảng tham số/Quy tắc quyết định:']
+Timestamp links found: []
