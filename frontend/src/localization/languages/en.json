@@ -1,5 +1,7 @@
 {
   "sidebar": {
+    "folder": "folders",
+    "documents": "documents",
     "file_list": {
       "header": "Directory List Of",
       "version": "Test Version"
@@ -7,14 +9,41 @@
     "empty_file_list": {
       "header": "No documents yet",
       "body": "Create the first document or nhập chủ đề muốn học vào khung chat để AI biên soạn lộ trình.",
-      "button": "Create new document"
-    }
-  },
-  "searchBar": {
-    "placeholder": "Search for documents...",
-    "no_documents_found": {
-      "header": "No result found",
-      "body": "No documents matches with "
+      "button": "Create new document",
+      "no_files": "There's no files"
+    },
+    "actions": {
+      "create": "Create",
+      "cancel": "Cancel",
+      "delete_chosen_files": "Delete selected",
+      "delete": "Delete",
+      "selected": "Selected",
+      "documents": "Documents",
+      "confirmation1": "Are you sure you want to delete",
+      "confirmation2": "selected? This action cannot be undone.",
+      "confirmation3": "and all the documents inside?",
+      "confirmation4": "from the folder?",
+      "delete_confirmation": "Deletion confirmation",
+      "new_name": "New name",
+      "rename": "Rename",
+      "pin": "Pinned folders",
+      "remove_pin": "Remove pin",
+      "view_mind_map": "View mind map",
+      "sort": {
+        "header": "Sort by",
+        "pinned": "Auto / Pinned",
+        "alphabet": "Name (A → Z)",
+        "reverse_alphabet": "Name (Z → A)",
+        "date": "Latest",
+        "quantity": "Quantity"
+      }
+    },
+    "searchBar": {
+      "placeholder": "Search for documents...",
+      "no_documents_found": {
+        "header": "No result found",
+        "body": "No documents matches with "
+      }
     }
   },
   "theme": {
