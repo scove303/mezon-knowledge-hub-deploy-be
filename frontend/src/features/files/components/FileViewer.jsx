@@ -39,6 +39,7 @@ import {
   Minimize2,
   Ellipsis,
   Settings2,
+  Mic,
 } from "lucide-react";
 import { Button } from "@/components/base-ui/Button";
 import { Modal } from "@/components/base-ui/Modal";
@@ -57,6 +58,13 @@ import {
   updateSpeechConfig,
   getSpeechConfig,
 } from "@/utils/Speech/speechSystem";
+
+// Regex để xóa MINDMAP_NODE anchor tags khỏi hiển thị (giữ trong content gốc cho mindmap)
+const MINDMAP_ANCHOR_RE = /\[MINDMAP_NODE:[^\]]+\]\s*\n?/g;
+
+function stripMindmapAnchors(content) {
+  return content ? content.replace(MINDMAP_ANCHOR_RE, "") : content;
+}
 
 // Timer hoãn xóa (module scope để React Compiler không chặn việc modify trong handler)
 let deleteTimer = null;
@@ -84,7 +92,6 @@ export default function FileViewer({
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [showTtsSettings, setShowTtsSettings] = useState(false);
   const [speechRate, setSpeechRate] = useState(1.0);
-  const [useCloudNeural, setUseCloudNeural] = useState(true);
   const [isEditing, setIsEditing] = useState(false);
   const [editedContent, setEditedContent] = useState(file ? file.content : "");
   const [seekTime, setSeekTime] = useState(0);
@@ -291,46 +298,76 @@ export default function FileViewer({
     return () => cancelAnimationFrame(frame);
   }, [file?.id]);
 
-  // Tìm kiếm từ sidebar → nhảy tới từ khóa đầu tiên khớp + highlight tạm thời
+  // Tìm kiếm / Nhảy tới vị trí từ khóa từ Mindmap hoặc Sidebar
   useEffect(() => {
     if (!file?.id || isEditing) return;
-    const q = (store.searchQuery || "").trim().toLowerCase();
-    if (!q) return;
-    if (!(file.content || "").toLowerCase().includes(q)) return;
+    const rawQ = (store.searchQuery || "").trim();
+    if (!rawQ) return;
     const panel = docPanelRef.current;
     const article = panel?.querySelector("article");
     if (!article) return;
 
-    const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT);
-    let targetNode = null;
-    while (walker.nextNode()) {
-      if ((walker.currentNode.nodeValue || "").toLowerCase().includes(q)) {
-        targetNode = walker.currentNode;
-        break;
+    // Danh sách từ khóa ưu tiên: 1. Nguyên văn -> 2. Cụm 3 từ -> 3. Từ dài nhất
+    const searchTerms = [rawQ.toLowerCase()];
+    const cleanWords = rawQ
+      .replace(/[*_`#>|()\[\]]+/g, " ")
+      .split(/\s+/)
+      .filter((w) => w.length >= 3);
+
+    if (cleanWords.length > 2) {
+      for (let i = 0; i <= cleanWords.length - 2; i++) {
+        searchTerms.push(
+          cleanWords
+            .slice(i, i + 3)
+            .join(" ")
+            .toLowerCase(),
+        );
       }
     }
-    if (!targetNode) return;
+    cleanWords.sort((a, b) => b.length - a.length);
+    cleanWords.slice(0, 3).forEach((w) => searchTerms.push(w.toLowerCase()));
+
+    let targetNode = null;
+    let matchedTerm = "";
+
+    for (const term of searchTerms) {
+      if (!term || term.length < 2) continue;
+      const walker = document.createTreeWalker(article, NodeFilter.SHOW_TEXT);
+      while (walker.nextNode()) {
+        const val = (walker.currentNode.nodeValue || "").toLowerCase();
+        if (val.includes(term)) {
+          targetNode = walker.currentNode;
+          matchedTerm = term;
+          break;
+        }
+      }
+      if (targetNode) break;
+    }
+
+    if (!targetNode || !matchedTerm) return;
 
     const full = targetNode.nodeValue || "";
-    const idx = full.toLowerCase().indexOf(q);
+    const idx = full.toLowerCase().indexOf(matchedTerm);
     if (idx === -1) return;
 
     const mark = document.createElement("mark");
     mark.className =
-      "bg-amber-400/40 text-[rgb(var(--color-text-primary))] rounded px-0.5";
+      "bg-amber-400/40 text-[rgb(var(--color-text-primary))] rounded px-1 py-0.5 font-medium transition-all shadow-sm";
     const range = document.createRange();
     range.setStart(targetNode, idx);
-    range.setEnd(targetNode, idx + q.length);
+    range.setEnd(targetNode, idx + matchedTerm.length);
     range.surroundContents(mark);
     mark.scrollIntoView({ behavior: "smooth", block: "center" });
 
     const fade = setTimeout(() => {
-      mark.style.transition = "background-color 700ms ease";
+      mark.style.transition = "background-color 1000ms ease, color 1000ms ease";
       mark.style.backgroundColor = "transparent";
-    }, 3000);
+    }, 3500);
     return () => {
       clearTimeout(fade);
-      mark.replaceWith(document.createTextNode(full));
+      try {
+        mark.replaceWith(document.createTextNode(full));
+      } catch {}
     };
   }, [file?.id, file?.content, isEditing, store.searchQuery]);
 
@@ -713,6 +750,12 @@ export default function FileViewer({
   const handleCloudToggle = (enabled) => {
     setUseCloudNeural(enabled);
     updateSpeechConfig({ useCloudNeural: enabled });
+  };
+
+  const handleVoiceChange = (voice) => {
+    console.log("[TTS] handleVoiceChange - new voice:", voice);
+    setTtsVoice(voice);
+    updateSpeechConfig({ voice });
   };
 
   // Xử lý Bật / Tắt giọng đọc
@@ -1151,12 +1194,20 @@ export default function FileViewer({
                   id="btn-share-file"
                   onClick={() => {
                     setOverflowOpen(false);
-                    navigator.clipboard.writeText(window.location.href);
-                    useToastStore
-                      .getState()
-                      .addToast(
-                        "Đã copy đường dẫn chia sẻ vào clipboard!",
-                        "success",
+                    navigator.clipboard
+                      .writeText(window.location.href)
+                      .then(() =>
+                        useToastStore
+                          .getState()
+                          .addToast(
+                            "Đã copy đường dẫn chia sẻ vào clipboard!",
+                            "success",
+                          ),
+                      )
+                      .catch(() =>
+                        useToastStore
+                          .getState()
+                          .addToast("Không thể copy đường dẫn", "error"),
                       );
                   }}
                   title="Chia sẻ link"
@@ -1193,7 +1244,7 @@ export default function FileViewer({
             {/* Tốc độ đọc */}
             <div className="flex items-center space-x-2">
               <span className="text-[rgb(var(--color-text-muted))] font-medium">
-                Tốc độ:
+                Tốc độ đọc Google Dịch:
               </span>
               {[0.8, 1.0, 1.25, 1.5].map((rate) => (
                 <button
@@ -1211,22 +1262,12 @@ export default function FileViewer({
             </div>
 
             {/* Chế độ Giọng Neural Cloud vs Local */}
-            <div className="flex items-center space-x-2">
-              <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-              <span className="text-[rgb(var(--color-text-muted))] font-medium">
-                Giọng AI Neural (Edge):
-              </span>
-              <input
-                type="checkbox"
-                checked={useCloudNeural}
-                onChange={(e) => handleCloudToggle(e.target.checked)}
-                className="rounded border-[rgb(var(--color-border))] bg-[rgb(var(--color-bg))] text-indigo-600 focus:ring-0 cursor-pointer"
-              />
-            </div>
+
+            {/* Chọn giọng đọc trong Bảng cấu hình */}
           </div>
 
           <span className="text-[10px] text-[rgb(var(--color-text-muted))] italic">
-            Tự động làm sạch Markdown & dịch chuyển công thức LaTeX
+            Đang sử dụng Google Translate TTS (Giọng Nữ chuẩn)
           </span>
         </div>
       )}
@@ -1258,7 +1299,7 @@ export default function FileViewer({
                 remarkPlugins={[remarkGfm]}
                 components={FileMarkdownComponents}
               >
-                {file.content}
+                {stripMindmapAnchors(file.content)}
               </ReactMarkdown>
             </article>
           )}

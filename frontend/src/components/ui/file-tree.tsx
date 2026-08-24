@@ -54,6 +54,8 @@ type TreeViewProps = {
   indicator?: boolean
   elements?: TreeViewElement[]
   initialExpandedItems?: string[]
+  expandedItems?: string[]
+  onExpandedChange?: (items: string[]) => void
   openIcon?: React.ReactNode
   closeIcon?: React.ReactNode
 } & TreeViewComponentProps
@@ -65,6 +67,8 @@ const Tree = forwardRef<HTMLDivElement, TreeViewProps>(
       elements,
       initialSelectedId,
       initialExpandedItems,
+      expandedItems: propExpandedItems,
+      onExpandedChange,
       children,
       indicator = true,
       openIcon,
@@ -77,22 +81,44 @@ const Tree = forwardRef<HTMLDivElement, TreeViewProps>(
     const [selectedId, setSelectedId] = useState<string | undefined>(
       initialSelectedId,
     )
-    const [expandedItems, setExpandedItems] = useState<string[] | undefined>(
+    const [uncontrolledExpandedItems, setUncontrolledExpandedItems] = useState<string[] | undefined>(
       initialExpandedItems,
     )
+
+    const isControlled = propExpandedItems !== undefined
+    const expandedItems = isControlled ? propExpandedItems : uncontrolledExpandedItems
 
     const selectItem = useCallback((id: string) => {
       setSelectedId(id)
     }, [])
 
-    const handleExpand = useCallback((id: string) => {
-      setExpandedItems((prev) => {
-        if (prev?.includes(id)) {
-          return prev.filter((item) => item !== id)
+    const setExpandedItems = useCallback(
+      (
+        updater:
+          | React.SetStateAction<string[] | undefined>
+          | ((prev: string[] | undefined) => string[] | undefined),
+      ) => {
+        const nextValue =
+          typeof updater === "function" ? updater(expandedItems) : updater
+        if (!isControlled) {
+          setUncontrolledExpandedItems(nextValue)
         }
-        return [...(prev ?? []), id]
-      })
-    }, [])
+        onExpandedChange?.(nextValue ?? [])
+      },
+      [isControlled, expandedItems, onExpandedChange],
+    )
+
+    const handleExpand = useCallback(
+      (id: string) => {
+        setExpandedItems((prev) => {
+          if (prev?.includes(id)) {
+            return prev.filter((item) => item !== id)
+          }
+          return [...(prev ?? []), id]
+        })
+      },
+      [setExpandedItems],
+    )
 
     const expandSpecificTargetedElements = useCallback(
       (elements?: TreeViewElement[], selectId?: string) => {
@@ -128,7 +154,7 @@ const Tree = forwardRef<HTMLDivElement, TreeViewProps>(
           findParent(element)
         })
       },
-      [],
+      [setExpandedItems],
     )
 
     useEffect(() => {
@@ -165,7 +191,12 @@ const Tree = forwardRef<HTMLDivElement, TreeViewProps>(
               defaultValue={expandedItems}
               value={expandedItems}
               className="flex flex-col gap-1"
-              onValueChange={(value) => setExpandedItems(value)}
+              onValueChange={(value) => {
+                if (!isControlled) {
+                  setUncontrolledExpandedItems(value)
+                }
+                onExpandedChange?.(value)
+              }}
               dir={dir as Direction}
             >
               {children}

@@ -49,3 +49,24 @@ def store_folder_structure_roadmap(session: Session, user_id: int, roadmap_data:
     session.refresh(new_folder)
 
     return new_folder
+
+
+def add_files_to_existing_folder(session: Session, folder_id: str, files_data: list[dict]) -> list[KnowledgeFile]:
+    """Add generated lesson files to an existing folder."""
+    files_to_create = []
+    for index, file_info in enumerate(files_data):
+        new_file = KnowledgeFile(
+            id=f"file-{uuid.uuid4().hex[:8]}",
+            name=file_info.get("title", "Bài học không tên"),
+            summary=file_info.get("summary", ""),
+            markdown_content=file_info.get("text_content", ""),
+            folder_id=folder_id,
+            order_index=index
+        )
+        files_to_create.append(new_file)
+
+    if files_to_create:
+        session.add_all(files_to_create)
+        session.commit()
+    
+    return files_to_create

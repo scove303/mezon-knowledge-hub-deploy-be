@@ -98,12 +98,6 @@ def mezon_authorize():
         + urlencode(params)
     )
 
-    print("========== MEZON AUTHORIZE ==========")
-    print("CLIENT_ID:", settings.MEZON_CLIENT_ID)
-    print("REDIRECT_URI:", settings.MEZON_REDIRECT_URI)
-    print("STATE:", state)
-    print("AUTHORIZE URL:", authorize_url)
-
     return success_response(
         message="Tạo Mezon OAuth2 URL thành công",
         data={
@@ -122,11 +116,6 @@ def mezon_callback(
     state: str = Query(""),
     error: str = Query(""),
 ):
-    print("========== MEZON CALLBACK ==========")
-    print("CODE:", code[:10] + "..." if code else None)
-    print("STATE:", state)
-    print("ERROR:", error)
-
     base_url = settings.FRONTEND_URL.rstrip("/")
     login_url = f"{base_url}/login"
 
@@ -172,12 +161,6 @@ def login_with_mezon(
         "Content-Type": "application/x-www-form-urlencoded"
     }
 
-    print("========== MEZON TOKEN EXCHANGE ==========")
-    print("CLIENT_ID:", settings.MEZON_CLIENT_ID)
-    print("REDIRECT_URI:", settings.MEZON_REDIRECT_URI)
-    print("CODE:", data.code[:10] + "..." if data.code else None)
-    print("STATE:", data.state)
-
     try:
         response = requests.post(
             token_endpoint,
@@ -185,12 +168,9 @@ def login_with_mezon(
             headers=headers,
             timeout=15,
         )
-        print("MEZON TOKEN STATUS:", response.status_code)
-        print("MEZON TOKEN RESPONSE:", response.text)
         response.raise_for_status()
         token_data = response.json()
     except requests.exceptions.RequestException as e:
-        print("MEZON TOKEN ERROR:", str(e))
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error_response(
@@ -221,12 +201,9 @@ def login_with_mezon(
             headers=userinfo_headers,
             timeout=15,
         )
-        print("MEZON USERINFO STATUS:", userinfo_res.status_code)
-        print("MEZON USERINFO:", userinfo_res.text)
         userinfo_res.raise_for_status()
         user_info = userinfo_res.json()
     except requests.exceptions.RequestException as e:
-        print("MEZON USERINFO ERROR:", str(e))
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error_response(

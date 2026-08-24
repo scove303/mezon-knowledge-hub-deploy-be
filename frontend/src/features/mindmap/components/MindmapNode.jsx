@@ -1,6 +1,6 @@
 import React, { memo } from 'react';
 import { Handle, Position } from '@xyflow/react';
-import { Folder, BookOpen, Dot } from 'lucide-react';
+import { Folder, BookOpen, Dot, ChevronRight } from 'lucide-react';
 
 const NODE_TRANSITION = 'opacity 320ms cubic-bezier(0.4, 0, 0.2, 1)';
 
@@ -26,15 +26,25 @@ function MindmapNode({ data }) {
   }
 
   if (node.kind === 'lesson') {
+    const displayLabel = node.shortLabel || node.label;
+    const hasDescription = node.label !== node.shortLabel;
+    
     return (
       <div
-        className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] shadow-sm hover:shadow-md transition-all cursor-pointer select-none min-w-0"
+        className="flex items-start gap-2 px-3 py-2 rounded-lg bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] shadow-sm hover:shadow-md transition-all cursor-pointer select-none min-w-0"
         style={{ ...fade, borderLeft: `3px solid ${node.color}` }}
       >
-        <BookOpen size={18} className="shrink-0" style={{ color: node.color }} />
-        <span className="text-[19.5px] font-medium text-[rgb(var(--color-text-primary))] leading-snug line-clamp-2">
-          {node.label}
-        </span>
+        <BookOpen size={18} className="shrink-0 mt-0.5" style={{ color: node.color }} />
+        <div className="flex-1 min-w-0">
+          <span className="text-[17px] font-semibold text-[rgb(var(--color-text-primary))] leading-snug line-clamp-2 block">
+            {displayLabel}
+          </span>
+          {hasDescription && (
+            <span className="text-[13px] text-[rgb(var(--color-text-muted))] leading-snug line-clamp-2 block mt-0.5 max-w-[400px]">
+              {node.label.replace(node.shortLabel + ': ', '').replace(node.shortLabel, '')}
+            </span>
+          )}
+        </div>
         <Handle type="target" position={Position.Left} className="!opacity-0" />
         <Handle type="source" position={Position.Right} className="!opacity-0" />
       </div>
@@ -43,14 +53,23 @@ function MindmapNode({ data }) {
 
   return (
     <div
-      className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-[rgb(var(--color-surface-2))] border border-[rgb(var(--color-border))] select-none min-w-0"
-      style={fade}
+      className="flex items-start gap-1.5 px-2.5 py-1.5 rounded-md bg-[rgb(var(--color-surface-2))] border border-[rgb(var(--color-border))] select-none min-w-0"
+      style={{ ...fade, borderLeft: node.color ? `2px solid ${node.color}` : undefined }}
+      title={node.description || node.label}
     >
-      <Dot size={18} className="shrink-0" style={{ color: node.color }} />
-      <span className="text-[17px] text-[rgb(var(--color-text-secondary))] leading-snug line-clamp-2">
-        {node.label}
-      </span>
+      <Dot size={18} className="shrink-0 mt-0.5" style={{ color: node.color }} />
+      <div className="flex-1 min-w-0">
+        <span className="text-[16px] font-medium text-[rgb(var(--color-text-primary))] leading-snug block line-clamp-2">
+          {node.label}
+        </span>
+        {node.description && (
+          <span className="text-[12px] text-[rgb(var(--color-text-muted))] leading-snug block line-clamp-2 mt-0.5">
+            {node.description}
+          </span>
+        )}
+      </div>
       <Handle type="target" position={Position.Left} className="!opacity-0" />
+      <Handle type="source" position={Position.Right} className="!opacity-0" />
     </div>
   );
 }

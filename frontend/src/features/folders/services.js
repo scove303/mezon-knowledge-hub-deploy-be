@@ -25,4 +25,9 @@ export const folderService = {
     const { data } = await axiosInstance.put(`/folders/${id}`, { name });
     return data;
   },
+
+  async reorderFolders(folderIds) {
+    const { data } = await axiosInstance.put("/folders/reorder", { folder_ids: folderIds });
+    return data;
+  },
 };

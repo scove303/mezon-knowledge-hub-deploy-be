@@ -98,7 +98,7 @@ export default function DashboardIndex() {
     setIsSubmitting(true);
 
     const threadId = `thread-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
-    const folderName = `🐍 Lộ trình: ${message.slice(0, 20)}${message.length > 20 ? '...' : ''}`;
+    const folderName = `${message.slice(0, 30)}${message.length > 30 ? '...' : ''}`;
 
     // Nếu có thread hoàn thành gần nhất (có folder) → đây là prompt hỏi tiếp / chỉnh sửa,
     // giữ nguyên conversation_id = folder_id cũ thay vì tạo lộ trình mới.
@@ -330,7 +330,7 @@ export default function DashboardIndex() {
             <ChatInput
               onSubmit={handleSubmit}
               isLoading={isSubmitting}
-              placeholder="Ask a question, paste a YouTube link, or upload a document..."
+              placeholder={currentText.dashboard.chat.placeholder}
             />
           </div>
         </div>

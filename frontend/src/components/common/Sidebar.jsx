@@ -24,6 +24,16 @@ import {
   Upload,
   SquareCheckBig,
   CheckCircle2,
+  GripVertical,
+  Network,
+  ArrowUpDown,
+  ArrowDownAZ,
+  ArrowUpZA,
+  Clock,
+  Layers,
+  Check,
+  RefreshCw,
+  ChevronsUpDown,
 } from "lucide-react";
 import {
   Tree,
@@ -51,11 +61,22 @@ const translation = {
   vn: vn
 }
 
+export function cleanFolderName(name) {
+  if (!name) return "";
+  return (
+    name
+      .replace(/^[\p{Emoji}\s]*\s*(Lộ\s*trình|Roadmap)\s*:\s*/iu, "")
+      .replace(/^[\p{Emoji}\s]*\s*(Lộ\s*trình|Roadmap)\s+/iu, "")
+      .replace(/^[🐍📄🎥📁📚🎯💡📌✨🚀]+\s*/u, "")
+      .trim() || name
+  );
+}
+
 // Dữ liệu mock dùng làm dự phòng khi không đăng nhập hoặc backend offline
 const MOCK_FOLDERS = [
   {
     id: "mock-folder-1",
-    name: "🐍 Lộ trình Python cho người mới",
+    name: "Python cho người mới",
     type: "roadmap",
     files: [
       {
@@ -69,7 +90,7 @@ const MOCK_FOLDERS = [
   },
   {
     id: "mock-folder-2",
-    name: "📄 Nghiên cứu AI Agents",
+    name: "Nghiên cứu AI Agents",
     type: "document",
     files: [
       {
@@ -83,7 +104,7 @@ const MOCK_FOLDERS = [
   },
   {
     id: "mock-folder-3",
-    name: "🎥 Video System Design",
+    name: "Video System Design",
     type: "video",
     files: [
       {
@@ -212,6 +233,9 @@ export default function Sidebar() {
   // Drag & drop: file đang kéo + folder đang được hover làm đích
   const [draggingFile, setDraggingFile] = useState(null);
   const [dragOverFolderId, setDragOverFolderId] = useState(null);
+  // Drag & drop: folder reordering
+  const [draggingFolder, setDraggingFolder] = useState(null);
+  const [dragOverFolderTarget, setDragOverFolderTarget] = useState(null);
   // Context menu chuột phải
   const [ctxMenu, setCtxMenu] = useState(null); // { x, y, type, folderId, fileId, name }
   // Ghim thư mục (lưu localStorage)
@@ -295,18 +319,85 @@ export default function Sidebar() {
     }
   };
 
-  // Folder đã ghim hiển thị trước
-  const sortedFolders = useMemo(
-    () =>
-      [...folders].sort((a, b) => {
-        const pa = pinnedIds.includes(a.id) ? 0 : 1;
-        const pb = pinnedIds.includes(b.id) ? 0 : 1;
-        return pa - pb;
-      }),
-    [folders, pinnedIds],
+  // Tiêu chí sắp xếp thư mục: 'default' | 'az' | 'za' | 'newest' | 'files'
+  const [sortBy, setSortBy] = useState("default");
+  const [sortMenuOpen, setSortMenuOpen] = useState(false);
+  const sortMenuRef = useRef(null);
+
+  // Đóng dropdown sort khi click ngoài
+  useEffect(() => {
+    if (!sortMenuOpen) return;
+    const handleClickOutside = (e) => {
+      if (sortMenuRef.current && !sortMenuRef.current.contains(e.target)) {
+        setSortMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, [sortMenuOpen]);
+
+  // Folder sắp xếp theo tiêu chí được chọn
+  const sortedFolders = useMemo(() => {
+    const list = [...folders];
+    if (sortBy === "az") {
+      return list.sort((a, b) =>
+        cleanFolderName(a.name).localeCompare(cleanFolderName(b.name), "vi"),
+      );
+    }
+    if (sortBy === "za") {
+      return list.sort((a, b) =>
+        cleanFolderName(b.name).localeCompare(cleanFolderName(a.name), "vi"),
+      );
+    }
+    if (sortBy === "newest") {
+      return list.sort(
+        (a, b) =>
+          new Date(b.created_at || b.createdAt || 0).getTime() -
+          new Date(a.created_at || a.createdAt || 0).getTime(),
+      );
+    }
+    if (sortBy === "files") {
+      return list.sort(
+        (a, b) => (b.files?.length || 0) - (a.files?.length || 0),
+      );
+    }
+    // Mặc định: folder đã ghim lên trước, theo order_index
+    return list.sort((a, b) => {
+      const pa = pinnedIds.includes(a.id) ? 0 : 1;
+      const pb = pinnedIds.includes(b.id) ? 0 : 1;
+      return pa - pb;
+    });
+  }, [folders, pinnedIds, sortBy]);
+
+  // Quản lý trạng thái mở rộng/thu gọn thư mục
+  const [expandedFolderIds, setExpandedFolderIds] = useState(() =>
+    folders.map((f) => f.id),
   );
+
+  // Đồng bộ expandedFolderIds khi danh sách folders cập nhật
+  useEffect(() => {
+    if (folders.length > 0) {
+      setExpandedFolderIds((prev) => {
+        if (!prev || prev.length === 0) return prev;
+        const folderIds = folders.map((f) => f.id);
+        const remaining = prev.filter((id) => folderIds.includes(id));
+        return remaining.length === 0 ? prev : remaining;
+      });
+    }
+  }, [folders]);
+
+  const isAllExpanded = expandedFolderIds && expandedFolderIds.length > 0;
+
+  const toggleExpandAll = () => {
+    if (expandedFolderIds && expandedFolderIds.length > 0) {
+      setExpandedFolderIds([]);
+    } else {
+      setExpandedFolderIds(sortedFolders.map((f) => f.id));
+    }
+  };
+
   const {currentLanguage, setCurrentLanguage} = useLanguage();
-  const currentText = translation[currentLanguage];
+  const currentText = translation[currentLanguage] || translation.vn;
 
   const selectFolder = (folderId) => {
     store.setSelectedFolder(folderId);
@@ -361,7 +452,7 @@ export default function Sidebar() {
   const treeElements = sortedFolders.map((folder) => ({
     id: folder.id,
     isSelectable: true,
-    name: folder.name,
+    name: cleanFolderName(folder.name),
     children: (folder.files || []).map((file) => ({
       id: file.id,
       isSelectable: true,
@@ -391,6 +482,14 @@ export default function Sidebar() {
     Promise.resolve().then(() => {
       refreshFolders();
     });
+  }, [refreshFolders]);
+
+  // Refresh khi có sự kiện bên ngoài yêu cầu (vd: phục hồi dữ liệu backup)
+  useEffect(() => {
+    const onFoldersChanged = () => refreshFolders();
+    window.addEventListener("mf-folders-changed", onFoldersChanged);
+    return () =>
+      window.removeEventListener("mf-folders-changed", onFoldersChanged);
   }, [refreshFolders]);
 
   // Xử lý phím tắt Xóa (Có kiểm tra tránh kích hoạt khi người dùng đang gõ văn bản)
@@ -557,6 +656,69 @@ export default function Sidebar() {
     setDraggingFile(null);
   };
 
+  // Xử lý kéo thả sắp xếp lại thư mục
+  const handleFolderDragStart = (e, folderId) => {
+    setDraggingFolder(folderId);
+    e.dataTransfer.effectAllowed = "move";
+    e.dataTransfer.setData("text/plain", folderId);
+  };
+
+  const handleFolderDragOver = (e, folderId) => {
+    e.preventDefault();
+    if (draggingFolder && draggingFolder !== folderId) {
+      setDragOverFolderTarget(folderId);
+    }
+  };
+
+  const handleFolderDragLeave = (e, folderId) => {
+    if (dragOverFolderTarget === folderId) {
+      setDragOverFolderTarget(null);
+    }
+  };
+
+  const handleFolderReorderDrop = async (e, targetFolderId) => {
+    e.preventDefault();
+    setDragOverFolderTarget(null);
+    
+    if (!draggingFolder || draggingFolder === targetFolderId) {
+      setDraggingFolder(null);
+      return;
+    }
+
+    const { folders, setFolders, setFolderOrder } = useWorkspaceStore.getState();
+    
+    // Tạo thứ tự mới
+    const folderIds = folders.map(f => f.id);
+    const fromIndex = folderIds.indexOf(draggingFolder);
+    const toIndex = folderIds.indexOf(targetFolderId);
+    
+    if (fromIndex === -1 || toIndex === -1) {
+      setDraggingFolder(null);
+      return;
+    }
+
+    // Di chuyển folder trong mảng
+    const newFolderIds = [...folderIds];
+    const [removed] = newFolderIds.splice(fromIndex, 1);
+    newFolderIds.splice(toIndex, 0, removed);
+
+    // Cập nhật UI ngay lập tức
+    setFolderOrder(newFolderIds);
+
+    try {
+      // Gọi API để lưu thứ tự mới
+      await folderService.reorderFolders(newFolderIds);
+      useToastStore.getState().addToast("Đã cập nhật thứ tự thư mục", "success");
+    } catch (err) {
+      console.error("Lỗi khi sắp xếp thư mục:", err);
+      useToastStore.getState().addToast("Cập nhật thứ tự thất bại", "error");
+      // Rollback: tải lại danh sách từ server
+      await refreshFolders();
+    }
+    
+    setDraggingFolder(null);
+  };
+
   // Mở context menu chuột phải tại vị trí con trỏ
   const openContextMenu = (e, item) => {
     e.preventDefault();
@@ -649,20 +811,26 @@ export default function Sidebar() {
     router.push("/login");
   };
 
-  const getFolderIcon = (type, isExpanded) => {
+  const getFolderIcon = (type, name, isExpanded) => {
+    const isRoadmap =
+      type === "roadmap" ||
+      (name && /lộ trình|roadmap|python|học|react|backend|frontend/i.test(name));
+
+    if (isRoadmap) {
+      return <Compass className="w-4 h-4 text-emerald-400 shrink-0" />;
+    }
+
     if (isExpanded) {
       return <FolderOpen className="w-4 h-4 text-amber-300/90 shrink-0" />;
     }
 
     switch (type) {
-      case "roadmap":
-        return <Compass className="w-4 h-4 text-emerald-400" />;
       case "document":
-        return <FileCheck className="w-4 h-4 text-cyan-400" />;
+        return <FileCheck className="w-4 h-4 text-cyan-400 shrink-0" />;
       case "video":
-        return <Video className="w-4 h-4 text-rose-400" />;
+        return <Video className="w-4 h-4 text-rose-400 shrink-0" />;
       default:
-        return <Folder className="w-4 h-4 text-indigo-400" />;
+        return <Folder className="w-4 h-4 text-indigo-400 shrink-0" />;
     }
   };
 
@@ -724,39 +892,160 @@ export default function Sidebar() {
           className="hidden"
           onChange={handleUploadChange}
         />
-        {/* Header Section Label */}
-        <div className="flex items-center justify-between px-6 py-3 border-b border-[rgb(var(--color-border))]/40 shrink-0">
-          <span className="text-[11px] font-semibold uppercase tracking-widest text-[rgb(var(--color-text-muted))] truncate">
-            Thư Mục Của {`<USER>`}
-          </span>
-          <div className="flex items-center gap-1 shrink-0">
-            <span className="text-[11px] opacity-60 text-[rgb(var(--color-text-muted))] mr-0.5">
+        {/* Header Section Toolbar */}
+        <div className="relative flex items-center justify-between px-4 py-2.5 border-b border-[rgb(var(--color-border))]/40 shrink-0">
+          {/* Left: Interactive "Thư mục" button (Expand All / Collapse All) */}
+          <button
+            type="button"
+            onClick={toggleExpandAll}
+            className="flex items-center gap-1.5 px-2 py-1 -ml-1.5 rounded-lg hover:bg-[rgb(var(--color-surface-2))] transition-colors group cursor-pointer"
+            title={isAllExpanded ? "Thu gọn tất cả thư mục" : "Mở rộng tất cả thư mục"}
+            aria-label={isAllExpanded ? "Thu gọn tất cả thư mục" : "Mở rộng tất cả thư mục"}
+          >
+            <ChevronsUpDown className="w-3.5 h-3.5 text-indigo-400 group-hover:text-[rgb(var(--color-primary))] transition-colors" />
+            <span className="text-xs font-bold uppercase tracking-wider text-[rgb(var(--color-text-primary))] group-hover:text-[rgb(var(--color-primary))] transition-colors">
+              Thư mục
+            </span>
+            <span className="text-[11px] px-1.5 py-0.2 rounded-full bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-muted))] font-medium group-hover:bg-[rgb(var(--color-primary)/0.15)] group-hover:text-[rgb(var(--color-primary))] transition-colors">
               {folders.length}
             </span>
-            <Button
+          </button>
+
+          {/* Right: Tools (Sort, Refresh, Add Folder, Multiselect) */}
+          <div className="flex items-center gap-1 shrink-0">
+            {/* Sort Menu Dropdown */}
+            <div className="relative" ref={sortMenuRef}>
+              <button
+                type="button"
+                onClick={() => setSortMenuOpen(!sortMenuOpen)}
+                className={`p-1.5 rounded-md text-xs transition-colors flex items-center justify-center ${
+                  sortBy !== "default" || sortMenuOpen
+                    ? "bg-[rgb(var(--color-primary)/0.15)] text-[rgb(var(--color-primary))] border border-[rgb(var(--color-primary)/0.3)]"
+                    : "text-[rgb(var(--color-text-muted))] hover:bg-[rgb(var(--color-surface-2))] hover:text-[rgb(var(--color-text-primary))]"
+                }`}
+                title="Sắp xếp thư mục"
+                aria-label="Sắp xếp thư mục"
+              >
+                <ArrowUpDown className="w-3.5 h-3.5" />
+              </button>
+
+              {sortMenuOpen && (
+                <div
+                  className="absolute right-0 top-full mt-1 w-48 p-1 bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] rounded-lg shadow-xl shadow-black/40 z-50 animate-fade-in space-y-0.5"
+                >
+                  <div className="px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-[rgb(var(--color-text-muted))]">
+                    Sắp xếp theo
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => { setSortBy("default"); setSortMenuOpen(false); }}
+                    className={`w-full text-left px-2.5 py-1.5 text-xs flex items-center gap-2 rounded-md transition-colors ${
+                      sortBy === "default"
+                        ? "text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/0.1)] font-medium"
+                        : "text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] hover:text-[rgb(var(--color-text-primary))]"
+                    }`}
+                  >
+                    <Star className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                    <span className="flex-1">Mặc định / Đã ghim</span>
+                    {sortBy === "default" && <Check className="w-3.5 h-3.5 shrink-0" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSortBy("az"); setSortMenuOpen(false); }}
+                    className={`w-full text-left px-2.5 py-1.5 text-xs flex items-center gap-2 rounded-md transition-colors ${
+                      sortBy === "az"
+                        ? "text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/0.1)] font-medium"
+                        : "text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] hover:text-[rgb(var(--color-text-primary))]"
+                    }`}
+                  >
+                    <ArrowDownAZ className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                    <span className="flex-1">Tên (A → Z)</span>
+                    {sortBy === "az" && <Check className="w-3.5 h-3.5 shrink-0" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSortBy("za"); setSortMenuOpen(false); }}
+                    className={`w-full text-left px-2.5 py-1.5 text-xs flex items-center gap-2 rounded-md transition-colors ${
+                      sortBy === "za"
+                        ? "text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/0.1)] font-medium"
+                        : "text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] hover:text-[rgb(var(--color-text-primary))]"
+                    }`}
+                  >
+                    <ArrowUpZA className="w-3.5 h-3.5 text-sky-400 shrink-0" />
+                    <span className="flex-1">Tên (Z → A)</span>
+                    {sortBy === "za" && <Check className="w-3.5 h-3.5 shrink-0" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSortBy("newest"); setSortMenuOpen(false); }}
+                    className={`w-full text-left px-2.5 py-1.5 text-xs flex items-center gap-2 rounded-md transition-colors ${
+                      sortBy === "newest"
+                        ? "text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/0.1)] font-medium"
+                        : "text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] hover:text-[rgb(var(--color-text-primary))]"
+                    }`}
+                  >
+                    <Clock className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                    <span className="flex-1">Mới tạo nhất</span>
+                    {sortBy === "newest" && <Check className="w-3.5 h-3.5 shrink-0" />}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setSortBy("files"); setSortMenuOpen(false); }}
+                    className={`w-full text-left px-2.5 py-1.5 text-xs flex items-center gap-2 rounded-md transition-colors ${
+                      sortBy === "files"
+                        ? "text-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/0.1)] font-medium"
+                        : "text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] hover:text-[rgb(var(--color-text-primary))]"
+                    }`}
+                  >
+                    <Layers className="w-3.5 h-3.5 text-purple-400 shrink-0" />
+                    <span className="flex-1">Số lượng tài liệu</span>
+                    {sortBy === "files" && <Check className="w-3.5 h-3.5 shrink-0" />}
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Refresh Folders */}
+            <button
+              type="button"
+              onClick={() => refreshFolders()}
+              disabled={isLoadingFolders}
+              className="p-1.5 rounded-md text-[rgb(var(--color-text-muted))] hover:bg-[rgb(var(--color-surface-2))] hover:text-[rgb(var(--color-primary))] transition-colors disabled:opacity-50"
+              title="Làm mới danh sách"
+              aria-label="Làm mới danh sách"
+            >
+              <RefreshCw className={cn("w-3.5 h-3.5", isLoadingFolders && "animate-spin text-[rgb(var(--color-primary))]")} />
+            </button>
+
+            {/* Create Folder Button */}
+            <button
+              type="button"
               id="btn-add-folder"
-              variant="ghost"
-              size="icon"
               onClick={() => setShowAddFolder(!showAddFolder)}
+              className="p-1.5 rounded-md text-[rgb(var(--color-text-muted))] hover:bg-[rgb(var(--color-surface-2))] hover:text-[rgb(var(--color-primary))] transition-colors"
               title="Tạo thư mục mới"
               aria-label="Tạo thư mục mới"
-              className={cn("h-7 w-7 p-0 rounded-md hover:bg-[rgb(var(--color-surface-2))] hover:text-[rgb(var(--color-primary))]")}
             >
-              <Plus className="w-4 h-4" />
-            </Button>
-            <Button
+              <Plus className="w-3.5 h-3.5" />
+            </button>
+
+            {/* Multi-select Toggle Button */}
+            <button
+              type="button"
               id="btn-multiselect"
-              variant={selMode ? "primary" : "ghost"}
-              size="icon"
               onClick={() =>
                 selectionArmed ? clearAllSelection() : setSelectionArmed(true)
               }
+              className={`p-1.5 rounded-md transition-colors ${
+                selectionArmed
+                  ? "bg-[rgb(var(--color-primary))] text-white shadow-xs"
+                  : "text-[rgb(var(--color-text-muted))] hover:bg-[rgb(var(--color-surface-2))] hover:text-[rgb(var(--color-primary))]"
+              }`}
               title={selectionArmed ? "Hủy chọn nhiều" : "Chọn nhiều tài liệu"}
               aria-label={selectionArmed ? "Hủy chọn nhiều" : "Chọn nhiều tài liệu"}
-              className={cn("h-7 w-7 p-0 rounded-md hover:bg-[rgb(var(--color-surface-2))] hover:text-[rgb(var(--color-primary))]")}
             >
-              <SquareCheckBig className="w-4 h-4" />
-            </Button>
+              <SquareCheckBig className="w-3.5 h-3.5" />
+            </button>
           </div>
         </div>
 
@@ -817,40 +1106,27 @@ export default function Sidebar() {
                   <FolderPlus className="w-6 h-6 text-indigo-400" />
                 </div>
                 <p className="text-sm font-semibold text-[rgb(var(--color-text-secondary))]">
-                  Chưa có thư mục nào
+                  {currentText.sidebar.empty_file_list.header}
                 </p>
                 <p className="text-xs text-[rgb(var(--color-text-muted))] mt-1 max-w-[220px] leading-relaxed">
-                  Tạo thư mục đầu tiên hoặc nhập chủ đề muốn học vào khung chat
-                  để AI biên soạn lộ trình.
+                  {currentText.sidebar.empty_file_list.body}
                 </p>
                 <button
                   onClick={() => setShowAddFolder(true)}
                   className="mt-4 flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-indigo-600 text-white text-xs font-medium hover:bg-indigo-500 transition-colors"
                 >
                   <Plus className="w-3.5 h-3.5" />
-                  Tạo thư mục mới
+                  {currentText.sidebar.empty_file_list.button}
                 </button>
               </div>
             )
           ) : (
             <Tree
               className="p-0"
-              initialExpandedItems={sortedFolders.map((folder) => folder.id)}
+              expandedItems={expandedFolderIds}
+              onExpandedChange={(ids) => setExpandedFolderIds(ids)}
               elements={treeElements}
             >
-              <CollapseButton
-                elements={treeElements}
-                className="flex items-center justify-between w-full px-4 py-2.5 h-auto rounded-lg text-sm font-semibold text-[rgb(var(--color-text-primary))] hover:bg-[rgb(var(--color-surface-2))]"
-                title="Mở rộng / Thu gọn tất cả"
-                aria-label="Mở rộng / Thu gọn tất cả thư mục"
-              >
-                <span className="text-[13px] font-semibold text-[rgb(var(--color-text-primary))]">
-                  Tất cả thư mục
-                </span>
-                <span className="text-[11px] opacity-60">
-                  {sortedFolders.length}
-                </span>
-              </CollapseButton>
               {sortedFolders.map((folder) => {
                 const isSelected =
                   selectedFolder?.id === folder.id && !selectedFile;
@@ -860,12 +1136,25 @@ export default function Sidebar() {
                     key={folder.id}
                     value={folder.id}
                     element={
-                      <>
+                      <span
+                        onMouseDown={(e) => e.stopPropagation()}
+                        onDragStart={(e) => handleFolderDragStart(e, folder.id)}
+                        onDragOver={(e) => handleFolderDragOver(e, folder.id)}
+                        onDragLeave={(e) => handleFolderDragLeave(e, folder.id)}
+                        onDrop={(e) => handleFolderReorderDrop(e, folder.id)}
+                        draggable
+                        className="flex items-center w-full min-w-0 gap-1.5 cursor-grab active:cursor-grabbing"
+                        title="Kéo để sắp xếp thứ tự"
+                        aria-label="Kéo để sắp xếp thứ tự"
+                      >
                         {pinnedIds.includes(folder.id) && (
-                          <Star className="w-3 h-3 text-amber-400 fill-amber-400 inline-block shrink-0 mr-1 -mt-px" />
+                          <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 inline-block shrink-0 -mt-px" />
                         )}
-                        {highlightMatch(folder.name, searchQuery)}
-                      </>
+                        <span className="truncate min-w-0">
+                          {highlightMatch(cleanFolderName(folder.name), searchQuery)}
+                        </span>
+                        <GripVertical className="w-3.5 h-3.5 text-[rgb(var(--color-text-muted))] opacity-0 group-hover/folder:opacity-60 hover:!opacity-100 shrink-0 ml-auto mr-1" />
+                      </span>
                     }
                     isSelect={isSelected}
                     onSelect={(id) => selectFolder(id)}
@@ -875,7 +1164,7 @@ export default function Sidebar() {
                       draggingFile.folderId !== folder.id
                         ? "ring-2 ring-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/0.08)]"
                         : ""
-                    }`}
+                    } ${dragOverFolderTarget === folder.id && draggingFolder && draggingFolder !== folder.id ? "ring-2 ring-emerald-400 bg-emerald-400/10" : ""}`}
                     onDragOver={(e) => {
                       e.preventDefault();
                       setDragOverFolderId(folder.id);
@@ -894,10 +1183,8 @@ export default function Sidebar() {
                       })
                     }
                     badge={folderBadge(folder)}
-                    openIcon={
-                      <FolderOpen className="w-4 h-4 text-amber-300/90 shrink-0" />
-                    }
-                    closeIcon={getFolderIcon(folder.type, false)}
+                    openIcon={getFolderIcon(folder.type, folder.name, true)}
+                    closeIcon={getFolderIcon(folder.type, folder.name, false)}
                     actions={
                       <>
                         <button
@@ -914,6 +1201,18 @@ export default function Sidebar() {
                           aria-label="Đổi tên thư mục"
                         >
                           <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            store.setSelectedFolder(folder.id);
+                            router.push(`/dashboard/folders/${folder.id}?view=mindmap`);
+                          }}
+                          className="text-[rgb(var(--color-text-muted))] hover:text-indigo-400 p-0.5 rounded transition-colors"
+                          title="Xem sơ đồ tư duy"
+                          aria-label="Xem sơ đồ tư duy"
+                        >
+                          <Network className="w-3.5 h-3.5" />
                         </button>
                         <button
                           onClick={(e) => {
@@ -1118,22 +1417,34 @@ export default function Sidebar() {
             <Pencil className="w-3.5 h-3.5" /> Đổi tên
           </button>
           {ctxMenu.type === "folder" && (
-            <button
-              onClick={() => {
-                togglePin(ctxMenu.folderId);
-                setCtxMenu(null);
-              }}
-              className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] hover:text-amber-400 transition-colors"
-            >
-              <Star
-                className={`w-3.5 h-3.5 ${
-                  pinnedIds.includes(ctxMenu.folderId)
-                    ? "text-amber-400 fill-amber-400"
-                    : ""
-                }`}
-              />
-              {pinnedIds.includes(ctxMenu.folderId) ? "Bỏ ghim" : "Ghim thư mục"}
-            </button>
+            <>
+              <button
+                onClick={() => {
+                  store.setSelectedFolder(ctxMenu.folderId);
+                  router.push(`/dashboard/folders/${ctxMenu.folderId}?view=mindmap`);
+                  setCtxMenu(null);
+                }}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] hover:text-indigo-400 transition-colors"
+              >
+                <Network className="w-3.5 h-3.5" /> Xem sơ đồ tư duy
+              </button>
+              <button
+                onClick={() => {
+                  togglePin(ctxMenu.folderId);
+                  setCtxMenu(null);
+                }}
+                className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] hover:text-amber-400 transition-colors"
+              >
+                <Star
+                  className={`w-3.5 h-3.5 ${
+                    pinnedIds.includes(ctxMenu.folderId)
+                      ? "text-amber-400 fill-amber-400"
+                      : ""
+                  }`}
+                />
+                {pinnedIds.includes(ctxMenu.folderId) ? "Bỏ ghim" : "Ghim thư mục"}
+              </button>
+            </>
           )}
           <button
             onClick={() => {

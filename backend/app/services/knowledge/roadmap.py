@@ -1,28 +1,33 @@
+import asyncio
 import json
 import re
 import uuid
-from typing import Optional, List
+from typing import List
+
 from sqlmodel import Session, select
 
 from app.models.folder import Folder
-from app.models.knowledge_file import KnowledgeFile  # Adjust import path to your actual File model
+from app.models.knowledge_file import KnowledgeFile
 from app.services.document.parser import parse_context_to_structure, _generate_content_with_retry
-from app.services.ai.prompts import REVISE_SYSTEM_PROMPT
+from app.services.ai.domain_prompts import build_revise_prompt, detect_domain
 from app.services.search.tavily import tavily_search
 from app.services.storage.file_storage import store_folder_structure_roadmap
-from app.utils.similarity_checker import get_embedding,cosine_similarity
+from app.utils.similarity_checker import get_embedding, cosine_similarity
 from google.genai import types
-import asyncio
+
 
 def _get_folders_sync(sess):
-    return sess.exec(select(Folder).where(Folder.type == "roadmap")).all()
+    return sess.exec(
+        select(Folder).where(Folder.type == "roadmap")
+    ).all()
+
 
 def clone_folder_for_user(
-    cached_folder: Folder, 
-    new_user_id: int, 
-    new_folder_name: str, 
-    new_embedding: list[float], 
-    session: Session
+    cached_folder: Folder,
+    new_user_id: int,
+    new_folder_name: str,
+    new_embedding: list[float],
+    session: Session,
 ) -> Folder:
     """
     Clones an existing roadmap folder and all its files for a new user.
@@ -33,7 +38,7 @@ def clone_folder_for_user(
         name=new_folder_name or cached_folder.name,
         type="roadmap",
         user_id=new_user_id,
-        prompt_embedding=json.dumps(new_embedding)
+        prompt_embedding=json.dumps(new_embedding),
     )
     session.add(cloned_folder)
     session.commit()
@@ -53,10 +58,22 @@ def clone_folder_for_user(
                 folder_id=cloned_folder.id,
                 name=original_file.name,
                 summary=getattr(original_file, "summary", ""),
-                markdown_content=getattr(original_file, "markdown_content", ""),
-                video_url=getattr(original_file, "video_url", None),
-                timestamps_json=getattr(original_file, "timestamps_json", None),
-                order_index=index
+                markdown_content=getattr(
+                    original_file,
+                    "markdown_content",
+                    "",
+                ),
+                video_url=getattr(
+                    original_file,
+                    "video_url",
+                    None,
+                ),
+                timestamps_json=getattr(
+                    original_file,
+                    "timestamps_json",
+                    None,
+                ),
+                order_index=index,
             )
         )
 
@@ -69,9 +86,9 @@ def clone_folder_for_user(
 
 
 async def roadmap_service(
-    topic: str, 
-    user_id: int, 
-    session: Session, 
+    topic: str,
+    user_id: int,
+    session: Session,
     folder_name: str,
     similarity_threshold: float = 0.88,
     on_event: callable = None,
@@ -84,59 +101,88 @@ async def roadmap_service(
     # ---------------------------------------------------------
     # STEP 2: Check Semantic Cache across existing roadmap folders
     # ---------------------------------------------------------
-
-    existing_folders = await asyncio.to_thread(_get_folders_sync, session)
+    existing_folders = await asyncio.to_thread(
+        _get_folders_sync,
+        session,
+    )
 
     if new_embedding:
         for cached_folder in existing_folders:
             if cached_folder.prompt_embedding:
-                # Parse stored JSON string to list of floats
                 cached_embedding = (
                     json.loads(cached_folder.prompt_embedding)
-                    if isinstance(cached_folder.prompt_embedding, str)
+                    if isinstance(
+                        cached_folder.prompt_embedding,
+                        str,
+                    )
                     else cached_folder.prompt_embedding
                 )
-                score = cosine_similarity(new_embedding, cached_embedding)
+
+                score = cosine_similarity(
+                    new_embedding,
+                    cached_embedding,
+                )
 
                 # === CACHE HIT ===
                 if score >= similarity_threshold:
-                    print(f"⚡ [CACHE HIT] Match found! Reusing folder '{cached_folder.name}' (Score: {score:.2f})")
+                    print(
+                        f"⚡ [CACHE HIT] Match found! "
+                        f"Reusing folder '{cached_folder.name}' "
+                        f"(Score: {score:.2f})"
+                    )
 
                     # If user already owns this folder, return directly
                     if cached_folder.user_id == user_id:
                         return cached_folder
 
-                    # Otherwise, clone the folder for the requesting user
+                    # Otherwise, clone the folder
                     return await asyncio.to_thread(
                         clone_folder_for_user,
                         cached_folder=cached_folder,
                         new_user_id=user_id,
                         new_folder_name=folder_name,
                         new_embedding=new_embedding,
-                        session=session
+                        session=session,
                     )
 
     # ---------------------------------------------------------
     # STEP 3: CACHE MISS — Crawl & Call Gemini AI
     # ---------------------------------------------------------
-    print(f"🤖 [CACHE MISS] Calling Tavily & AI to generate new roadmap for: '{topic}'")
+    print(
+        f"🤖 [CACHE MISS] Calling Tavily & AI "
+        f"to generate new roadmap for: '{topic}'"
+    )
+
     if on_event:
-        on_event({"type": "status", "message": "Đang tìm kiếm tài liệu trên Internet..."})
-    
+        on_event(
+            {
+                "type": "status",
+                "message": "Đang tìm kiếm tài liệu trên Internet...",
+            }
+        )
+
     tavily_context = ""
+
     try:
         tavily_context = await tavily_search(topic)
     except Exception as e:
-        print(f"  ---> [Tavily] Không lấy được ngữ cảnh Internet, tiếp tục với context trống: {e}")
+        print(
+            "  ---> [Tavily] Không lấy được ngữ cảnh Internet, "
+            f"tiếp tục với context trống: {e}"
+        )
 
-    roadmap_data = await parse_context_to_structure(topic, tavily_context, folder_name=folder_name, on_event=on_event)
-
+    roadmap_data = await parse_context_to_structure(
+        topic,
+        tavily_context,
+        folder_name=folder_name,
+        on_event=on_event,
+    )
 
     new_folder = await asyncio.to_thread(
         store_folder_structure_roadmap,
         session=session,
         user_id=user_id,
-        roadmap_data=roadmap_data
+        roadmap_data=roadmap_data,
     )
 
     # Save prompt vector to DB for future semantic cache matches
@@ -151,13 +197,23 @@ async def roadmap_service(
 # =====================================================================
 # FOLLOW-UP PROMPT: HỎI TIẾP / CHỈNH SỬA NỘI DUNG CŨ
 # =====================================================================
+
+
 def _tokenize(text: str) -> set:
     """Tách từ (hỗ trợ tiếng Việt) để dùng cho keyword matching."""
-    return set(re.findall(r"[a-zA-Z0-9_À-ỹ]+", text.lower()))
+    return set(
+        re.findall(
+            r"[a-zA-Z0-9_À-ỹ]+",
+            text.lower(),
+        )
+    )
 
 
 def search_folder_documents(
-    folder: Folder, query: str, top_k: int = 3, max_chars: int = 2500
+    folder: Folder,
+    query: str,
+    top_k: int = 3,
+    max_chars: int = 2500,
 ) -> List[dict]:
     """
     Tìm kiếm nội dung liên quan trong folder tài liệu (các file bài học)
@@ -167,37 +223,64 @@ def search_folder_documents(
     query_terms = _tokenize(query)
 
     scored = []
+
     for f in getattr(folder, "files", []):
         title = getattr(f, "name", "") or ""
-        content = getattr(f, "markdown_content", "") or ""
+        content = getattr(
+            f,
+            "markdown_content",
+            "",
+        ) or ""
+
         haystack = f"{title}\n{content}".lower()
 
         if not query_terms:
             score = 0
         else:
             hit = 0
+
             for term in query_terms:
                 if term in haystack:
                     hit += 1
+
             score = hit / len(query_terms)
 
         scored.append((score, f))
 
-    scored.sort(key=lambda x: x[0], reverse=True)
+    scored.sort(
+        key=lambda x: x[0],
+        reverse=True,
+    )
 
     results = []
+
     for score, f in scored[:top_k]:
         if score <= 0:
             continue
-        content = (getattr(f, "markdown_content", "") or "")[:max_chars]
+
+        content = (
+            getattr(
+                f,
+                "markdown_content",
+                "",
+            )
+            or ""
+        )[:max_chars]
+
         results.append(
             {
                 "file_id": f.id,
-                "title": getattr(f, "name", "") or "Untitled",
+                "title": getattr(
+                    f,
+                    "name",
+                    "",
+                )
+                or "Untitled",
                 "score": round(score, 3),
                 "excerpt": content,
             }
         )
+
     return results
 
 
@@ -209,71 +292,123 @@ async def revise_roadmap(
 ) -> dict:
     """
     Xử lý prompt hỏi tiếp / yêu cầu chỉnh sửa nội dung cũ:
-    1. Tìm kiếm tài liệu liên quan trong folder (search_folder_documents)
+
+    1. Tìm kiếm tài liệu liên quan trong folder
     2. Gọi Gemini quyết định: trả lời (answer) hoặc chỉnh sửa bài học (edit)
     3. Nếu edit: cập nhật markdown_content của KnowledgeFile trong DB
-
-    Returns:
-        {"action": "answer", "text": str}
-        | {"action": "edit", "file_id": str, "title": str, "content": str}
     """
-    if on_event:
-        on_event({"type": "status", "message": "Đang tìm kiếm tài liệu liên quan trong folder..."})
 
-    docs = search_folder_documents(folder, topic)
+    if on_event:
+        on_event(
+            {
+                "type": "status",
+                "message": (
+                    "Đang tìm kiếm tài liệu liên quan trong folder..."
+                ),
+            }
+        )
+
+    docs = search_folder_documents(
+        folder,
+        topic,
+    )
 
     if docs:
         doc_block = "\n\n".join(
-            f"--- FILE: {d['title']} (file_id: {d['file_id']}) ---\n{d['excerpt']}"
+            f"--- FILE: {d['title']} "
+            f"(file_id: {d['file_id']}) ---\n"
+            f"{d['excerpt']}"
             for d in docs
         )
     else:
-        # Fallback: gửi danh sách tiêu đề bài học để AI có ngữ cảnh folder
         titles = [
-            getattr(f, "name", "Untitled")
-            for f in getattr(folder, "files", [])
+            getattr(
+                f,
+                "name",
+                "Untitled",
+            )
+            for f in getattr(
+                folder,
+                "files",
+                [],
+            )
         ]
+
         doc_block = (
-            "Không có trích đoạn khớp. Danh sách bài học hiện có:\n"
-            + "\n".join(f"- {t}" for t in titles)
+            "Không có trích đoạn khớp. "
+            "Danh sách bài học hiện có:\n"
+            + "\n".join(
+                f"- {t}"
+                for t in titles
+            )
         )
 
     if on_event:
-        on_event({"type": "status", "message": "Đang xử lý với AI..."})
+        on_event(
+            {
+                "type": "status",
+                "message": "Đang xử lý với AI...",
+            }
+        )
 
-    prompt = (
-        f"Folder hiện tại: {folder.name}\n"
-        f"Yêu cầu của người dùng: {topic}\n\n"
-        f"Tài liệu tìm thấy trong folder:\n{doc_block}"
+    prompt = build_revise_prompt(
+        topic=topic,
+        folder_name=folder.name,
+        user_query=topic,
+        relevant_docs=docs,
+        domain=None,  # auto-detect
     )
 
     response = await _generate_content_with_retry(
         prompt,
         types.GenerateContentConfig(
-            system_instruction=REVISE_SYSTEM_PROMPT,
             response_mime_type="application/json",
             temperature=0.4,
         ),
     )
 
     raw = response.text or "{}"
+
     try:
         parsed = json.loads(raw)
     except json.JSONDecodeError:
-        parsed = {"action": "answer", "text": raw}
+        parsed = {
+            "action": "answer",
+            "text": raw,
+        }
 
-    action = parsed.get("action", "answer")
+    action = parsed.get(
+        "action",
+        "answer",
+    )
 
-    # ---------- CHỈNH SỬA NỘI DUNG CŨ ----------
+    # =========================================================
+    # CHỈNH SỬA NỘI DUNG CŨ
+    # =========================================================
     if action == "edit":
-        files = list(getattr(folder, "files", []))
+        files = list(
+            getattr(
+                folder,
+                "files",
+                [],
+            )
+        )
+
         target = next(
-            (f for f in files if f.id == parsed.get("file_id")),
+            (
+                f
+                for f in files
+                if f.id == parsed.get("file_id")
+            ),
             None,
         )
 
         if target:
-            new_content = parsed.get("content", "")
+            new_content = parsed.get(
+                "content",
+                "",
+            )
+
             target.markdown_content = new_content
             session.add(target)
             session.commit()
@@ -282,20 +417,38 @@ async def revise_roadmap(
             return {
                 "action": "edit",
                 "file_id": target.id,
-                "title": parsed.get("title") or target.name,
+                "title": (
+                    parsed.get("title")
+                    or target.name
+                ),
                 "content": new_content,
             }
 
-        # file_id trỏ tới bài không tồn tại (hoặc "new") → tạo bài học mới
-        max_order = max((f.order_index for f in files), default=-1)
+        # file_id trỏ tới bài không tồn tại hoặc "new"
+        # → tạo bài học mới
+        max_order = max(
+            (
+                f.order_index
+                for f in files
+            ),
+            default=-1,
+        )
+
         new_file = KnowledgeFile(
             id=f"file-{uuid.uuid4().hex[:8]}",
             folder_id=folder.id,
-            name=parsed.get("title") or topic[:80],
+            name=(
+                parsed.get("title")
+                or topic[:80]
+            ),
             summary="",
-            markdown_content=parsed.get("content", ""),
+            markdown_content=parsed.get(
+                "content",
+                "",
+            ),
             order_index=max_order + 1,
         )
+
         session.add(new_file)
         session.commit()
         session.refresh(new_file)
@@ -307,8 +460,13 @@ async def revise_roadmap(
             "content": new_file.markdown_content,
         }
 
-    # ---------- TRẢ LỜI CÂU HỎI ----------
+    # =========================================================
+    # TRẢ LỜI CÂU HỎI
+    # =========================================================
     return {
         "action": "answer",
-        "text": parsed.get("text", raw),
+        "text": parsed.get(
+            "text",
+            raw,
+        ),
     }

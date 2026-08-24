@@ -1,3 +1,4 @@
+import json
 import traceback
 import inspect
 import asyncio
@@ -23,7 +24,8 @@ async def process_youtube_native_pipeline(
     session: Session,
     user_id: int,
     youtube_url: str,
-    on_event: callable = None
+    on_event: callable = None,
+    folder_id: str = None
 ) -> None:
     try:
         await send_status_event(on_event, "Đang lấy phụ đề từ YouTube...")

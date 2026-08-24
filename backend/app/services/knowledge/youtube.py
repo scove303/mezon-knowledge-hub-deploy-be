@@ -1,11 +1,14 @@
 import re
+import re
 import json
 import asyncio
 from yt_dlp import YoutubeDL
 from youtube_transcript_api import YouTubeTranscriptApi
 from google import genai
 from google.genai import types
+from youtube_transcript_api import YouTubeTranscriptApi
 from app.core.config import settings
+from app.services.search.tavily import tavily_search
 
 api_key = getattr(settings, "GEMINI_API_KEY", None) or getattr(settings, "GOOGLE_API_KEY", None)
 client = genai.Client(api_key=api_key)
@@ -77,6 +80,7 @@ class YouTubeTranscriptService:
 
         response = await client.aio.models.generate_content(
             model=MODEL_NAME,
+            contents=prompt,
             contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",

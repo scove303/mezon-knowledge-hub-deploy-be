@@ -1,14 +1,19 @@
 import React, { useEffect, useRef, useState } from "react";
-import { LogOut, ChevronUp, LogIn } from "lucide-react";
+import { LogOut, ChevronUp, LogIn, Download, Upload } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { authService } from "@/features/auth/services";
 import { useAuthStore } from "@/features/auth/store";
+import { useToastStore } from "@/stores/toast";
+import { backupService } from "@/features/backup/services";
 import { cn } from "@/utils/formatTailwind";
 import { ThemeToggle } from "@/components/theme/ThemeToggle";
 import { LanguageToggle } from "@/components/language/LanguageToggle";
 
 export default function UserProfileMenu() {
   const [isOpen, setIsOpen] = useState(false);
+  const [isBackingUp, setIsBackingUp] = useState(false);
+  const [isRestoring, setIsRestoring] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const menuRef = useRef(null);
   const router = useRouter();
   const clearAuth = useAuthStore((state) => state.clearAuth);
@@ -50,6 +55,48 @@ export default function UserProfileMenu() {
     } finally {
       clearAuth();
       router.push("/login");
+    }
+  };
+
+  const handleExportBackup = async () => {
+    setIsBackingUp(true);
+    try {
+      await backupService.exportData();
+      useToastStore
+        .getState()
+        .addToast("Đã xuất bản sao lưu dữ liệu (JSON)", "success");
+    } catch (err) {
+      console.error("Lỗi xuất bản sao lưu:", err);
+      useToastStore.getState().addToast("Xuất bản sao lưu thất bại", "error");
+    } finally {
+      setIsBackingUp(false);
+    }
+  };
+
+  const handleImportBackup = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file) return;
+    setIsRestoring(true);
+    try {
+      const res = await backupService.importData(file);
+      useToastStore
+        .getState()
+        .addToast(
+          `Đã phục hồi ${res.folders} thư mục, ${res.files} tài liệu`,
+          "success",
+        );
+      window.dispatchEvent(new Event("mf-folders-changed"));
+    } catch (err: any) {
+      console.error("Lỗi phục hồi dữ liệu:", err);
+      useToastStore
+        .getState()
+        .addToast(
+          `Phục hồi thất bại: ${err?.message || "file không hợp lệ"}`,
+          "error",
+        );
+    } finally {
+      setIsRestoring(false);
     }
   };
 
@@ -131,6 +178,43 @@ export default function UserProfileMenu() {
 
           <div className={cn("pt-1 px-1")}>
             <ThemeToggle />
+          </div>
+
+          {/* Sao lưu / Phục hồi dữ liệu */}
+          <div className={cn("pt-1 px-1 border-t border-[rgb(var(--color-border))]")}>
+            <button
+              type="button"
+              onClick={handleExportBackup}
+              disabled={isBackingUp}
+              className={cn(
+                "w-full flex items-center space-x-2.5 px-2.5 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:text-[rgb(var(--color-text-primary))] hover:bg-[rgb(var(--color-surface-2))] rounded-lg transition-colors disabled:opacity-50",
+              )}
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className={cn("font-medium")}>
+                {isBackingUp ? "Đang xuất..." : "Sao lưu dữ liệu (JSON)"}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isRestoring}
+              className={cn(
+                "w-full flex items-center space-x-2.5 px-2.5 py-1.5 text-xs text-[rgb(var(--color-text-secondary))] hover:text-[rgb(var(--color-text-primary))] hover:bg-[rgb(var(--color-surface-2))] rounded-lg transition-colors disabled:opacity-50",
+              )}
+            >
+              <Upload className="w-3.5 h-3.5" />
+              <span className={cn("font-medium")}>
+                {isRestoring ? "Đang phục hồi..." : "Phục hồi dữ liệu"}
+              </span>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              onChange={handleImportBackup}
+            />
           </div>
 
           {/* Nút Logout / Đăng nhập */}

@@ -1,15 +1,19 @@
+import asyncio
+
 MODEL_AVAILABLE = False
 _model = None
 
 try:
     from sentence_transformers import SentenceTransformer
-    import asyncio
 
     # Load a fast, lightweight embedding model once at startup
     _model = SentenceTransformer("all-MiniLM-L6-v2")
     MODEL_AVAILABLE = True
 except Exception as e:
-    print(f"⚠️ [similarity_checker] sentence-transformers không khả dụng, bỏ qua semantic cache: {e}")
+    print(
+        f"[similarity_checker] sentence-transformers unavailable, disable semantic cache: {e}",
+        flush=True,
+    )
 
 
 def _get_embedding_sync(text: str) -> list[float]:
@@ -19,6 +23,8 @@ def _get_embedding_sync(text: str) -> list[float]:
 
 # Wrap in an async function using asyncio.to_thread
 async def get_embedding(text: str) -> list[float]:
+    if not MODEL_AVAILABLE or _model is None:
+        return []
     return await asyncio.to_thread(_get_embedding_sync, text)
 
 

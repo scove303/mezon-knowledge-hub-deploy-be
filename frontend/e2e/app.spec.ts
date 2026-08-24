@@ -114,11 +114,11 @@ test.describe("Guest flow (không cần login/backend)", () => {
 
     // Bấm file → FileViewer render nội dung (heading # của markdown).
     // Lưu ý: accessible name của row file là "File" → dùng getByText
-    await page.getByText("Bai_01.md", { exact: true }).click();
+    await page.getByRole("button", { name: "Bai_01.md", exact: true }).click();
     await expect(
       page.getByRole("heading", { name: "Bài 1: Khởi động" }),
     ).toBeVisible();
-    await expect(page.getByText("Xin chào thế giới.")).toBeVisible();
+    await expect(page.locator('.prose').getByText("Xin chào thế giới.")).toBeVisible();
   });
 
   test("palette chuyển theme sáng/tối qua class trên <html>", async ({

@@ -1,7 +1,7 @@
 """add prompt_embedding to folders table
 
 Revision ID: 3185770ec2a5
-Revises: 877e45696ceb
+Revises: a1b2c3d4e5f6
 Create Date: 2026-07-31 19:45:43.824355
 
 """
@@ -13,7 +13,7 @@ import sqlalchemy as sa
 
 # revision identifiers, used by Alembic.
 revision: str = '3185770ec2a5'
-down_revision: Union[str, Sequence[str], None] = '877e45696ceb'
+down_revision: Union[str, Sequence[str], None] = 'a1b2c3d4e5f6'
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 

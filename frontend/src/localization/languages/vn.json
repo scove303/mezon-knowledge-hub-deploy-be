@@ -1,8 +1,13 @@
 {
   "sidebar": {
-    "fileList": {
+    "file_list": {
       "header": "Danh sách Thư Mục Của",
       "version": "Bản Thử"
+    },
+    "empty_file_list": {
+      "header": "Chưa có thư mục nào",
+      "body": "Hãy tạo thư mục đầu tiên hoặc nhập chủ đề bạn muốn học vào khung chat để AI tạo lộ trình học tập cho bạn.",
+      "button": "Tạo thư mục mới"
     }
   },
   "searchBar": {
@@ -22,9 +27,24 @@
     "vietnamese": "Tiếng Việt"
   },
   "dashboard": {
-    "title": "Xin chào, bạn muốn học gì hôm nay?",
-    "subtitle": "Khám phá Mezon Knowledge Hub",
-    "placeholder": "Hỏi một câu hỏi, dán link youtube, hay tải lên tài liệu..."
+    "chat": {
+      "title": "Xin chào, bạn muốn học gì hôm nay?",
+      "subtitle": "Khám phá Mezon Knowledge Hub",
+      "placeholder": "Hỏi một câu hỏi, dán link youtube, hay tải lên tài liệu..."
+    },
+    "getting_started_banner": {
+      "header": "Bắt đầu hành trình học tập của bạn",
+      "body": "Nhập chủ đề bạn muốn học (ví dụ: \"Lộ trình Python cho người mới\") vào khung chat bên dưới — AI sẽ tự động biên soạn lộ trình, chia bài học và lưu vào thư mục cho bạn."
+    },
+    "roadmap_folder": "Thư mục lộ trình",
+    "learning_materials": "Tài liệu học tập",
+    "lecture_videos": "Video bài giảng",
+    "completed_lessons": "Bài đã học",
+    "streak": "ngày liên tiếp",
+    "recent_folders": {
+      "header": "Tài liệu gần đây",
+      "no_recent_documents": "Chưa có tài liệu nào — hãy tạo lộ trình đầu tiên ở khung chat bên dưới!"
+    }
   },
   "login": {
     "header": "Đăng nhập vào không gian tri thức của bạn",

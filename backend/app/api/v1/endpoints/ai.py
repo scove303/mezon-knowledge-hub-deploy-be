@@ -2,23 +2,31 @@ import asyncio
 import json
 import uuid
 
-from fastapi import APIRouter, File, Form, UploadFile, HTTPException, status,BackgroundTasks
-from app.workers.tasks.youtube_task import process_youtube_native_pipeline
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    File,
+    Form,
+    HTTPException,
+    UploadFile,
+    status,
+)
 from fastapi.responses import StreamingResponse
-from sqlmodel import select
+from google.genai import types
 from sqlalchemy.orm import selectinload
+from sqlmodel import select
 
-from app.core.database import get_session
+from app.api.deps import CurrentActor, SessionDep
 from app.core.state import create_job, get_job_for_user, roadmap_jobs
-from app.schemas.common import success_response
-from app.api.deps import SessionDep, CurrentActor
-from app.services.knowledge.roadmap import roadmap_service, revise_roadmap
-from app.schemas.ai import RoadmapCreateRequest, RoadmapFollowUpRequest
 from app.models.folder import Folder
 from app.models.knowledge_file import KnowledgeFile
+from app.schemas.ai import RoadmapCreateRequest, RoadmapFollowUpRequest
+from app.schemas.common import success_response
+from app.services.ai.domain_prompts import build_summarize_prompt, detect_domain
 from app.services.document.parser import _generate_content_with_retry
-from app.services.ai.prompts import SUMMARIZE_SYSTEM_PROMPT
-from google.genai import types
+from app.services.knowledge.roadmap import roadmap_service, revise_roadmap
+from app.workers.tasks.youtube_task import process_youtube_native_pipeline
+from app.core.database import get_session
 
 router = APIRouter()
 
@@ -35,6 +43,7 @@ async def run_roadmap_job(job_id: str):
         return
 
     job.status = "running"
+
     try:
         with next(_get_session()) as session:
             folder = await roadmap_service(
@@ -44,24 +53,40 @@ async def run_roadmap_job(job_id: str):
                 session=session,
                 on_event=job.push,
             )
+
             job.folder_id = folder.id
             job.files = [
                 {"file_id": f.id, "title": f.name}
                 for f in getattr(folder, "files", [])
             ]
+
             job.status = "done"
-            job.push({
-                "type": "done",
-                "folder_id": folder.id,
-                "folder_name": folder.name,
-                "total_files": len(job.files),
-                "files": job.files,
-            })
+
+            job.push(
+                {
+                    "type": "done",
+                    "folder_id": folder.id,
+                    "folder_name": folder.name,
+                    "total_files": len(job.files),
+                    "files": job.files,
+                }
+            )
+
     except Exception as e:
         job.status = "error"
         job.error = str(e)
-        job.push({"type": "error", "message": f"Error generating roadmap: {str(e)}"})
-        print(f"❌ [Job {job_id}] Thất bại: {e}", flush=True)
+
+        job.push(
+            {
+                "type": "error",
+                "message": f"Error generating roadmap: {str(e)}",
+            }
+        )
+
+        print(
+            f"❌ [Job {job_id}] Thất bại: {e}",
+            flush=True,
+        )
 
 
 def _event_to_sse(event: dict) -> str:
@@ -74,16 +99,22 @@ async def generate_roadmap(
     session: SessionDep,
     current_user: CurrentActor,
 ):
-    # Giới hạn số job đồng thời mỗi user (tránh lạm dụng), không chặn chạy song song
+    # Giới hạn số job đồng thời mỗi user
+    # (tránh lạm dụng), không chặn chạy song song
     user_jobs = sum(
         1
         for j in roadmap_jobs.values()
-        if j.user_id == current_user.id and j.status in ("queued", "running")
+        if j.user_id == current_user.id
+        and j.status in ("queued", "running")
     )
+
     if user_jobs >= MAX_CONCURRENT_JOBS_PER_USER:
         raise HTTPException(
             status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail="Bạn đang có quá nhiều lộ trình đang tạo. Vui lòng đợi một vài lộ trình hoàn tất!",
+            detail=(
+                "Bạn đang có quá nhiều lộ trình đang tạo. "
+                "Vui lòng đợi một vài lộ trình hoàn tất!"
+            ),
         )
 
     job = create_job(
@@ -91,12 +122,24 @@ async def generate_roadmap(
         topic=body.topic,
         folder_name=body.folder_name,
     )
-    job.push({"type": "status", "message": "Đã nhận yêu cầu, đang chuẩn bị..."})
-    asyncio.create_task(run_roadmap_job(job.id))
+
+    job.push(
+        {
+            "type": "status",
+            "message": "Đã nhận yêu cầu, đang chuẩn bị...",
+        }
+    )
+
+    asyncio.create_task(
+        run_roadmap_job(job.id)
+    )
 
     return success_response(
         message="Yêu cầu tạo lộ trình đã được chấp nhận",
-        data={"job_id": job.id, "status": "queued"},
+        data={
+            "job_id": job.id,
+            "status": "queued",
+        },
     )
 
 
@@ -106,35 +149,51 @@ async def stream_roadmap(
     session: SessionDep,
     current_user: CurrentActor,
 ):
-    job = get_job_for_user(job_id, current_user.id)
+    job = get_job_for_user(
+        job_id,
+        current_user.id,
+    )
+
     if not job:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Không tìm thấy job này (có thể đã hết hạn sau khi server khởi động lại)",
+            detail=(
+                "Không tìm thấy job này "
+                "(có thể đã hết hạn sau khi server khởi động lại)"
+            ),
         )
 
     async def event_generator():
         # Replay các sự kiện đã xảy ra trước khi client kết nối
         replayed_ids = set()
+
         for event in job.events:
             yield _event_to_sse(event)
+
             replayed_ids.add(id(event))
+
             if event.get("type") in ("done", "error"):
                 return
 
         while True:
             try:
-                event = await asyncio.wait_for(job.queue.get(), timeout=HEARTBEAT_INTERVAL)
+                event = await asyncio.wait_for(
+                    job.queue.get(),
+                    timeout=HEARTBEAT_INTERVAL,
+                )
+
             except asyncio.TimeoutError:
                 # Heartbeat giữ kết nối sống khi chưa có sự kiện mới
                 yield ": ping\n\n"
                 continue
 
-            # Sự kiện push đã được replay phía trên (cùng object) → bỏ qua
+            # Sự kiện push đã được replay phía trên
+            # (cùng object) → bỏ qua
             if id(event) in replayed_ids:
                 continue
 
             yield _event_to_sse(event)
+
             if event.get("type") in ("done", "error"):
                 return
 
@@ -155,12 +214,17 @@ async def get_roadmap_status(
     session: SessionDep,
     current_user: CurrentActor,
 ):
-    job = get_job_for_user(job_id, current_user.id)
+    job = get_job_for_user(
+        job_id,
+        current_user.id,
+    )
+
     if not job:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
             detail="Không tìm thấy job này",
         )
+
     return success_response(
         message="Trạng thái job",
         data={
@@ -169,7 +233,11 @@ async def get_roadmap_status(
             "error": job.error,
             "folder_id": job.folder_id,
             "files": job.files,
-            "last_event": job.events[-1] if job.events else None,
+            "last_event": (
+                job.events[-1]
+                if job.events
+                else None
+            ),
         },
     )
 
@@ -177,13 +245,24 @@ async def get_roadmap_status(
 # =====================================================================
 # FOLLOW-UP PROMPT: HỎI TIẾP / CHỈNH SỬA NỘI DUNG CŨ
 # =====================================================================
-def _load_owned_folder(session, folder_id: str, user_id: int) -> Folder:
+
+def _load_owned_folder(
+    session,
+    folder_id: str,
+    user_id: int,
+) -> Folder:
     """Load folder kèm files, kiểm tra quyền sở hữu của user."""
     statement = (
         select(Folder)
-        .where(Folder.id == folder_id, Folder.user_id == user_id)
-        .options(selectinload(Folder.files))
+        .where(
+            Folder.id == folder_id,
+            Folder.user_id == user_id,
+        )
+        .options(
+            selectinload(Folder.files)
+        )
     )
+
     return session.exec(statement).first()
 
 
@@ -192,17 +271,27 @@ async def run_followup_job(job_id: str):
     from app.core.database import get_session as _get_session
 
     job = roadmap_jobs.get(job_id)
+
     if not job:
         return
 
     job.status = "running"
+
     try:
         with next(_get_session()) as session:
-            folder = _load_owned_folder(session, job.conversation_id, job.user_id)
+            folder = _load_owned_folder(
+                session,
+                job.conversation_id,
+                job.user_id,
+            )
+
             if not folder:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
-                    detail="Không tìm thấy folder/hội thoại này (có thể đã bị xóa hoặc không thuộc quyền của bạn)",
+                    detail=(
+                        "Không tìm thấy folder/hội thoại này "
+                        "(có thể đã bị xóa hoặc không thuộc quyền của bạn)"
+                    ),
                 )
 
             result = await revise_roadmap(
@@ -221,15 +310,26 @@ async def run_followup_job(job_id: str):
                         "content": result["content"],
                     }
                 )
+
                 job.folder_id = folder.id
                 job.files = [
-                    {"file_id": f.id, "title": f.name}
+                    {
+                        "file_id": f.id,
+                        "title": f.name,
+                    }
                     for f in folder.files
                 ]
+
             else:
-                job.push({"type": "answer", "text": result.get("text", "")})
+                job.push(
+                    {
+                        "type": "answer",
+                        "text": result.get("text", ""),
+                    }
+                )
 
             job.status = "done"
+
             job.push(
                 {
                     "type": "done",
@@ -240,11 +340,24 @@ async def run_followup_job(job_id: str):
                     "title": result.get("title"),
                 }
             )
+
     except Exception as e:
         job.status = "error"
         job.error = str(e)
-        job.push({"type": "error", "message": f"Lỗi xử lý prompt tiếp theo: {str(e)}"})
-        print(f"❌ [FollowUpJob {job_id}] Thất bại: {e}", flush=True)
+
+        job.push(
+            {
+                "type": "error",
+                "message": (
+                    f"Lỗi xử lý prompt tiếp theo: {str(e)}"
+                ),
+            }
+        )
+
+        print(
+            f"❌ [FollowUpJob {job_id}] Thất bại: {e}",
+            flush=True,
+        )
 
 
 @router.post("/roadmap/followup")
@@ -254,11 +367,20 @@ async def followup_roadmap(
     current_user: CurrentActor,
 ):
     """Prompt hỏi tiếp / chỉnh sửa nội dung cũ — giữ nguyên conversation_id (folder_id)."""
-    folder = _load_owned_folder(session, body.conversation_id, current_user.id)
+
+    folder = _load_owned_folder(
+        session,
+        body.conversation_id,
+        current_user.id,
+    )
+
     if not folder:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail="Không tìm thấy hội thoại/lộ trình này. Vui lòng tạo lộ trình trước hoặc kiểm tra lại ID.",
+            detail=(
+                "Không tìm thấy hội thoại/lộ trình này. "
+                "Vui lòng tạo lộ trình trước hoặc kiểm tra lại ID."
+            ),
         )
 
     job = create_job(
@@ -267,12 +389,25 @@ async def followup_roadmap(
         folder_name=body.folder_name or folder.name,
         conversation_id=folder.id,
     )
-    job.push({"type": "status", "message": "Đã nhận yêu cầu, đang chuẩn bị..."})
-    asyncio.create_task(run_followup_job(job.id))
+
+    job.push(
+        {
+            "type": "status",
+            "message": "Đã nhận yêu cầu, đang chuẩn bị...",
+        }
+    )
+
+    asyncio.create_task(
+        run_followup_job(job.id)
+    )
 
     return success_response(
         message="Yêu cầu hỏi tiếp / chỉnh sửa đã được chấp nhận",
-        data={"job_id": job.id, "status": "queued", "conversation_id": folder.id},
+        data={
+            "job_id": job.id,
+            "status": "queued",
+            "conversation_id": folder.id,
+        },
     )
 
 
@@ -283,9 +418,13 @@ async def summarize_file(
     current_user: CurrentActor,
 ):
     """Tóm tắt nội dung một bài học (file markdown) bằng Gemini."""
+
     file = session.exec(
-        select(KnowledgeFile).where(KnowledgeFile.id == file_id)
+        select(KnowledgeFile).where(
+            KnowledgeFile.id == file_id
+        )
     ).first()
+
     if not file:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
@@ -293,15 +432,26 @@ async def summarize_file(
         )
 
     folder = session.exec(
-        select(Folder).where(Folder.id == file.folder_id)
+        select(Folder).where(
+            Folder.id == file.folder_id
+        )
     ).first()
+
     if not folder or folder.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Bạn không có quyền truy cập tài liệu này",
         )
 
-    content = (getattr(file, "markdown_content", "") or "").strip()
+    content = (
+        getattr(
+            file,
+            "markdown_content",
+            "",
+        )
+        or ""
+    ).strip()
+
     if not content:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -309,23 +459,27 @@ async def summarize_file(
         )
 
     if len(content) > 20000:
-        content = content[:20000] + "\n...(bị cắt gọn)"
+        content = (
+            content[:20000]
+            + "\n...(bị cắt gọn)"
+        )
 
-    prompt = (
-        f"Tiêu đề bài học: {file.name}\n\n"
-        f"Nội dung bài học (Markdown):\n{content}"
-    )
+    prompt = build_summarize_prompt(content)
 
     try:
         response = await _generate_content_with_retry(
             prompt,
             types.GenerateContentConfig(
-                system_instruction=SUMMARIZE_SYSTEM_PROMPT,
                 temperature=0.3,
             ),
         )
+
     except Exception as e:
-        print(f"❌ [Summarize {file_id}] Lỗi gọi Gemini: {e}", flush=True)
+        print(
+            f"❌ [Summarize {file_id}] Lỗi gọi Gemini: {e}",
+            flush=True,
+        )
+
         raise HTTPException(
             status_code=status.HTTP_502_BAD_GATEWAY,
             detail=f"Không thể gọi AI để tóm tắt: {e}",
@@ -333,7 +487,12 @@ async def summarize_file(
 
     return success_response(
         message="Đã tóm tắt xong",
-        data={"file_id": file_id, "summary": (response.text or "").strip()},
+        data={
+            "file_id": file_id,
+            "summary": (
+                response.text or ""
+            ).strip(),
+        },
     )
 
 
@@ -350,7 +509,11 @@ async def digest_document(
     """
     return success_response(
         message="Đã bóc tách tài liệu thành công",
-        data={"folder_id": folder_id, "filename": file.filename, "files_created": []},
+        data={
+            "folder_id": folder_id,
+            "filename": file.filename,
+            "files_created": [],
+        },
     )
 
 
@@ -360,21 +523,37 @@ async def summarize_youtube(
     session: SessionDep,
     current_user: CurrentActor,
     background_tasks: BackgroundTasks,
+    folder_id: str = None,
 ):
-
     if "youtube.com" not in url and "youtu.be" not in url:
-        raise HTTPException(status_code=400, detail="URL YouTube không hợp lệ!")
+        raise HTTPException(
+            status_code=400,
+            detail="URL YouTube không hợp lệ!",
+        )
 
+    # Capture folder_id explicitly before background task
+    target_folder_id = folder_id
+    
     # Offload processing & DB saving to background task
     background_tasks.add_task(
         process_youtube_native_pipeline,
         session=session,
         user_id=current_user.id,
         youtube_url=url,
-        on_event=None
+        on_event=None,
+        folder_id=target_folder_id,
     )
 
+    if target_folder_id:
+        message = "Đang phân tích video và tóm tắt vào thư mục hiện tại..."
+    else:
+        message = "Đang phân tích video và tạo lộ trình học tập mới..."
+
     return success_response(
-        message="Đang phân tích video và tạo lộ trình học tập mới...",
-        data={"status": "processing", "user_id": current_user.id}
+        message=message,
+        data={
+            "status": "processing",
+            "user_id": current_user.id,
+            "folder_id": target_folder_id,
+        },
     )

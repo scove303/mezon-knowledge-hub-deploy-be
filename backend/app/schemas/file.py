@@ -1,6 +1,6 @@
 from typing import Optional, List, Any
 from datetime import datetime
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class TimestampItem(BaseModel):
@@ -23,7 +23,8 @@ class FileRename(BaseModel):
 
 
 class FileMove(BaseModel):
-    folder_id: str
+    folder_id: str = Field(alias="folderId")
+    model_config = {"populate_by_name": True}
 
 
 class FileRead(BaseModel):

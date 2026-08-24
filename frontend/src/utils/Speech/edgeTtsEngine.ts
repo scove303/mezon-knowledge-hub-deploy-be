@@ -1,12 +1,5 @@
-/**
- * Dịch vụ phát âm thanh TTS Đa tầng (Google TTS + Edge-TTS Dynamic Fallback)
- * Đảm bảo tỷ lệ hoạt động 99.999%
- */
-
 export interface SpeechOptions {
   rate?: number;
-  pitch?: number;
-  voice?: string;
 }
 
 let currentAudio: HTMLAudioElement | null = null;
@@ -21,144 +14,55 @@ export const stopEdgeSpeech = (): void => {
   }
 };
 
-/**
- * Tạo URL phát âm thanh Google Translate TTS đáng tin cậy
- */
 const buildGoogleTtsUrl = (text: string): string => {
   const encodedText = encodeURIComponent(text);
-  return `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=vi&client=tw-ob`;
+  return `/api/google-tts?ie=UTF-8&q=${encodedText}&tl=vi&total=1&idx=0&textlen=${text.length}&client=tw-ob`;
 };
 
-/**
- * Gọi phát âm thanh từ Endpoint Edge-TTS dự phòng (Nguồn bổ trợ)
- */
-const fetchEdgeTtsAudioUrl = async (
-  text: string,
-  voice: string,
-  rateFormatted: string,
-): Promise<string> => {
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 3500); // Giới hạn 3.5 giây
-
-  try {
-    const response = await fetch("https://edge-tts-api.vercel.app/api/tts", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ text, voice, rate: rateFormatted }),
-      signal: controller.signal,
-    });
-    clearTimeout(timeoutId);
-
-    if (!response.ok) throw new Error(`HTTP Error ${response.status}`);
-    const blob = await response.blob();
-    return URL.createObjectURL(blob);
-  } catch (err) {
-    clearTimeout(timeoutId);
-    throw err;
-  }
-};
-
-/**
- * Phát danh sách các đoạn văn bản qua Cloud TTS Hàng chờ
- */
-export const speakWithEdgeTtsQueue = async (
+export const speakWithGoogleTtsQueue = async (
   chunks: string[],
   options: SpeechOptions = {},
   onEnd?: () => void,
-  onError?: () => void,
 ): Promise<boolean> => {
-  isCancelled = false;
   stopEdgeSpeech();
+  isCancelled = false;
 
-  const voice = options.voice || "vi-VN-HoaiMyNeural";
   const rate = options.rate || 1.0;
-  const ratePercent = `${Math.round((rate - 1.0) * 100)}%`;
-  const formattedRate = ratePercent.startsWith("-")
-    ? ratePercent
-    : `+${ratePercent}`;
 
+  // Lặp qua từng chunk để gửi request riêng biệt
   for (let i = 0; i < chunks.length; i++) {
     if (isCancelled) return false;
 
-    const chunkText = chunks[i];
-    let audioUrl = "";
-    let isBlobUrl = false;
+    const currentText = chunks[i];
+    const audioUrl = buildGoogleTtsUrl(currentText);
 
-    // Tầng 1: Thử nghiệm lấy Audio qua Google Translate TTS (Cực nhanh & Bền vững)
+    // Console log để bạn kiểm tra từng URL gửi đi trong DevTools
+    console.log(
+      `[Google TTS] Đang đọc đoạn ${i + 1}/${chunks.length} (${currentText.length} ký tự): "${currentText}"`,
+    );
+
     try {
-      audioUrl = buildGoogleTtsUrl(chunkText);
-    } catch {
-      // Tầng 2: Nếu tạo URL thất bại, thử gọi Edge-TTS Proxy
-      try {
-        audioUrl = await fetchEdgeTtsAudioUrl(chunkText, voice, formattedRate);
-        isBlobUrl = true;
-      } catch (edgeError) {
-        console.warn(`Thất bại tại đoạn ${i + 1}/${chunks.length}:`, edgeError);
-        if (onError) onError();
-        return false;
-      }
-    }
+      await new Promise<void>((resolve, reject) => {
+        if (isCancelled) return reject(new Error("Playback Cancelled"));
 
-    // Phát Audio thu được
-    const playSuccess = await new Promise<boolean>((resolve) => {
-      if (isCancelled) {
-        if (isBlobUrl) URL.revokeObjectURL(audioUrl);
-        return resolve(false);
-      }
+        currentAudio = new Audio(audioUrl);
+        currentAudio.playbackRate = rate;
 
-      const audio = new Audio(audioUrl);
-      currentAudio = audio;
+        // Chỉ khi đoạn này đọc xong mới chuyển sang đoạn tiếp theo
+        currentAudio.onended = () => {
+          currentAudio = null;
+          resolve();
+        };
 
-      audio.onended = () => {
-        if (isBlobUrl) URL.revokeObjectURL(audioUrl);
-        currentAudio = null;
-        resolve(true);
-      };
+        currentAudio.onerror = (err) => {
+          currentAudio = null;
+          reject(err);
+        };
 
-      audio.onerror = async () => {
-        if (isBlobUrl) URL.revokeObjectURL(audioUrl);
-        currentAudio = null;
-
-        // Nếu Google TTS gặp sự cố nạp Audio, thử lại bằng Edge TTS Proxy
-        if (!isBlobUrl) {
-          try {
-            const fallbackUrl = await fetchEdgeTtsAudioUrl(
-              chunkText,
-              voice,
-              formattedRate,
-            );
-            const fallbackAudio = new Audio(fallbackUrl);
-            currentAudio = fallbackAudio;
-
-            fallbackAudio.onended = () => {
-              URL.revokeObjectURL(fallbackUrl);
-              currentAudio = null;
-              resolve(true);
-            };
-            fallbackAudio.onerror = () => {
-              URL.revokeObjectURL(fallbackUrl);
-              currentAudio = null;
-              resolve(false);
-            };
-            await fallbackAudio.play();
-            return;
-          } catch {
-            resolve(false);
-            return;
-          }
-        }
-        resolve(false);
-      };
-
-      audio.play().catch(() => {
-        if (isBlobUrl) URL.revokeObjectURL(audioUrl);
-        currentAudio = null;
-        resolve(false);
+        currentAudio.play().catch(reject);
       });
-    });
-
-    if (!playSuccess) {
-      if (onError) onError();
+    } catch (error) {
+      console.warn(`[Google TTS] Lỗi đọc đoạn ${i + 1}:`, error);
       return false;
     }
   }
