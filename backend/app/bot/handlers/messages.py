@@ -200,6 +200,8 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
             )
             return
 
+        user_id = get_or_create_user(message)
+
         # 1. Send initial status message
         await channel.send(
             content=ChannelMessageContent(
@@ -210,11 +212,13 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
         # 2. Define non-blocking background task
         async def run_youtube_processing():
             try:
+
+
                 # Inject/Open your DB Session context here
                 with Session(engine) as session:
                     await process_youtube_native_pipeline(
                         session=session,
-                        user_id=sender_id,  # Pass the Mezon user/sender ID
+                        user_id=user_id,  # Pass the Mezon user/sender ID
                         youtube_url=url,
                         on_event=None
                     )
