@@ -54,7 +54,7 @@ interface ChatThread {
 
 export default function DashboardIndex() {
   const router = useRouter();
-  const { setFolders } = useWorkspaceStore() as any;
+  const { setFolders, setSelectedFile, setDocumentSideOpen } = useWorkspaceStore() as any;
 
   const {currentLanguage, setCurrentLanguage} = useLanguage();
   const currentText = translation[currentLanguage];
@@ -74,10 +74,14 @@ export default function DashboardIndex() {
   const refreshSidebarFolders = useCallback(async () => {
     try {
       const res = await folderService.getFolders();
-      if (res.success) setFolders(res.data);
+      if (res.success) {
+        setFolders(res.data);
+        return res.data;
+      }
     } catch (err) {
       console.error('Lỗi refresh folder sidebar:', err);
     }
+    return null;
   }, [setFolders]);
 
   useEffect(() => {
@@ -187,7 +191,16 @@ export default function DashboardIndex() {
               statusMessage: 'Hoàn tất!',
               output: `Đã tạo xong lộ trình với ${evt.total_files} bài học.`,
             });
-            await refreshSidebarFolders();
+            const newFolders = await refreshSidebarFolders();
+            if (newFolders && evt.folder_id) {
+               const newFolder = newFolders.find((f: any) => String(f.id) === String(evt.folder_id));
+               if (newFolder && newFolder.files && newFolder.files.length > 0) {
+                 setSelectedFile(newFolder.files[0].id);
+                 setDocumentSideOpen(true);
+                 // Move to the folder page to view it
+                 router.push(`/dashboard/folders/${evt.folder_id}`);
+               }
+            }
           },
           onError: (msg: string) => updateThread(threadId, { status: 'error', error: msg, statusMessage: 'Thất bại' }),
         });
