@@ -81,7 +81,6 @@ class YouTubeTranscriptService:
         response = await client.aio.models.generate_content(
             model=MODEL_NAME,
             contents=prompt,
-            contents=prompt,
             config=types.GenerateContentConfig(
                 response_mime_type="application/json",
                 temperature=0.3,

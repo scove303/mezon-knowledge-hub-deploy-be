@@ -14,6 +14,7 @@ from app.models.user import User
 from app.bot.commands.folder import list_all_folder, get_folder_by_id
 from app.bot.commands.file import get_file_by_id
 from app.workers.tasks.youtube_task import process_youtube_native_pipeline
+from app.bot.commands.digest import _run_digest_pipeline
 
 PREFIX = "/"
 
@@ -22,31 +23,33 @@ PREFIX = "/"
 pending_confirmations: dict = {}
 
 
-def get_or_create_user(message: dict) -> int:
-    """Helper đệm xử lý lấy hoặc tạo mới User trong DB."""
+def get_or_create_user(message: api_pb2.ChannelMessage) -> int:
+
+    sender_id_str = str(message.sender_id).strip()
+    username_str = getattr(message, "username", None) or sender_id_str
+
     with Session(engine) as session:
+        # 1. Tìm User theo mezon_id trước, sau đó mới tới username
         db_user = session.exec(
             select(User).where(
-                (User.username == message.sender_id)
-                | (User.mezon_id == message.sender_id)
+                (User.mezon_id == sender_id_str) | (User.username == sender_id_str)
             )
         ).first()
 
         if not db_user:
-            # Tạo user mới nếu lần đầu tương tác với Bot
+            # Tạo user mới duy nhất nếu chưa có
             db_user = User(
-                username=message.username,
+                username=username_str,
                 hashed_password=get_password_hash("default_pass_123"),
-                display_name=message.username,
-                mezon_id=message.sender_id,
+                display_name=username_str,
+                mezon_id=sender_id_str,
                 role="USER",
             )
             session.add(db_user)
             session.commit()
             session.refresh(db_user)
-        elif db_user.mezon_id != message.sender_id:
-            # Link tài khoản Mezon cho user đã tồn tại
-            db_user.mezon_id = message.sender_id
+        elif db_user.mezon_id != sender_id_str:
+            db_user.mezon_id = sender_id_str
             session.add(db_user)
             session.commit()
 
@@ -207,11 +210,44 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
     # COMMAND 6: /digest
     # -----------------------------------------------------------------
     elif text.startswith("/digest"):
-        content = text[7:].strip()
-        # TODO: Implement digest logic
+        prompt = text[7:].strip()
+        attachments = getattr(message, "attachments", []) or []
+
+        if not attachments:
+            await channel.send(
+                content=ChannelMessageContent(
+                    t="⚠️ **Thiếu file!** Vui lòng đính kèm file (.pdf, .docx, .txt) khi gõ lệnh `/digest`."
+                )
+            )
+            return
+
+        user_id = get_or_create_user(message)
+        first_file = attachments[0]
+        file_url = getattr(first_file, "url", None) or getattr(first_file, "file_url", "")
+        filename = getattr(first_file, "filename", None) or getattr(first_file, "name", "file.pdf")
+
+        if not file_url:
+            await channel.send(
+                content=ChannelMessageContent(
+                    t="❌ Không tìm thấy link tải của file đính kèm."
+                )
+            )
+            return
+
         await channel.send(
             content=ChannelMessageContent(
-                t=f"📰 **Digest Summary:** Tính năng tóm tắt đang được xử lý..."
+                t=f"📰 **Đã nhận file `{filename}`!** Đang tiến hành đọc, tóm tắt và phân loại vào workspace..."
+            )
+        )
+
+        # Chạy background task để xử lý digest mà không làm nghẽn bot
+        asyncio.create_task(
+            _run_digest_pipeline(
+                channel=channel,
+                file_url=file_url,
+                filename=filename,
+                prompt=prompt,
+                user_id=user_id,
             )
         )
 
@@ -274,7 +310,8 @@ async def checklog(message: api_pb2.ChannelMessage):
 
 
 def get_help_message() -> str:
-    """Trả về tin nhắn hướng dẫn sử dụng (Help Menu) đẹp mắt."""
+    """Trả về tin nhắn hướng dẫn sử
+     dụng (Help Menu) đẹp mắt."""
     return (
         "🤖 **BẢNG HƯỚNG DẪN SỬ DỤNG MEZON KNOWLEDGE BOT**\n\n"
         "Chào mừng bạn! Dưới đây là danh sách các lệnh bạn có thể sử dụng:\n\n"

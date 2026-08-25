@@ -1,6 +1,22 @@
 import asyncio
 import json
 import uuid
+from app.crud import file as file_crud
+from app.crud import folder as folder_crud
+from app.schemas.file import FileCreate, FileMove, FileRename, FileUpdate
+from app.schemas.folder import FolderCreate
+
+from app.services.document.extractor import (
+    ALLOWED_EXTENSIONS,
+    MAX_FILE_SIZE_BYTES,
+    EmptyFileContentError,
+    UnsupportedFileTypeError,
+    extract_text,
+)
+from app.services.knowledge.summarize import (
+    SummarizeGenerationError,
+    summarize_and_group,
+)
 
 from fastapi import (
     APIRouter,
@@ -21,12 +37,12 @@ from app.core.state import create_job, get_job_for_user, roadmap_jobs
 from app.models.folder import Folder
 from app.models.knowledge_file import KnowledgeFile
 from app.schemas.ai import RoadmapCreateRequest, RoadmapFollowUpRequest
-from app.schemas.common import success_response
 from app.services.ai.domain_prompts import build_summarize_prompt, detect_domain
 from app.services.document.parser import _generate_content_with_retry
 from app.services.knowledge.roadmap import roadmap_service, revise_roadmap
 from app.workers.tasks.youtube_task import process_youtube_native_pipeline
 from app.core.database import get_session
+from app.schemas.common import error_response, success_response
 
 router = APIRouter()
 
@@ -500,19 +516,102 @@ async def summarize_file(
 async def digest_document(
     session: SessionDep,
     current_user: CurrentActor,
-    folder_id: str = Form(...),
     file: UploadFile = File(...),
+    prompt: str | None = Form(
+        default=None,
+        description="Yêu cầu tùy chỉnh của người dùng, sẽ được ghép cùng nội dung file thành 1 prompt gửi cho model",
+    ),
 ):
-    """
-    Bóc tách và tóm tắt tài liệu PDF/DOCX.
-    TODO: Tích hợp PDFPlumber / python-docx + Gemini summarization
-    """
+
+    folder_info = FolderCreate(name="Tổng hợp file" + prompt,type="digest")
+    folder = folder_crud.create_folder(session=session,data=folder_info,user_id=current_user.id)
+    if not folder:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail=error_response("Không tìm thấy folder"),
+        )
+
+    # 2. Validate phần mở rộng file trước khi đọc để fail sớm, đỡ tốn I/O
+    filename = file.filename or ""
+    extension = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if extension not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response(
+                f"Định dạng file không được hỗ trợ. Chỉ chấp nhận: "
+                f"{', '.join(sorted(ALLOWED_EXTENSIONS))}"
+            ),
+        )
+
+    # 3. Đọc nội dung file & giới hạn dung lượng
+    file_bytes = await file.read()
+    if len(file_bytes) == 0:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response("File rỗng, không có nội dung để xử lý"),
+        )
+    if len(file_bytes) > MAX_FILE_SIZE_BYTES:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response(
+                f"File vượt quá dung lượng tối đa cho phép "
+                f"({MAX_FILE_SIZE_BYTES // (1024 * 1024)}MB)"
+            ),
+        )
+
+    # 4. Crawl text bằng pypdf / python-docx / plain text
+    try:
+        extracted_text = extract_text(filename, file_bytes)
+    except UnsupportedFileTypeError as e:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail=error_response(str(e))
+        )
+    except EmptyFileContentError as e:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail=error_response(str(e)),
+        )
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=error_response(f"Lỗi khi xử lý file: {str(e)}"),
+        )
+
+    # 5. Gửi context (text đã crawl + prompt tùy chỉnh nếu có) cho Gemini
+    #    để tóm tắt và tự động nhóm thành cấu trúc tài liệu
+    try:
+        structure = await summarize_and_group(
+            extracted_text=extracted_text,
+            filename=filename,
+            user_prompt=prompt,
+        )
+    except SummarizeGenerationError as e:
+        raise HTTPException(
+            status_code=status.HTTP_502_BAD_GATEWAY,
+            detail=error_response(f"Lỗi khi tóm tắt bằng AI: {str(e)}"),
+        )
+
+    # 6. Lưu các tài liệu (KnowledgeFile) sinh ra vào folder đã chỉ định
+    created_files = [
+        file_crud.create_file(
+            session=session,
+            folder_id=folder.id,
+            data=FileCreate(name=doc["title"], content=doc["content"]),
+        )
+        for doc in structure["documents"]
+    ]
+
     return success_response(
-        message="Đã bóc tách tài liệu thành công",
+        message="Đã tiếp nhận file, tóm tắt và lưu tài liệu vào folder thành công",
         data={
-            "folder_id": folder_id,
-            "filename": file.filename,
-            "files_created": [],
+            "folder_id": folder.id,
+            "filename": filename,
+            "file_size_bytes": len(file_bytes),
+            "char_count": len(extracted_text),
+            "suggested_folder_name": structure["folder_name"],
+            "documents_created": [
+                {"id": f.id, "name": f.name} for f in created_files
+            ],
         },
     )
 
@@ -548,7 +647,6 @@ async def summarize_youtube(
         message = "Đang phân tích video và tóm tắt vào thư mục hiện tại..."
     else:
         message = "Đang phân tích video và tạo lộ trình học tập mới..."
-
     return success_response(
         message=message,
         data={
