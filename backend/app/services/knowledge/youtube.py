@@ -3,9 +3,10 @@ import json
 import asyncio
 import urllib.request
 import aiohttp
+from yt_dlp import YoutubeDL
+from youtube_transcript_api import YouTubeTranscriptApi
 from google import genai
 from google.genai import types
-from youtube_transcript_api import YouTubeTranscriptApi
 from app.core.config import settings
 from app.services.search.tavily import tavily_search
 
@@ -22,17 +23,12 @@ SUPADATA_API_KEY = getattr(settings, "SUPADATA_API_KEY", "")
 SUPADATA_API_BASE = getattr(settings, "SUPADATA_API_BASE", "https://api.supadata.ai/v1")
 
 
-def extract_youtube_video_id(url: str) -> str | None:
-    """Extract 11-char YouTube Video ID from various URL formats."""
-    patterns = [
-        r'(?:v=|\/)([0-9A-Za-z_-]{11})',
-        r'(?:embed\/|v\/|vi\/|youtu\.be\/|\/v\/|e\/|watch\?v=|&v=)([^#&?]*).*',
-    ]
-    for pattern in patterns:
-        match = re.search(pattern, url)
-        if match and len(match.group(1)) == 11:
-            return match.group(1)
-    return None
+def extract_video_id(url: str) -> str:
+    """Extracts 11-char video ID from YouTube URL."""
+    match = re.search(r"(?:v=|\/)([a-zA-Z0-9_-]{11})", url)
+    if match:
+        return match.group(1)
+    raise ValueError(f"Không thể tìm thấy Video ID hợp lệ từ URL: {url}")
 
 
 def get_youtube_video_info(youtube_url: str) -> dict:
@@ -65,7 +61,6 @@ async def get_transcript_from_transcriptapi(video_id: str) -> list[dict]:
             async with session.get(url, headers=headers, params=params, timeout=aiohttp.ClientTimeout(total=30)) as resp:
                 if resp.status == 200:
                     data = await resp.json()
-                    # TranscriptAPI returns: {"transcript": [{"start": 0.0, "duration": 5.2, "text": "..."}, ...]}
                     transcript = data.get("transcript", [])
                     return [
                         {
@@ -78,9 +73,10 @@ async def get_transcript_from_transcriptapi(video_id: str) -> list[dict]:
                 else:
                     error_text = await resp.text()
                     print(f"[TranscriptAPI error {resp.status}]: {error_text}")
+                    return []
     except Exception as e:
         print(f"[TranscriptAPI error for {video_id}]: {e}")
-    return []
+        return []
 
 
 def get_youtube_transcript(video_id: str) -> list[dict]:
@@ -201,71 +197,59 @@ def format_transcript_for_linking(transcript: list[dict]) -> list[dict]:
 
 class YouTubeNativeService:
     @classmethod
-    async def extract_outline_from_youtube_url(cls, youtube_url: str) -> dict:
-        video_id = extract_youtube_video_id(youtube_url)
-        print(f"[YouTube] Extracted video_id: '{video_id}' from URL: {youtube_url}")
-        info = get_youtube_video_info(youtube_url)
-        video_title = info.get("title", "")
-        author_name = info.get("author_name", "")
+    def fetch_video_metadata(cls, youtube_url: str) -> str:
+        """Fallback: Lấy Tiêu đề, Mô tả và Tags khi video không có Phụ đề."""
+        ydl_opts = {'skip_download': True, 'quiet': True}
+        try:
+            with YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(youtube_url, download=False)
+                title = info.get('title', '')
+                description = info.get('description', '')
+                tags = ", ".join(info.get('tags', []) or [])
+                return f"Tiêu đề Video: {title}\n\nMô tả Video:\n{description}\n\nTừ khóa (Tags): {tags}"
+        except Exception as e:
+            raise RuntimeError(f"Video không có phụ đề và không thể lấy thông tin chi tiết: {str(e)}")
 
-        transcript = []
-        has_transcript = False
-        if video_id:
-            transcript = await get_best_transcript(video_id)
-            has_transcript = bool(transcript)
-
-        # Nếu không lấy được transcript, fallback tìm kiếm nội dung trên web
-        web_context = ""
-        if not transcript and video_title:
+    @classmethod
+    def fetch_transcript_text(cls, video_id: str, youtube_url: str) -> str:
+        """Thử lấy phụ đề. Nếu video không có phụ đề, tự động fallback lấy Metadata."""
+        try:
+            # 1. Ưu tiên lấy phụ đề Tiếng Việt hoặc Tiếng Anh
+            fetched = YouTubeTranscriptApi.get_transcript(video_id, languages=["vi", "en"])
+            return " ".join([item["text"] for item in fetched])
+        except Exception:
             try:
-                # Tìm kiếm cụ thể về nội dung/chủ đề video, không chỉ tên
-                search_query = f"{video_title} {author_name} nội dung bài học tutorial"
-                web_context = await tavily_search(search_query)
-            except Exception as e:
-                print(f"[Tavily fallback error]: {e}")
+                # 2. Thử lấy bất kỳ phụ đề tự động (auto-generated) nào sẵn có
+                transcript_list = YouTubeTranscriptApi.list_transcripts(video_id)
+                fetched = transcript_list.find_transcript(["vi", "en"]).fetch()
+                return " ".join([item["text"] for item in fetched])
+            except Exception:
+                # 3. Fallback khi KHÔNG CÓ PHỤ ĐỀ: Lấy Metadata thông qua yt-dlp
+                print(f"⚠️ Video {video_id} không có phụ đề. Chuyển sang lấy thông tin Metadata...")
+                return cls.fetch_video_metadata(youtube_url)
 
-        # Xây dựng nội dung thực tế cung cấp cho Gemini
-        content_block = []
-        if video_title:
-            content_block.append(f"TIÊU ĐỀ VIDEO YOUTUBE: {video_title}")
-        if author_name:
-            content_block.append(f"KÊNH XUẤT BẢN: {author_name}")
-        if transcript:
-            transcript_text = format_transcript_for_context(transcript)
-            content_block.append(f"""NỘI DUNG PHỤ ĐỀ TỰ ĐỘNG (CÓ TIMESTAMP) - LƯU Ý: Có thể chứa lỗi nhận dạng giọng nói, đặc biệt ở đoạn mở đầu. HÃY ƯU TIÊN TIÊU ĐỀ VIDEO VÀ CÁC ĐOẠN CÓ NGỮ CẢNH SÚC TÍCH:
-{transcript_text}""")
-        elif web_context:
-            content_block.append(f"THÔNG TIN CHỦ ĐỀ TÌM KIẾM TRÊN WEB:\n{web_context[:6000]}")
-        else:
-            content_block.append(f"ĐƯỜNG DẪN VIDEO: {youtube_url}")
-
-        combined_input = "\n\n".join(content_block)
+    @classmethod
+    async def get_roadmap_outline_from_transcript(cls, youtube_url: str) -> tuple[str, dict]:
+        video_id = cls.extract_video_id(youtube_url)
+        context_text = await asyncio.to_thread(cls.fetch_transcript_text, video_id, youtube_url)
 
         prompt = f"""
-Phân tích CHÍNH XÁC nội dung video YouTube dựa trên thông tin thực tế được cung cấp dưới đây 
-và thiết kế một Cây Lộ Trình Học Tập (Educational Roadmap) chi tiết từ 8 đến 12 bài học.
+        Dưới đây là Dữ liệu Nội dung (Phụ đề hoặc Thông tin chi tiết) của một Video YouTube:
 
-⚠️ QUY TẮC BẮT BUỘC:
-1. `folder_name`: BẮT BUỘC dựa trên Tiêu đề THỰC TẾ của Video: "{video_title}". 
-   KHÔNG ĐƯỢC tự đặt tên chung chung như "Tóm tắt YouTube", "Tìm hiểu về YouTube"!
-2. Phụ đề tự động (auto-generated) CÓ THỂ CHỨA LỖI - đặc biệt 30-60 giây đầu. HÃY:
-   - Bỏ qua các đoạn văn không liên quan/không có ngữ cảnh
-   - Tập trung vào các đoạn có thuật ngữ chuyên ngành khớp với tiêu đề video
-   - Ưu tiên Tiêu đề Video và Tên Kênh ({author_name or 'N/A'}) làm nguồn tham chiếu chính
-3. Mỗi bài học có tiêu đề rõ ràng, thực tế và tóm tắt 1-2 câu.
+        ---
+        {context_text[:30000]}
+        ---
 
-TRẢ VỀ JSON DUY NHẤT ĐÚNG ĐỊNH DẠNG:
-{{
-  "folder_name": "Tên Lộ Trình Học Tập Dựa Trên Nội Dung Video Thực Tế",
-  "lessons": [
-    {{"title": "Bài 1: [Tiêu đề bài học]", "summary": "Tóm tắt 1-2 câu..."}},
-    {{"title": "Bài 2: [Tiêu đề bài học]", "summary": "Tóm tắt 1-2 câu..."}}
-  ]
-}}
-
-NỘI DUNG VIDEO THỰC TẾ:
-{combined_input}
-"""
+        Dựa trên nội dung ở trên, hãy thiết kế một Cây Lộ Trình Học Tập gồm 6-10 bài học.
+        Trả về DUY NHẤT định dạng JSON theo mẫu:
+        {{
+          "folder_name": "Tên Lộ Trình Học Tập Theo Chủ Đề Video",
+          "lessons": [
+            {{"title": "Bài 1: [Tên bài học]", "summary": "Tóm tắt 1-2 câu"}},
+            {{"title": "Bài 2: [Tên bài học]", "summary": "Tóm tắt 1-2 câu"}}
+          ]
+        }}
+        """
 
         # Wrap with retry for 503 errors
         async def generate_with_retry():
@@ -287,7 +271,7 @@ NỘI DUNG VIDEO THỰC TẾ:
                     code = getattr(e, "code", None)
                     is_503 = code == 503 or "503" in str(e) or "UNAVAILABLE" in str(e)
                     if is_503:
-                        print(f"⚠️ [Gemini 503 Outline] Thử lại lần {attempt + 1}/8 sau {base_delay:.0f}s...")
+                        print(f"⚠️ [Gemini 503 Outline] Thử lại lần {{attempt + 1}}/8 sau {{base_delay:.0f}}s...")
                         base_delay *= 1.5
                         await asyncio.sleep(base_delay)
                     else:
@@ -297,25 +281,13 @@ NỘI DUNG VIDEO THỰC TẾ:
         response = await generate_with_retry()
 
         raw_json = response.text or "{}"
-        try:
-            data = json.loads(raw_json)
-            # Ensure folder_name is clean and uses real video title if Gemini generated generic name
-            if data.get("folder_name", "").lower() in ["youtube summary", "tìm hiểu về youtube", "youtube", "tóm tắt youtube"]:
-                if video_title:
-                    data["folder_name"] = video_title
-            data["has_transcript"] = has_transcript
-            data["video_title"] = video_title
-            data["video_id"] = video_id
-            data["transcript"] = format_transcript_for_linking(transcript)
-            return data
-        except Exception:
-            return {
-                "folder_name": video_title or "Lộ trình từ Video YouTube",
-                "has_transcript": has_transcript,
-                "video_title": video_title,
-                "video_id": video_id,
-                "transcript": format_transcript_for_linking(transcript),
-                "lessons": [
-                    {"title": f"Bài 1: {video_title or 'Tổng quan nội dung'}", "summary": "Nội dung phân tích từ video YouTube."}
-                ]
-            }
+        outline_data = json.loads(raw_json)
+        return context_text, outline_data
+
+    @staticmethod
+    def extract_video_id(url: str) -> str:
+        """Extracts 11-char video ID from YouTube URL."""
+        match = re.search(r"(?:v=|\/)([a-zA-Z0-9_-]{11})", url)
+        if match:
+            return match.group(1)
+        raise ValueError(f"Không thể tìm thấy Video ID hợp lệ từ URL: {url}")
