@@ -45,7 +45,9 @@ Tiêu đề video: {video_title}
 Có phụ đề: {bool(transcript)}
 Cấu trúc tóm tắt nội dung video: {json.dumps(outline_data, ensure_ascii=False)}
 PHỤ ĐỀ CÓ TIMESTAMP (dùng để tạo link):
-{transcript_json}"""
+{transcript_json}
+
+⚠️ QUAN TRỌNG: AI PHẢI DỰA TRÊN PHỤ ĐỀ (TRANSCRIPT) TRÊN ĐỂ VIẾT NỘI DUNG. KHÔNG ĐƯỢC TỰ BIẠT ĐẶT NỘI DUNG KHÔNG CÓ TRONG PHỤ ĐỀ."""
 
         roadmap_data = await parse_context_to_structure(
             topic=folder_name,

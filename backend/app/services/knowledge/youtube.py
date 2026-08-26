@@ -110,10 +110,10 @@ async def get_transcript_from_supadata(video_id: str) -> list[dict]:
     
     url = f"{SUPADATA_API_BASE}/youtube/transcript"
     headers = {
-        "Authorization": f"Bearer {SUPADATA_API_KEY}",
+        "x-api-key": SUPADATA_API_KEY,
         "Content-Type": "application/json"
     }
-    params = {"video_id": video_id, "lang": "en", "format": "json"}
+    params = {"id": video_id, "lang": "en"}
     
     try:
         async with aiohttp.ClientSession() as session:
@@ -267,14 +267,34 @@ NỘI DUNG VIDEO THỰC TẾ:
 {combined_input}
 """
 
-        response = await client.aio.models.generate_content(
-            model=MODEL_NAME,
-            contents=prompt,
-            config=types.GenerateContentConfig(
-                response_mime_type="application/json",
-                temperature=0.3,
-            ),
-        )
+        # Wrap with retry for 503 errors
+        async def generate_with_retry():
+            retries = 8
+            base_delay = 10.0
+            last_exc = None
+            for attempt in range(retries):
+                try:
+                    return await client.aio.models.generate_content(
+                        model=MODEL_NAME,
+                        contents=prompt,
+                        config=types.GenerateContentConfig(
+                            response_mime_type="application/json",
+                            temperature=0.3,
+                        ),
+                    )
+                except Exception as e:
+                    last_exc = e
+                    code = getattr(e, "code", None)
+                    is_503 = code == 503 or "503" in str(e) or "UNAVAILABLE" in str(e)
+                    if is_503:
+                        print(f"⚠️ [Gemini 503 Outline] Thử lại lần {attempt + 1}/8 sau {base_delay:.0f}s...")
+                        base_delay *= 1.5
+                        await asyncio.sleep(base_delay)
+                    else:
+                        raise
+            raise last_exc
+        
+        response = await generate_with_retry()
 
         raw_json = response.text or "{}"
         try:
