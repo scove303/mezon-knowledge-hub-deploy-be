@@ -1,5 +1,7 @@
 {
   "sidebar": {
+    "folder": "Thư mục",
+    "documents": "tài liệu",
     "file_list": {
       "header": "Danh sách Thư Mục Của",
       "version": "Bản Thử"
@@ -7,11 +9,42 @@
     "empty_file_list": {
       "header": "Chưa có thư mục nào",
       "body": "Hãy tạo thư mục đầu tiên hoặc nhập chủ đề bạn muốn học vào khung chat để AI tạo lộ trình học tập cho bạn.",
-      "button": "Tạo thư mục mới"
+      "button": "Tạo thư mục mới",
+      "no_files": "Không có file nào"
+    },
+    "actions": {
+      "create": "Tạo",
+      "create_placeholder": "Tên thư mục mới...",
+      "cancel": "Hủy",
+      "delete_chosen_files": "Xóa đã chọn",
+      "delete": "Xóa",
+      "selected": "Đã chọn",
+      "confirmation1": "Bạn có chắc chắn muốn xóa",
+      "confirmation2": "đã chọn? Hành động này không thể hoàn tác.",
+      "confirmation3": "và toàn bộ tài liệu bên trong?",
+      "confirmation4": "khỏi thư mục?",
+      "delete_confirmation": "Đồng ý xóa",
+      "new_name": "Tên mới",
+      "rename": "Đổi tên",
+      "pin": "Ghim thư mục",
+      "remove_pin": "Bỏ ghim",
+      "view_mind_map": "Xem sơ đồ tư duy",
+      "sort": {
+        "header": "Sắp xếp theo",
+        "pinned": "Mặc định / Đã ghim",
+        "alphabet": "Tên (A → Z)",
+        "reverse_alphabet": "Tên (Z → A)",
+        "date": "Mới tạo nhất",
+        "quantity": "Số lượng tài liệu"
+      }
+    },
+    "searchBar": {
+      "placeholder": "Tìm kếm tài liệu...",
+      "no_documents_found": {
+        "header": "Không tim thấy kết quả",
+        "body": "Không có thư mục tài liệu nào khớp với "
+      }
     }
-  },
-  "searchBar": {
-    "placeholder": "Tìm kếm tài liệu..."
   },
   "theme": {
     "header": "Giao diện: ",

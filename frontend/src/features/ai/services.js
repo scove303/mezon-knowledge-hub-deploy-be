@@ -22,13 +22,13 @@ export const aiService = {
     const { data } = await axiosInstance.post('/ai/roadmap', {
       topic,
       folder_name: folderName
-    }, { timeout: 20000 });
+    }, { timeout: 120000 });
     return data;
   },
 
   // 1b. Lấy trạng thái job (fallback khi SSE lỗi)
   async getRoadmapStatus(jobId) {
-    const { data } = await axiosInstance.get(`/ai/roadmap/${jobId}`, { timeout: 15000 });
+    const { data } = await axiosInstance.get(`/ai/roadmap/${jobId}`, { timeout: 60000 });
     return data;
   },
 
@@ -127,7 +127,7 @@ export const aiService = {
       conversation_id: conversationId,
       topic,
       folder_name: folderName || undefined,
-    }, { timeout: 20000 });
+    }, { timeout: 120000 });
     return data;
   },
 

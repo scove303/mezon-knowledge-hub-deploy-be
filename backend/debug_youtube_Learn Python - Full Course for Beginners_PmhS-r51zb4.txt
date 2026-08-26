@@ -1,0 +1,1202 @@
+FOLDER: Learn Python - Full Course for Beginners
+VIDEO ID: PmhS-r51zb4
+TOPIC: Learn Python - Full Course for Beginners
+TOTAL LESSONS: 12
+================================================================================
+
+
+
+================================================================================
+FILE 1: Bài 1: Giới thiệu về Python và Cài đặt Môi trường
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Python Introduction & Environment" | parent_id="root" | type="main"]
+# Bài 1: Giới thiệu về Python và Cài đặt Môi trường
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Python Fundamentals & Setup" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Ngôn ngữ lập trình **Python** là gì và tại sao nó lại trở thành nền tảng vạn năng cho giới phát triển phần mềm hiện đại? Bài học này giải mã bản chất lịch sử, tính thẩm mỹ của cú pháp cũng như quy trình thiết lập môi trường kỹ thuật số chuẩn mực.
+- **Kết quả học tập:** Sau khi hoàn tất khảo luận này, người học sẽ nắm vững ngữ cảnh lịch sử của **Python**, thấu hiểu các triết lý thiết kế tối thượng trong **The Zen of Python**, tự tay thiết lập thành công trình dịch **Python Interpreter** cùng môi trường soạn thảo **PyCharm**, đồng thời vận hành thành công đoạn mã **Hello World** đầu tiên.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Interpreter & PyCharm Setup" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Tư duy logic sơ khởi, máy tính cá nhân (Windows, macOS hoặc Linux) có kết nối internet ổn định, và một tâm thế cởi mở tiếp cận nghệ thuật kiến tạo mã nguồn.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Python Philosophy & Interpreter" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** **Python** là một ngôn ngữ lập trình bậc cao (high-level programming language), thông dịch (interpreted), hướng đối tượng (object-oriented) với cú pháp cực kỳ trong sáng và gần gũi với ngôn ngữ tự nhiên. Được khai sinh bởi **Guido van Rossum** vào đầu những năm 1990 tại Viện Hàn lâm Toán học và Khoa học Máy tính Quốc gia Hà Lan (CWI), cái tên **Python** không bắt nguồn từ loài bò sát khổng lồ mà là sự tri ân dành cho nhóm hài kịch truyền hình Anh Quốc huyền thoại *Monty Python's Flying Circus*.
+[MINDMAP_NODE: id="sec_2_definitions" | label="Guido van Rossum & Syntax" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Khác với các ngôn ngữ biên dịch thuần túy (như C hay C++) đòi hỏi quá trình dịch toàn bộ mã nguồn thành mã máy trước khi thực thi, **Python** vận hành thông qua một **Python Interpreter** (trình thông dịch). Trình thông dịch này đọc từng dòng mã, dịch chúng thành **bytecode** và sau đó thực thi trên **Python Virtual Machine (PVM)**. Cơ chế này mang lại sự linh hoạt tuyệt đối, khả năng tương tác trực tiếp qua **Interactive Shell**, nhưng cũng đánh đổi một phần tốc độ thực thi so với các ngôn ngữ biên dịch cấp thấp.
+[MINDMAP_NODE: id="sec_2_principles" | label="Bytecode & Virtual Machine" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Cấu trúc thực thi chương trình trong hệ sinh thái **Python** tuân theo chu trình khép kín:
+  $$\text{Source Code (.py)} \xrightarrow{\text{Compilation}} \text{Bytecode (.pyc)} \xrightarrow{\text{Execution}} \text{Python Virtual Machine (PVM)} \rightarrow \text{Machine Output}$$
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Environment Installation Workflow" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** Thiết lập môi trường phát triển toàn diện đòi hỏi sự tuân thủ nghiêm ngặt các bước kỹ thuật sau:
+  1. **Tải xuống Python Interpreter:** Truy cập trang chủ chính thức `python.org`, lựa chọn phiên bản ổn định mới nhất phù hợp với kiến trúc hệ điều hành.
+  2. **Cấu hình biến môi trường:** Trong quá trình cài đặt trên hệ điều hành Windows, bắt buộc phải tích chọn ô **Add Python to PATH** để hệ thống có thể nhận diện lệnh `python` từ bất kỳ cửa sổ dòng lệnh nào.
+  3. **Xác minh cài đặt:** Mở **Command Prompt** (Windows) hoặc **Terminal** (macOS/Linux) và gõ lệnh `python --version` để kiểm tra tính toàn vẹn của quá trình cài đặt.
+  4. **Cài đặt IDE PyCharm:** Tải xuống và cài đặt **PyCharm** (phiên bản Community miễn phí hoặc Professional) từ nhà phát triển **JetBrains**, công cụ biên tập mã nguồn chuyên nghiệp hàng đầu cho hệ sinh thái **Python**.
+  5. **Khởi tạo Project đầu tiên:** Mở **PyCharm**, tạo một **New Project**, cấu hình **Virtual Environment** (môi trường ảo) riêng biệt cho dự án để tránh xung đột thư viện, và tạo file mã nguồn mang phần mở rộng `.py`.
+[MINDMAP_NODE: id="sec_3_steps" | label="Add Python to PATH" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Triết lý thiết kế **PEP 8** (Python Enhancement Proposal 8) - bộ quy chuẩn phong cách viết mã chính thống của cộng đồng **Python**, nhấn mạnh vào tính dễ đọc (readability counts) thông qua việc quy định quy tắc đặt tên, độ dài dòng mã và khoảng trắng chuẩn mực.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="PEP 8 Style Guide" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:**
+  - *Tên biến/hàm:* Sử dụng kiểu chữ thường cách nhau bằng dấu gạch dưới (`snake_case`, ví dụ: `user_score`, `calculate_total`).
+  - *Tên Class:* Sử dụng kiểu chữ hoa gộp từ (`PascalCase`, ví dụ: `GameCharacter`, `DatabaseConnector`).
+  - *Khoảng trắng:* Sử dụng đúng 4 khoảng trắng (spaces) cho mỗi cấp độ thụt lề (indentation), tuyệt đối không trộn lẫn giữa space và tab.
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="First Script & PyCharm Project" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Một nhà nghiên cứu dữ liệu mới bước chân vào thế giới lập trình cần khởi tạo một dự án phân tích thị trường tài chính nhỏ. Để bắt đầu, họ cần cấu hình một môi trường làm việc cô lập trong **PyCharm**, viết một chương trình chào mừng tối giản để kiểm tra tính sẵn sàng của **Python Interpreter**, và xuất bản kết quả ra màn hình console.
+[MINDMAP_NODE: id="sec_4_context" | label="Data Analyst Setup Case" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** 
+  - Khởi động **PyCharm**, thiết lập thư mục dự án mang tên `financial_analyzer`.
+  - Tạo một tệp lệnh mới mang tên `main.py`.
+  - Viết dòng lệnh huyền thoại sử dụng hàm tích hợp sẵn **print()**:
+    ```python
+    print("Chào mừng đến với hệ thống phân tích dữ liệu Python!")
+    print("Môi trường phát triển đã sẵn sàng vận hành.")
+    ```
+  - Nhấp chuột phải vào vùng soạn thảo trong **PyCharm** và chọn lệnh **Run 'main'** để kích hoạt trình thông dịch biên dịch và thực thi mã.
+[MINDMAP_NODE: id="sec_4_application" | label="Print Function Execution" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Cửa sổ **Run Tool Window** của **PyCharm** ngay lập tức hiển thị dòng chữ chào mừng một cách mượt mà. Việc sử dụng môi trường ảo độc lập (Virtual Environment) giúp dự án này cô lập hoàn toàn các thư viện phụ thuộc sau này (như Pandas, NumPy), đảm bảo tính ổn định tuyệt đối ngay cả khi máy tính cá nhân nâng cấp các gói phần mềm hệ thống khác.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Path Errors & Indentation Pitfalls" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:**
+  1. **Quên tích chọn Add to PATH khi cài đặt:** Đây là sai lầm kinh điển của người mới bắt đầu trên nền tảng Windows. Khi gọi lệnh `python` từ dòng lệnh, hệ điều hành trả về lỗi `'python' is not recognized as an internal or external command`. *Khắc phục:* Chạy lại bộ cài đặt **Python**, chọn mục **Modify** và tích chọn tùy chọn thêm vào biến môi trường hệ thống.
+  2. **Nhầm lẫn phiên bản Python (Python 2 vs Python 3):** Một số hệ điều hành cũ vẫn lưu giữ phiên bản **Python 2** đã lỗi thời. Việc chạy mã **Python 3** trên nền tảng cũ gây ra hàng loạt lỗi cú pháp (ví dụ cú pháp lệnh `print`). *Khắc phục:* Luôn sử dụng tường minh lệnh `python3` trên macOS/Linux hoặc đảm bảo trỏ đúng vào **Python Interpreter** phiên bản mới nhất trong cấu hình **PyCharm**.
+  3. **Lỗi thụt lề mã nguồn (IndentationError):** Khác với các ngôn ngữ sử dụng dấu ngoặc nhọn `{}` như C++ hay Java, **Python** sử dụng khoảng trắng thụt lề để xác định khối lệnh (blocks). Việc trộn lẫn giữa phím Tab và dấu Space gây ra lỗi biên dịch nghiêm trọng. *Khắc phục:* Cấu hình trình soạn thảo **PyCharm** tự động chuyển đổi phím Tab thành 4 khoảng trắng chuẩn hóa.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="IndentationError & PATH Fix" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:**
+  - Luôn khởi tạo một **Virtual Environment** riêng biệt cho từng dự án phần mềm độc lập nhằm kiểm soát chặt chẽ các phiên bản thư viện.
+  - Đặt tên thư mục và tệp mã nguồn hoàn toàn bằng tiếng Việt không dấu, viết thường và sử dụng dấu gạch dưới để tránh các lỗi mã hóa ký tự đặc biệt (Unicode/UTF-8 issues) trên các hệ thống khác nhau.
+[MINDMAP_NODE: id="sec_5_best" | label="Virtual Environment Isolation" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Hello World & Profile Exercise" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Viết một chương trình **Python** hoàn chỉnh trong **PyCharm** có tên `hồ_sơ_cá_nhân.py`. Chương trình này sử dụng hàm **print()** để in ra ba dòng thông tin: Họ và tên đầy đủ của bạn, mục tiêu học tập môn **Python**, và câu châm ngôn sống yêu thích nhất của bạn.
+  - *Output kỳ vọng:* Ba dòng văn bản hiển thị rõ ràng, sắc nét trên cửa sổ console của **PyCharm** mà không gặp bất kỳ lỗi cú pháp nào.
+  - *Gợi ý giải:* Sử dụng cấu trúc lệnh đơn giản:
+    ```python
+    print("Họ và tên: Nguyễn Văn An")
+    print("Mục tiêu: Chinh phục lập trình Python từ con số không")
+    print("Châm ngôn: Kiên trì là chìa khóa của mọi thành công")
+    ```
+[MINDMAP_NODE: id="sec_6_basic" | label="Personal Profile Script" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Khám phá tính năng **Python Interactive Console** tích hợp sẵn trong **PyCharm**. Hãy thử nghiệm gõ các biểu thức toán học trực tiếp vào console (ví dụ: `5 * 7`, `2 ** 10`, `10 / 3`) và quan sát kết quả trả về ngay lập tức. Sau đó, hãy suy ngẫm và trả lời câu hỏi: Tại sao việc sử dụng **Interactive Console** lại mang lại ưu thế tuyệt vời khi kiểm thử nhanh các đoạn mã ngắn so với việc tạo hẳn một file mã nguồn mới?
+[MINDMAP_NODE: id="sec_6_advanced" | label="Interactive Console Testing" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Official Python Documentation" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** 
+  - Tài liệu tài nguyên chuẩn mực từ tổ chức phát triển **Python Software Foundation** tại trang chủ chính thức `docs.python.org`.
+  - Bộ quy chuẩn phong cách lập trình mã nguồn mở **PEP 8 – Style Guide for Python Code**.
+  - Hướng dẫn sử dụng môi trường phát triển tích hợp chuyên sâu từ tài liệu chính thức của **JetBrains PyCharm Documentation**.
+[MINDMAP_NODE: id="sec_7_official" | label="Python Docs & PEP 8" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Python', 'Kết quả học tập:', 'Python', 'The Zen of Python', 'Python Interpreter', 'PyCharm', 'Hello World', 'Điều kiện tiên quyết:', 'Định nghĩa & Bản chất:', 'Python', 'Guido van Rossum', 'Python', 'Nguyên lý/Cơ chế:', 'Python', 'Python Interpreter', 'bytecode', 'Python Virtual Machine (PVM)', 'Interactive Shell', 'Sơ đồ/Mô hình:']
+Timestamp links found: []
+
+
+================================================================================
+FILE 2: Bài 2: Biến, Kiểu dữ liệu và Làm việc với Chuỗi
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Biến và Chuỗi Python" | parent_id="root" | type="main"]
+# Bài 2: Biến, Kiểu dữ liệu và Làm việc với Chuỗi
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Mục tiêu Biến và Chuỗi" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Làm thế nào để lưu trữ trạng thái của dữ liệu trong bộ nhớ máy tính và thao tác linh hoạt với các đoạn văn bản (text) trong Python?
+- **Kết quả học tập:** Sau bài học này, học viên có thể nắm vững khái niệm **variable** (biến), phân biệt tường minh các **data types** (kiểu dữ liệu) nguyên thủy, và thành thạo các **string methods** (phương thức xử lý chuỗi) để trích xuất, định dạng dữ liệu.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Biến và String Methods" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Đã hoàn thành việc cài đặt môi trường Python và biết cách chạy một tệp lệnh cơ bản.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Kiểu dữ liệu Python" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Trong lăng kính của ngôn ngữ lập trình, một **variable** (biến) hoạt động như một định danh, một chiếc hộp được gán nhãn nằm trong vùng nhớ RAM chứa đựng giá trị cụ thể. Không giống như các ngôn ngữ tĩnh, Python sử dụng cơ chế cấp phát động (dynamic typing) giúp trình biên dịch tự nhận diện kiểu dữ liệu mà không cần khai báo từ khóa tường minh.
+[MINDMAP_NODE: id="sec_2_definitions" | label="Dynamic Typing" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Các **data types** (kiểu dữ liệu) cơ bản bao gồm **string** (chuỗi ký tự được bao bọc trong nháy đơn hoặc nháy kép), **integer** (số nguyên), **float** (số thực), và **boolean** (giá trị đúng/sai `True`/`False`). Sự dịch chuyển giữa các kiểu dữ liệu này đòi hỏi các hàm ép kiểu tường minh như `int()` hay `str()`.
+[MINDMAP_NODE: id="sec_2_principles" | label="String & Integer Types" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Mô hình ánh xạ bộ nhớ cho thấy một biến trỏ tới một đối tượng giá trị cụ thể trong bộ nhớ thay vì lưu trữ trực tiếp giá trị đó.
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Quy trình Xử lý Chuỗi" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. Khởi tạo **variable name** tuân thủ quy tắc đặt tên (không bắt đầu bằng số, không trùng từ khóa).
+  2. Gán giá trị văn bản sử dụng dấu ngoặc kép hoặc nháy đơn.
+  3. Áp dụng các **string methods** như `.lower()`, `.upper()`, `.length()`, hoặc toán tử cắt chuỗi **string slicing** để tinh chỉnh dữ liệu.
+[MINDMAP_NODE: id="sec_3_steps" | label="String Slicing & Methods" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Sử dụng nguyên tắc DRY (Don't Repeat Yourself) khi lưu trữ các chuỗi lặp đi lặp lại thành các biến cấu hình cục bộ.
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Hồ sơ Nhân viên" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Xây dựng một chương trình quản lý thông tin nhân viên sơ khai, yêu cầu lưu trữ tên đầy đủ, tuổi và trạng thái làm việc của một cá nhân trong hệ thống nội bộ công ty.
+[MINDMAP_NODE: id="sec_4_context" | label="Quản lý Nhân sự" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Khai báo các biến `employee_name = "John Smith"`, `employee_age = 35`, và `is_active = True`. Sử dụng kết hợp **string concatenation** (phép nối chuỗi qua toán tử `+`) và **f-strings** để in ra thông báo chuẩn hóa.
+[MINDMAP_NODE: id="sec_4_application" | label="F-Strings Formatting" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Đoạn mã nguồn trở nên gọn gàng, dễ bảo trì và loại bỏ hoàn toàn các lỗi xung đột kiểu dữ liệu khi hiển thị thông tin ra màn hình console.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Lỗi Biến và Chuỗi" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:** 
+  - Quên đặt chuỗi trong dấu ngoặc kép dẫn đến lỗi **NameError** do Python hiểu nhầm đó là một tên biến chưa khai báo.
+  - Viết sai chính tả tên biến khi gọi lại ở các dòng lệnh phía dưới.
+  - Nhầm lẫn giữa chỉ số bắt đầu bằng `0` trong **string indexing** khi trích xuất ký tự.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="NameError & Indexing" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn đặt tên biến theo quy tắc **snake_case** (các từ nối bằng dấu gạch dưới) thay vì camelCase để tuân thủ chuẩn PEP 8.
+[MINDMAP_NODE: id="sec_5_best" | label="Snake Case Convention" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Thực hành Chuỗi Python" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Khai báo một biến chứa câu chào "Welcome to Python Programming!". Viết câu lệnh in ra toàn bộ chuỗi bằng chữ hoa sử dụng **upper method**, đồng thời trích xuất từ "Python" bằng kỹ thuật **string slicing**.
+[MINDMAP_NODE: id="sec_6_basic" | label="Upper Method & Slicing" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Thử nghiệm việc nối một chuỗi số nguyên (ví dụ: `age = 25`) trực tiếp với một chuỗi văn bản bằng toán tử `+` và phân tích lý do tại sao Python lại báo lỗi **TypeError**. Tìm cách khắc phục bằng hàm chuyển đổi kiểu dữ liệu tương ứng.
+[MINDMAP_NODE: id="sec_6_advanced" | label="TypeError & Conversion" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Tài liệu Python Official" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Tài liệu tài nguyên chuẩn từ **Python Software Foundation** về cấu trúc chuỗi và các thao tác biến nâng cao.
+[MINDMAP_NODE: id="sec_7_official" | label="Python Documentation" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'variable', 'data types', 'string methods', 'Điều kiện tiên quyết:', 'Định nghĩa & Bản chất:', 'variable', 'Nguyên lý/Cơ chế:', 'data types', 'string', 'integer', 'float', 'boolean', 'Sơ đồ/Mô hình:', 'Quy trình từng bước (Step-by-step):', 'variable name', 'string methods', 'string slicing', 'Framework/Model áp dụng:']
+Timestamp links found: []
+
+
+================================================================================
+FILE 3: Bài 3: Làm việc với Số và Nhận dữ liệu đầu vào
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Python Numbers & Input" | parent_id="root" | type="main"]
+# Bài 3: Làm việc với Số và Nhận dữ liệu đầu vào
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Numbers & Input Overview" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Làm thế nào để thực hiện các phép toán phức tạp và tương tác trực tiếp với người dùng thông qua dữ liệu nhập vào trong Python? Bài học này mở ra chiều kích động cho chương trình, biến các đoạn mã tĩnh thành những cỗ máy tính toán và giao tiếp linh hoạt.
+- **Kết quả học tập:** Sau bài này, người học sẽ nắm vững cách thao tác với kiểu dữ liệu số (**integers**, **floats**), vận dụng thành thạo các hàm toán học chuyên sâu, và biết cách khai thác hàm **input()** để thu thập thông tin thời gian thực từ người dùng.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Integers, Floats & Input" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Đã nắm vững cách khai báo biến, quy tắc đặt tên biến và các thao tác xử lý chuỗi cơ bản từ Bài 2.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Arithmetic & Math Library" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Trong thế giới tính toán của Python, số liệu được phân định rạch ròi thành các thể loại khác nhau. **integers** đại diện cho các số nguyên (như 10, -5, 0), trong khi **floats** biểu thị các số thực có phần thập phân (như 3.14, -0.001). Sự phân biệt này quyết định cách bộ nhớ cấp phát và tốc độ xử lý của CPU.
+[MINDMAP_NODE: id="sec_2_definitions" | label="Integers & Floats" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Python hỗ trợ đầy đủ các phép toán số học truyền thống cộng (**addition**), trừ (**subtraction**), nhân (**multiplication**), chia (**division**), cùng với các toán tử đặc thù như lũy thừa (**exponentiation**) và chia lấy phần dư (**modulo**). Để mở rộng biên giới tính toán, thư viện **math module** cung cấp hàng loạt hàm toán học cao cấp.
+[MINDMAP_NODE: id="sec_2_principles" | label="Math Module & Operators" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Mô hình tương tác dữ liệu số diễn từ việc tiếp nhận chuỗi ký tự qua **input function**, chuyển đổi kiểu dữ liệu (**type casting**) bằng các hàm **int()** hoặc **float()**, cho đến khi đưa vào biểu thức toán học để cho ra kết quả cuối cùng.
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Input-Cast-Calculate Pipeline" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. Kích hoạt lời nhắc người dùng thông qua hàm **input()**.
+  2. Tiếp nhận giá trị dưới dạng chuỗi ký tự (**string data**).
+  3. Thực hiện chuyển đổi kiểu dữ liệu sang số nguyên hoặc số thực (**type conversion**).
+  4. Đưa dữ liệu vào biểu thức tính toán hoặc hàm toán học của **math module**.
+  5. Xuất kết quả ra màn hình thông qua hàm **print()**.
+[MINDMAP_NODE: id="sec_3_steps" | label="Input & Type Conversion" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Áp dụng mô hình **IPO** (Input - Process - Output) kinh điển trong khoa học máy tính, đảm bảo tính chặt chẽ từ khâu tiếp nhận thông tin đầu vào đến khi xử lý logic toán học và hiển thị kết quả.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="IPO Pipeline Model" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** Thứ tự ưu tiên toán tử (**operator precedence**) tuân thủ quy tắc toán học chuẩn PEMDAS/BODMAS (ngoặc, lũy thừa, nhân/chia, cộng/trừ).
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Building a Basic Calculator" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Xây dựng một chương trình máy tính bỏ túi cơ bản có khả năng nhận hai số từ người dùng, thực hiện phép cộng và hiển thị kết quả tổng lên màn hình console.
+[MINDMAP_NODE: id="sec_4_context" | label="Console Calculator App" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Sử dụng hai lần gọi hàm **input()** kết hợp với hàm **int()** để ép kiểu dữ liệu chuỗi thành số nguyên, sau đó thực hiện phép tính cộng.
+[MINDMAP_NODE: id="sec_4_application" | label="Input Casting Application" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Nếu thiếu bước ép kiểu dữ liệu, Python sẽ hiểu phép toán cộng giữa hai chuỗi là phép nối chuỗi (**string concatenation**) thay vì cộng số học. Việc nhận thức rõ bản chất kiểu dữ liệu giúp lập trình viên tránh được những lỗi logic tinh vi.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Type Errors & Best Practices" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:** 
+  - Quên chuyển đổi kiểu dữ liệu từ **input()** khiến chương trình nối chuỗi thay vì cộng số học.
+  - Nhầm lẫn giữa kết quả phép chia chuẩn (**division**) trả về số thực và phép chia lấy phần nguyên (**floor division**).
+  - Sử dụng các hàm của **math module** mà quên dòng lệnh **import math** ở đầu chương trình.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="String Concatenation Pitfall" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn kiểm tra kỹ kiểu dữ liệu của biến trước khi thực hiện các phép toán phức tạp; đặt tên biến rõ nghĩa thể hiện đơn vị đo lường hoặc bản chất con số; tận dụng các hàm có sẵn như **abs()** (giá trị tuyệt đối) và **pow()** (lũy thừa) khi cần thiết.
+[MINDMAP_NODE: id="sec_5_best" | label="Explicit Type Casting" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Calculator & Math Exercises" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Viết chương trình chuyển đổi nhiệt độ từ độ Celsius sang độ Fahrenheit. Chương trình cần yêu cầu người dùng nhập vào nhiệt độ Celsius dưới dạng số thực, áp dụng công thức tính toán và in ra kết quả.
+[MINDMAP_NODE: id="sec_6_basic" | label="Temperature Converter" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Thiết kế một chương trình tính toán tiền boa (**tip calculator**) cho hóa đơn nhà hàng. Chương trình cần nhận tổng số tiền hóa đơn, phần trăm tiền boa mong muốn, và số lượng thực khách để chia đều tổng chi phí.
+[MINDMAP_NODE: id="sec_6_advanced" | label="Tip Calculator Design" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Python Built-in Functions Docs" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Tài liệu tài nguyên chính thức từ Python Software Foundation về các hàm tích hợp sẵn (**Built-in Functions**) và thư viện toán học tiêu chuẩn (**math module documentation**).
+[MINDMAP_NODE: id="sec_7_official" | label="Python Math Documentation" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'integers', 'floats', 'input()', 'Điều kiện tiên quyết:', 'Định nghĩa & Bản chất:', 'integers', 'floats', 'Nguyên lý/Cơ chế:', 'addition', 'subtraction', 'multiplication', 'division', 'exponentiation', 'modulo', 'math module', 'Sơ đồ/Mô hình:', 'input function', 'type casting']
+Timestamp links found: []
+
+
+================================================================================
+FILE 4: Bài 4: Cấu trúc dữ liệu List và Tuple
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Python List & Tuple" | parent_id="root" | type="main"]
+# Bài 4: Cấu trúc dữ liệu List và Tuple
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="List and Tuple Overview" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Khi cần lưu trữ một tập hợp hàng chục, hàng trăm biến có liên quan đến nhau thay vì khai báo rời rạc từng biến đơn lẻ, chúng ta phải giải quyết bằng cách nào trong Python? Tại sao sự phân hóa giữa cấu trúc dữ liệu có thể thay đổi (**mutable**) và không thể thay đổi (**immutable**) lại là huyết mạch của thiết kế thuật toán?
+- **Kết quả học tập:** Sau bài này, người học sẽ nắm vững kỹ thuật khởi tạo **Python List**, thuần thục các phương thức thao tác danh sách cốt lõi, hiểu rõ bản chất tĩnh của **Tuple**, và biết cách ứng dụng linh hoạt hai cấu trúc này vào mô hình lưu trữ dữ liệu thực tế.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Mutable Lists & Tuples" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Đã nắm vững các kiểu dữ liệu cơ bản như **string**, **integer**, **boolean** cùng cú pháp khai báo **variable** từ Bài 2.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Data Structures Architecture" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Trong bức tranh kiến trúc dữ liệu của Python, **List** (danh sách) là một tập hợp các phần tử có thứ tự, cho phép chứa các kiểu dữ liệu hỗn hợp và đặc biệt có tính chất **mutable** (có thể thay đổi giá trị, thêm, bớt phần tử sau khi khởi tạo). Ngược lại, **Tuple** là một cấu trúc tương tự nhưng mang bản chất **immutable** (bất biến), nghĩa là một khi đã được đóng gói trong dấu ngoặc đơn `()`, cấu trúc và giá trị của nó vĩnh cửu không thể bị chỉnh sửa, đảm bảo tính toàn vẹn tuyệt đối cho dữ liệu nguồn.
+[MINDMAP_NODE: id="sec_2_definitions" | label="List vs Tuple" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Việc truy xuất phần tử trong cả **List** và **Tuple** dựa trên hệ thống chỉ mục **zero-based indexing**, nơi phần tử đầu tiên mang định danh số `0` và phần tử cuối cùng có thể được trỏ tới thông qua chỉ mục âm như `-1`. Cơ chế cấp phát bộ nhớ động của **List** cho phép nó tự động co giãn kích thước khi gọi các phương thức như **append()** hoặc **extend()**, trong khi **Tuple** được tối ưu hóa về tốc độ truy xuất nhờ việc cấp phát bộ nhớ tĩnh tại thời điểm khởi tạo.
+[MINDMAP_NODE: id="sec_2_principles" | label="Zero-based Indexing" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Mô hình lưu trữ tuần tự (Sequential Memory Allocation) biểu diễn các ô nhớ liền kề chứa các con trỏ trỏ đến vùng nhớ thực tế của từng phần tử bên trong danh sách.
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="List Operations Framework" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. Khởi tạo danh sách bằng dấu ngoặc vuông `[]` hoặc hàm **list()**.
+  2. Thêm mới dữ liệu vào cuối danh sách thông qua phương thức **append()**.
+  3. Chèn phần tử vào vị trí bất kỳ bằng hàm **insert()** với tham số chỉ mục xác định.
+  4. Quét, sắp xếp hoặc đảo ngược thứ tự bằng các phương thức hỗ trợ sẵn có như **sort()**, **reverse()**.
+  5. Loại bỏ phần tử không mong muốn bằng **remove()** hoặc **pop()**.
+[MINDMAP_NODE: id="sec_3_steps" | label="Append Insert Pop" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Sử dụng mô hình **CRUD** (Create, Read, Update, Delete) áp dụng trực tiếp lên các phần tử của **List** thông qua các phương thức nội tại của ngôn ngữ Python.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="CRUD on Lists" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** Lựa chọn **List** khi dữ liệu có tính chất biến động, cần thêm bớt liên tục; lựa chọn **Tuple** khi lưu trữ các hằng số cấu hình hệ thống, tọa độ địa lý cố định, hoặc làm khóa trong **Dictionary** nhờ tính chất băm được (**hashable**).
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Student Database Case Study" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Giả sử xây dựng một hệ thống quản lý danh sách học sinh tham gia câu lạc bộ lập trình tại một trung tâm nghệ thuật và công nghệ. Hệ thống cần lưu trữ họ tên các thành viên, cho phép bổ sung học sinh mới đăng ký, loại bỏ những học sinh xin rút lui, và cố định một danh sách tọa độ phòng học không bao giờ thay đổi trong suốt khóa học.
+[MINDMAP_NODE: id="sec_4_context" | label="Coding Club Roster" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Sử dụng **List** mang tên `students = ["An", "Bình", "Cường"]` để quản lý danh sách thay đổi. Thực hiện lệnh `students.add()` hoặc `students.append("Dung")` khi có học sinh mới. Đồng thời, khởi tạo một **Tuple** `ROOM_COORDINATES = (10.762, 106.660)` để lưu vị trí địa lý cố định của phòng học chính, ngăn chặn mọi hành vi ghi đè vô ý trong mã nguồn.
+[MINDMAP_NODE: id="sec_4_application" | label="List Append and Tuple" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Chương trình vận hành mượt mà nhờ việc phân định rõ ràng ranh giới giữa dữ liệu động và dữ liệu tĩnh. Việc sử dụng đúng cấu trúc giúp tối ưu hóa hiệu suất chạy và giảm thiểu tối đa các lỗi logic do thay đổi nhầm dữ liệu hệ thống.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Mutable Pitfalls Best Practices" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:** 
+  1. Cố gắng thay đổi phần tử của **Tuple** bằng cú pháp gán trực tiếp (ví dụ: `my_tuple[0] = 5`), dẫn đến lỗi ngoại lệ **TypeError**.
+  2. Nhầm lẫn giữa phương thức trả về danh sách mới và phương thức chỉnh sửa trực tiếp trên danh sách gốc (ví dụ: `sort()` làm thay đổi list gốc trong khi hàm `sorted()` tạo ra danh sách mới).
+  3. Truy xuất chỉ mục vượt quá giới hạn phần tử hiện có của **List**, gây ra lỗi **IndexError**.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="TypeError and IndexError" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn đặt tên biến **List** ở dạng số nhiều (ví dụ: `users`, `scores`) để phân biệt rõ ràng với biến đơn lẻ. Ưu dụng sử dụng **Tuple** cho các hàm trả về nhiều giá trị đồng thời (**multiple return values**) nhằm đảm bảo tính an toàn dữ liệu xuyên suốt các module chương trình.
+[MINDMAP_NODE: id="sec_5_best" | label="Plural Naming and Tuples" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Inventory Management Exercise" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Viết một chương trình quản lý kho hàng mini bằng **Python List**. Chương trình khởi tạo một danh sách các mặt hàng ban đầu `inventory = ["laptop", "mouse", "keyboard"]`. Yêu cầu người dùng nhập tên một mặt hàng mới, thêm nó vào danh sách bằng phương thức **append()**, sau đó in ra toàn bộ danh sách kèm theo số lượng tổng cộng sử dụng hàm **len()**.
+[MINDMAP_NODE: id="sec_6_basic" | label="Inventory List Append" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Thiết kế một hàm nhận vào một **Tuple** chứa tọa độ GPS và một **List** chứa lịch trình di chuyển. Phân tích tại sao **Tuple** lại an toàn hơn **List** khi lưu trữ dữ liệu tọa độ địa lý trong bối cảnh hệ thống đa luồng (**multithreading**).
+[MINDMAP_NODE: id="sec_6_advanced" | label="GPS Tuple Thread Safety" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Python Data Structures Docs" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Tài liệu tài nguyên chuẩn hóa từ Python Software Foundation về cấu trúc dữ liệu tích hợp sẵn.
+[MINDMAP_NODE: id="sec_7_official" | label="Python Official Docs" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'mutable', 'immutable', 'Kết quả học tập:', 'Python List', 'Tuple', 'Điều kiện tiên quyết:', 'string', 'integer', 'boolean', 'variable', 'Định nghĩa & Bản chất:', 'List', 'mutable', 'Tuple', 'immutable', 'Nguyên lý/Cơ chế:', 'List', 'Tuple', 'zero-based indexing']
+Timestamp links found: []
+
+
+================================================================================
+FILE 5: Bài 5: Hàm (Functions) và Câu lệnh Return
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Python Functions & Return" | parent_id="root" | type="main"]
+# Bài 5: Hàm (Functions) và Câu lệnh Return
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Functions Overview" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Khi mã nguồn phình lớn và các khối logic lặp đi lặp lại khắp nơi, làm thế nào để đóng gói, cô lập và tái sử dụng chúng một cách thanh lịch nhất mà không vi phạm nguyên lý DRY (Don't Repeat Yourself)?
+- **Kết quả học tập:** Sau bài học này, học viên có thể tự tay thiết kế các hàm tùy chỉnh, truyền linh hoạt các **Parameters & Arguments**, xử lý phạm vi biến (**Variable Scope**) và điều phối dòng dữ liệu đầu ra thông qua từ khóa **return value**.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Parameters & Return" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Đã nắm vững các kiểu dữ liệu cơ bản (String, Integer, Float, Boolean) và cấu trúc dữ liệu dạng danh sách (Lists, Tuples) từ các chương trước.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Function Core Concepts" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Trong nghệ thuật kiến trúc phần mềm, **def keyword** (từ khóa định nghĩa) đóng vai trò như một bản thiết kế kiến trúc thu nhỏ. Một **function block** (khối hàm) là một tập hợp các dòng lệnh được gom nhóm lại với nhau nhằm thực thi một nhiệm vụ độc lập, duy nhất. Thay vì viết đi viết lại một thuật toán tính toán phức tạp, chúng ta gán cho nó một định danh (**function identifier**) và gọi lại nó bất cứ khi nào cần thiết.
+[MINDMAP_NODE: id="sec_2_definitions" | label="Def Keyword & Scope" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Cơ chế hoạt động của hàm dựa trên mô hình Hộp Đen (Black Box abstraction). Người dùng truyền các **Arguments** (đối số thực tế) vào qua cổng **Parameters** (tham số hình thức). Hàm tiến hành xử lý nội bộ trong vùng nhớ cục bộ (**Local Scope**) mà không làm ô nhiễm môi trường toàn cục (**Global Scope**), sau đó bàn giao lại kết quả thông qua **return statement**.
+[MINDMAP_NODE: id="sec_2_principles" | label="Black Box Abstraction" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Mô hình dòng chảy dữ liệu trong hàm bao gồm ba giai đoạn kinh điển: Nhận diện đối số (`Input Arguments`) $\rightarrow$ Khối xử lý logic nội bộ (`Function Body Execution`) $\rightarrow$ Trả về giá trị (`Return Value Output`).
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Function Implementation Workflow" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. Khởi tạo cấu trúc hàm bằng từ khóa `def`, theo sau là tên hàm chuẩn mực (quy tắc snake_case) và cặp dấu ngoặc đơn chứa tham số `()`.
+  2. Viết thân hàm với khoảng trắng thụt lề chuẩn mực (4 spaces indentation rule), định nghĩa logic xử lý dữ liệu.
+  3. Sử dụng từ khóa `return` để kết thúc quá trình tính toán và đẩy giá trị kết quả ra bên ngoài môi trường gọi hàm.
+[MINDMAP_NODE: id="sec_3_steps" | label="Def Indentation Return" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Áp dụng triết lý thiết kế **Single Responsibility Principle (SRP)** — mỗi hàm chỉ nên giải quyết một bài toán duy nhất, viết ngắn gọn, tường minh và có tính mô-đun hóa cao.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="Single Responsibility" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** Tên hàm phải mang tính mô tả hành động (ví dụ: `calculate_tax()`, `get_user_profile()`). Tránh việc một hàm vừa thực hiện tính toán vừa in kết quả (`print()`) vừa ghi file — điều này phá vỡ tính nguyên tử của hàm.
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Cube Calculation Case Study" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Giả sử bạn đang xây dựng một công cụ phân tích không gian 3D, trong đó hệ thống liên tục phải tính toán thể tích hình lập phương dựa trên kích thước các cạnh do người dùng nhập vào từ giao diện dòng lệnh.
+[MINDMAP_NODE: id="sec_4_context" | label="3D Space Analysis" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Ta thiết kế một hàm chuyên dụng nhận vào độ dài một cạnh, thực hiện phép toán lũy thừa lập phương và trả về kết quả số thực.
+[MINDMAP_NODE: id="sec_4_application" | label="Cube Function Design" | parent_id="sec_4" | type="sub"]
+  ```python
+  def cube_calculation(num):
+      return num * num * num
+
+  result = cube_calculation(3)
+  print(result)  # Kết quả hiển thị: 27
+  ```
+- **Kết quả & Phân tích:** Bằng cách cô lập logic tính toán vào trong `cube_calculation`, mã nguồn trở nên cực kỳ gọn gàng. Nếu sau này công thức hình học thay đổi, nhà phát triển chỉ cần chỉnh sửa tại một điểm duy nhất bên trong thân hàm thay vì phải rà soát hàng trăm dòng code phân tán.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Common Function Pitfalls" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:**
+  1. **Quên câu lệnh Return:** Lập trình viên mới thường viết lệnh `print()` bên trong hàm thay vì dùng `return`. Khi gán kết quả vào biến bên ngoài, biến đó sẽ nhận giá trị `None`, dẫn đến lỗi logic dây chuyền.
+  2. **Vi phạm thụt lề (Indentation Error):** Viết các câu lệnh xử lý bên ngoài thân hàm, làm gián đoạn cú pháp khối lệnh của Python.
+  3. **Đặt tên hàm quá chung chung:** Sử dụng các tên như `func1()` hoặc `process()` thay vì tên diễn tả rõ hành vi chức năng.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Return vs Print Error" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn đặt tài liệu chú thích ngắn gọn (**Docstrings**) ngay dưới dòng khai báo hàm để giải thích hàm đó làm gì, nhận tham số nào và trả về cái gì, giúp các thành viên khác trong nhóm dễ dàng bảo trì mã nguồn.
+[MINDMAP_NODE: id="sec_5_best" | label="Docstrings & Clean Code" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Function Practical Exercise" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Viết một hàm hoàn chỉnh tên là `greet_user` nhận vào hai tham số là `first_name` và `last_name`, sau đó sử dụng câu lệnh `return` để trả về một chuỗi định dạng tên đầy đủ được viết hoa chữ cái đầu tiên (ví dụ: "Nguyen Van A").
+[MINDMAP_NODE: id="sec_6_basic" | label="Greet User Function" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Thiết kế một hàm tính toán mức lương thực nhận `calculate_net_salary` có nhận tham số cơ bản và sử dụng các từ khóa tham số mặc định cho thuế suất. Thảo luận điều gì xảy ra nếu hàm không chứa từ khóa `return` và tại sao lệnh `return` đồng thời đóng vai trò như một điểm ngắt (`exit point`) của khối lệnh bên trong hàm.
+[MINDMAP_NODE: id="sec_6_advanced" | label="Salary & Return Break" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Official Python Documentation" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Tài liệu chính thức từ Python Software Foundation về cấu trúc định nghĩa hàm và phạm vi biến: *Python Documentation - Defining Functions (PEP 8 Style Guide).*
+[MINDMAP_NODE: id="sec_7_official" | label="Python PEP 8 Functions" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'Parameters & Arguments', 'Variable Scope', 'return value', 'Điều kiện tiên quyết:', 'Định nghĩa & Bản chất:', 'def keyword', 'function block', 'function identifier', 'Nguyên lý/Cơ chế:', 'Arguments', 'Parameters', 'Local Scope', 'Global Scope', 'return statement', 'Sơ đồ/Mô hình:', 'Quy trình từng bước (Step-by-step):', 'Framework/Model áp dụng:', 'Single Responsibility Principle (SRP)']
+Timestamp links found: []
+
+
+================================================================================
+FILE 6: Bài 6: Câu lệnh điều kiện If và Phép so sánh
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Python Conditional Statements" | parent_id="root" | type="main"]
+# Bài 6: Câu lệnh điều kiện If và Phép so sánh
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Conditional Statements Overview" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Làm thế nào để một chương trình máy tính có thể tự động đưa ra quyết định, phân loại tình huống và thay đổi đường đi của dữ liệu dựa trên các điều kiện thực tế giống như tư duy logic của con người?
+- **Kết quả học tập:** Sau bài học này, học viên sẽ nắm vững cách xây dựng các nhánh logic phức tạp, sử dụng thành thạo các **phép so sánh** toán học, kết hợp nhiều mệnh đề thông qua toán tử Boolean, và áp dụng cấu trúc **if-elif-else** để giải quyết các bài toán phân rã luồng dữ liệu theo tiêu chuẩn của Bloom's taxonomy ở mức độ ứng dụng và phân tích.
+[MINDMAP_NODE: id="sec_1_objectives" | label="If-Elif-Else & Boolean Logic" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Đã hoàn thành việc khai báo biến, hiểu rõ các kiểu dữ liệu cơ bản như số nguyên (**integer**), số thực (**float**), chuỗi ký tự (**string**), và biết cách định nghĩa cũng như gọi hàm trong Python.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Comparison Operators & Boolean" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Trong nghệ thuật kiến tạo mã nguồn, máy tính bản chất là một cỗ máy tuần tự, chỉ thực thi các dòng lệnh từ trên xuống dưới. Để phá vỡ tính đơn điệu này, chúng ta cần đến **câu lệnh điều kiện**. Các biểu thức điều kiện luôn trả về một giá trị chân lý thuộc kiểu **boolean**, bao gồm **True** (đúng) hoặc **False** (sai). Việc đánh giá tính hợp lệ của một mệnh đề thông qua các **phép so sánh** là nền tảng tối cao cho mọi thuật toán thông minh.
+[MINDMAP_NODE: id="sec_2_definitions" | label="Boolean & Comparison Operators" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Cơ chế hoạt động dựa trên việc kiểm tra biểu thức logic nằm sau từ khóa **if**. Nếu biểu thức đánh giá ra kết quả **True**, khối lệnh thụt lề ngay bên dưới sẽ được kích hoạt và thực thi. Ngược lại, chương trình sẽ lướt qua hoặc chuyển hướng sang các nhánh thay thế như **elif** (else if) hoặc điểm dừng cuối cùng là **else**. Sự phân cấp bằng khoảng trắng (**indentation**) trong Python đóng vai trò như các bức tường cú pháp định hình rõ ràng ranh giới của từng khối lệnh logic.
+[MINDMAP_NODE: id="sec_2_principles" | label="Indentation & Branching Logic" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Mô hình phân nhánh rẽ đôi (Decision Tree) hoặc biểu đồ lưu đồ (**flowchart**) minh họa rõ nét dòng chảy thực thi: Từ điểm khởi đầu, chương trình gặp cổng kiểm tra điều kiện; nếu thỏa mãn, nó đi theo nhánh trái, nếu không, nó rẽ sang nhánh phải để tìm kiếm điều kiện phù hợp tiếp theo hoặc kết thúc quy trình.
+[MINDMAP_NODE: id="sec_2_models" | label="Decision Tree Flowchart" | parent_id="sec_2" | type="sub"]
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Conditional Execution Framework" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. Xác định biến hoặc dữ liệu đầu vào cần kiểm tra tính chất.
+  2. Thiết lập biểu thức so sánh sử dụng các toán tử như `==` (bằng), `!=` (khác), `>`, `<`, `>=`, `<=`.
+  3. Viết từ khóa **if** kèm theo điều kiện cốt lõi và dấu hai chấm (`:`).
+  4. Thụt lề đúng chuẩn (thường là 4 khoảng trắng) cho khối lệnh sẽ chạy khi điều kiện đúng.
+  5. Bổ sung các nhánh phụ **elif** nếu có nhiều hơn hai trường hợp xảy ra.
+  6. Khóa sổ toàn bộ cấu trúc bằng khối lệnh **else** để xử lý tất cả các tình huống còn sót lại.
+[MINDMAP_NODE: id="sec_3_steps" | label="Step-by-Step If Construction" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Áp dụng mô hình tư duy **MECE** (Mutually Exclusive, Collectively Exhaustive - Độc lập tương đối, Bao trùm toàn diện) khi xây dựng các nhánh điều kiện, đảm bảo không có trường hợp nào bị bỏ sót và các điều kiện không bị chồng chéo logic lẫn nhau.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="MECE Branching Model" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** 
+  - Toán tử so sánh bằng: `a == b`
+  - Toán tử khác biệt: `a != b`
+  - Toán tử kết hợp logic: **and**, **or**, **not**
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Maximum Number Finder Case Study" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Giả sử chúng ta được giao nhiệm vụ xây dựng một tiện ích nhỏ bằng Python để nhận ba số nguyên từ người dùng và xác định chính xác đâu là con số có giá trị lớn nhất trong ba số đó, phục vụ cho hệ thống xếp hạng điểm số tự động của một cuộc thi học thuật.
+[MINDMAP_NODE: id="sec_4_context" | label="Three Numbers Comparison" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Chúng ta định nghĩa một hàm mang tên `max_num(num1, num2, num3)`. Bên trong hàm này, chúng ta sử dụng tổ hợp cấu trúc **if-elif-else** kết hợp với toán tử **and** để so sánh chéo từng cặp giá trị. Ví dụ: Nếu `num1 >= num2` và `num1 >= num3`, thì trả về `num1`. Tiếp tục kiểm tra tương tự cho `num2` và cuối cùng mặc định trả về `num3` thông qua khối **else**.
+[MINDMAP_NODE: id="sec_4_application" | label="Nested If Comparison Logic" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Chương trình chạy mượt mà, trả về kết quả chính xác tuyệt đối ngay cả khi các số đầu vào có giá trị bằng nhau. Bài học rút ra là việc cấu trúc các biểu thức phức tạp bằng toán tử logic giúp giảm thiểu số lượng dòng code, tăng độ đọc hiểu và tránh việc lồng ghép quá sâu (**deep nesting**) gây khó khăn cho việc bảo trì mã nguồn sau này.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Indentation and Syntax Pitfalls" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:** 
+  - *Nhầm lẫn giữa toán tử gán `=` và toán tử so sánh `==`:* Viết `if x = 5:` thay vì `if x == 5:` dẫn đến lỗi cú pháp nghiêm trọng (**SyntaxError**).
+  - *Sai sót về khoảng trắng thụt lề (**IndentationError**):* Quên thụt lề cho các dòng lệnh bên trong khối **if**, khiến Python không hiểu được phạm vi thực thi của câu lệnh điều kiện.
+  - *Thiếu dấu hai chấm (`:`):* Quên đặt dấu hai chấm ở cuối dòng chứa từ khóa điều kiện.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Syntax and Indentation Errors" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn kiểm tra kỹ các trường hợp biên (**edge cases** như số âm, số không, giá trị rỗng) trước khi đưa chương trình vào vận hành chính thức. Sử dụng ngoặc tròn `()` để nhóm các biểu thức logic phức tạp nhằm tăng tính tường minh và tránh nhầm lẫn về thứ tự ưu tiên của toán tử.
+[MINDMAP_NODE: id="sec_5_best" | label="Edge Cases & Parentheses" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Calculator and Grade Evaluator" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Viết một chương trình máy tính cầm tay thu nhỏ (**Calculator**). Yêu cầu người dùng nhập vào hai con số và một toán tử ký tự (`+`, `-`, `*`, `/`). Sử dụng câu lệnh điều kiện **if-elif-else** để thực hiện phép toán tương ứng và in ra kết quả màn hình. Nếu người dùng nhập sai toán tử, hãy hiển thị thông báo lỗi thân thiện.
+[MINDMAP_NODE: id="sec_6_basic" | label="Basic Calculator Program" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Thiết kế hệ thống đánh giá học lực tự động dựa trên điểm số từ 0 đến 100. Hãy mở rộng chương trình bằng cách xử lý thêm các ngoại lệ: Nếu người dùng nhập điểm số nhỏ hơn 0 hoặc lớn hơn 100, chương trình phải lập tức từ chối và cảnh báo giá trị không hợp lệ trước khi phân loại học lực (Xuất sắc, Giỏi, Khá, Trung bình, Yếu).
+[MINDMAP_NODE: id="sec_6_advanced" | label="Academic Grading System" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Python Official Documentation" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Tài liệu tham khảo chuẩn mực từ Python Software Foundation về các cấu trúc điều khiển luồng (**Control Flow Tools**), cùng các tài liệu chuyên sâu về chuẩn mã nguồn PEP 8 định hình phong cách viết code sạch, dễ đọc và chuyên nghiệp.
+[MINDMAP_NODE: id="sec_7_official" | label="Python Control Flow Docs" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'phép so sánh', 'if-elif-else', 'Điều kiện tiên quyết:', 'integer', 'float', 'string', 'Định nghĩa & Bản chất:', 'câu lệnh điều kiện', 'boolean', 'True', 'False', 'phép so sánh', 'Nguyên lý/Cơ chế:', '. Nếu biểu thức đánh giá ra kết quả ', 'elif', 'else', 'indentation', 'Sơ đồ/Mô hình:']
+Timestamp links found: []
+
+
+================================================================================
+FILE 7: Bài 7: Từ điển (Dictionaries) và Vòng lặp While
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Dictionaries & While Loops" | parent_id="root" | type="main"]
+# Bài 7: Từ điển (Dictionaries) và Vòng lặp While
+
+---
+
+[MINDMAP_NODE: id="sec_1" | label="Dictionaries & While Loops" | parent_id="root" | type="main"]
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+
+- **Câu hỏi cốt lõi:** Làm thế nào để lưu trữ dữ liệu theo cặp ánh xạ ý nghĩa thay vì chỉ dựa vào chỉ mục số nguyên đơn thuần, và làm sao để tự động hóa các tác vụ lặp vô hạn định dựa trên điều kiện logic động?
+- **Kết quả học tập:** Sau bài học này, học viên có khả năng vận dụng thành thạo cấu trúc **dictionaries** để tổ chức dữ liệu dạng **key-value pairs**, khai thác các phương thức truy xuất như **get method**, đồng thời kiểm soát luồng thực thi chương trình bằng **while loops** một cách tối ưu.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Key-Value & While Logic" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Đã nắm vững cấu trúc dữ liệu danh sách căn bản (**lists**) cùng với các biểu thức điều kiện rẽ nhánh (**if statements**).
+
+---
+
+[MINDMAP_NODE: id="sec_2" | label="Dictionaries and While Loop Mechanics" | parent_id="root" | type="main"]
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+
+Trong hành trình kiến tạo các hệ thống thông tin phức tạp, việc sắp xếp dữ liệu không chỉ dừng lại ở các hàng dọc tuyến tính. **Dictionaries** (Từ điển) ra đời như một hiện thân của cơ chế lưu trữ từ vựng trong đời sống thực: mỗi từ khóa duy nhất (**key**) sẽ trỏ trực tiếp đến một định nghĩa hoặc giá trị tương ứng (**value**). 
+
+[MINDMAP_NODE: id="sec_2_definitions" | label="Key-Value Pairs" | parent_id="sec_2" | type="sub"]
+- **Định nghĩa & Bản chất:** Một **dictionary** trong Python là tập hợp các phần tử không có thứ tự (từ phiên bản 3.7 trở đi duy trì thứ tự chèn), có thể thay đổi (**mutable**) và lập chỉ mục bằng các **keys** thay vì **integer indices**. Cấu trúc này tối ưu hóa tốc độ tra cứu dữ liệu quy mô lớn thông qua thuật toán băm (**hash table**).
+- **Nguyên lý/Cơ chế:** Khi khởi tạo một **dictionary**, mỗi **key** phải là một kiểu dữ liệu bất biến (**immutable types** như chuỗi, số, hoặc tuple), trong khi **value** có thể chứa bất kỳ kiểu dữ liệu nào từ số nguyên, chuỗi ký tự, danh sách, cho đến một **dictionary** lồng nhau khác. Đối với **while loop**, cơ chế hoạt động dựa trên việc kiểm tra một **boolean expression** trước mỗi lần lặp (**iteration**); vòng lặp tiếp tục quần thảo cho đến khi biểu thức đánh giá về giá trị `False`.
+[MINDMAP_NODE: id="sec_2_principles" | label="Boolean Expressions" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Mô hình ánh xạ **Key-to-Value Mapping** trực quan hóa quá trình tra cứu O(1): Đầu vào là một **key** độc nhất, qua hàm băm sẽ dẫn trực tiếp đến ô nhớ chứa **value** tương ứng mà không cần quét qua toàn bộ cấu trúc dữ liệu.
+
+---
+
+[MINDMAP_NODE: id="sec_3" | label="Dictionary & While Loop Framework" | parent_id="root" | type="main"]
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+
+Việc thao tác với **dictionaries** và xây dựng vòng lặp **while** đòi hỏi một quy trình tư duy cấu trúc rõ ràng để tránh những lỗi logic trầm trọng như vòng lặp vô tận (**infinite loops**).
+
+- **Quy trình từng bước (Step-by-step):**
+  1. *Khởi tạo cấu trúc:* Xác định các thuộc tính cần lưu trữ và thiết lập **dictionary** với cú pháp `{ "key1": value1, "key2": value2 }`.
+  2. *Truy xuất và Cập nhật:* Sử dụng ký hiệu ngoặc vuông `dict[key]` hoặc phương thức an toàn `dict.get(key, default)` để lấy giá trị hoặc thêm mới/ghi đè cặp **key-value**.
+  3. *Thiết lập điều kiện lặp:* Xác định biến đếm hoặc biến trạng thái (**state variable**) trước khi khai báo từ khóa `while`.
+  4. *Cập nhật biến trạng thái:* Đảm bảo bên trong khối lệnh của **while loop** có cơ chế làm thay đổi giá trị của biểu thức điều kiện để vòng lặp có điểm dừng hữu hạn.
+[MINDMAP_NODE: id="sec_3_steps" | label="State Update Mechanism" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Mô hình **Read-Process-Evaluate Pattern** thường được áp dụng khi kết hợp **dictionaries** với **while loops** trong các chương trình nhập liệu tương tác hoặc bảng dịch mã tự động.
+
+---
+
+[MINDMAP_NODE: id="sec_4" | label="Interactive Translation Case Study" | parent_id="root" | type="main"]
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+
+Để hiểu sâu sắc sức mạnh của cấu trúc này, chúng ta khảo sát một bài toán thực tế: Xây dựng một cuốn từ điển dịch mã tháng tự động từ tiếng Anh sang tiếng Tây Ban Nha kết hợp với hệ thống nhập liệu liên tục.
+
+[MINDMAP_NODE: id="sec_4_context" | label="Month Conversion Context" | parent_id="sec_4" | type="sub"]
+- **Bối cảnh:** Một ứng dụng học ngoại ngữ cần chuyển đổi tên viết tắt của các tháng sang dạng đầy đủ hoặc ngôn ngữ khác dựa trên yêu cầu người dùng, đồng thời chương trình phải chạy liên tục cho đến khi người dùng chủ động gõ lệnh thoát.
+- **Áp dụng:** 
+  ```python
+  month_conversions = {
+      "Jan": "January",
+      "Feb": "February",
+      "Mar": "March",
+      "Apr": "April",
+      "May": "May",
+      "Jun": "June",
+      "Jul": "July",
+      "Aug": "August",
+      "Sep": "September",
+      "Oct": "October",
+      "Nov": "November",
+      "Dec": "December",
+  }
+
+  running = True
+  while running:
+    user_input = input(
+        "Nhập mã tháng (hoặc gõ 'quit' để thoát): "
+    ).capitalize()
+    if user_input == "Quit":
+      running = False
+      print("Đã thoát chương trình.")
+    elif user_input in month_conversions:
+      print(f"Tháng tương ứng là: {month_conversions[user_input]}")
+    else:
+      print("Không tìm thấy mã tháng hợp lệ!")
+```
+[MINDMAP_NODE: id="sec_4_application" | label="Dictionary Lookup Logic" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Chương trình tận dụng tốc độ tra cứu O(1) của **dictionary** thông qua toán tử kiểm tra thành viên `in`, kết hợp nhịp nhàng với **while loop** duy trì trạng thái `running`. Điều này tạo ra một giao diện dòng lệnh (**CLI**) mượt mà, minh chứng cho tính thực tiễn cao của cấu trúc dữ liệu kết hợp điều khiển luồng.
+
+---
+
+[MINDMAP_NODE: id="sec_5" | label="Common Pitfalls & Best Practices" | parent_id="sec_5" | type="main"]
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+
+- **3-5 Sai lầm phổ biến:**
+  1. *KeyError ngoại lệ:* Cố gắng truy xuất một **key** không tồn tại bằng cú pháp `dict['khong_ton_tai']` thay vì dùng phương thức `get()`. Nguyên nhân do thiếu kiểm tra trước. Khắc phục bằng cách sử dụng `dict.get('key', default_value)`.
+  2. *Vòng lặp vô tận (Infinite Loop):* Quên cập nhật biến điều kiện trong **while loop** dẫn đến việc chương trình treo máy do **CPU usage** đạt 100%. Khắc phục bằng cách luôn kiểm tra đường thoát rõ ràng.
+  3. *Sử dụng **mutable type** làm key:* Cố gắng đặt một **list** làm **key** trong **dictionary**, gây ra lỗi `TypeError: unhashable type: 'list'`. Khắc phục bằng cách chuyển đổi sang **tuple** hoặc chuỗi.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="KeyError & Infinite Loops" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn định nghĩa rõ ràng kiểu dữ liệu của cả **key** và **value** trước khi thiết kế các cấu trúc **dictionaries** phức tạp. Ưu tiên sử dụng phương thức `.keys()`, `.values()`, hoặc `.items()` khi cần duyệt qua toàn bộ cấu trúc dữ liệu.
+[MINDMAP_NODE: id="sec_5_best" | label="Safe Data Access" | parent_id="sec_5" | type="sub"]
+
+---
+
+[MINDMAP_NODE: id="sec_6" | label="Dictionary & While Loop Exercises" | parent_id="root" | type="main"]
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+
+- **Bài tập 1 (Áp dụng cơ bản):** Xây dựng một từ điển lưu trữ danh bạ điện thoại cá nhân gồm tên người làm **key** và số điện thoại làm **value**. Viết một **while loop** cho phép người dùng tra cứu số điện thoại bằng cách nhập tên, chương trình chỉ kết thúc khi nhập từ khóa "exit".
+[MINDMAP_NODE: id="sec_6_basic" | label="Phone Directory Exercise" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Thiết kế một trò chơi đoán từ (Word Guessing Game) mini. Sử dụng **dictionary** để lưu các từ gợi ý và từ khóa gốc, kết hợp **while loop** để giới hạn số lần đoán sai của người chơi, đồng thời cập nhật trạng thái bảng điểm liên tục sau mỗi vòng lặp.
+[MINDMAP_NODE: id="sec_6_advanced" | label="Word Guessing Game" | parent_id="sec_6" | type="sub"]
+
+---
+
+[MINDMAP_NODE: id="sec_7" | label="Official Python Dictionaries Documentation" | parent_id="root" | type="main"]
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+
+- **Nguồn chính thức:** Tài liệu chuyên sâu về cấu trúc ánh xạ tích hợp (**Mapping Types — dict**) trên trang chủ Python Documentation, cùng các nguyên lý tối ưu hóa bảng băm trong mã nguồn chính thức của ngôn ngữ.
+[MINDMAP_NODE: id="sec_7_official" | label="Python Mapping Docs" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'dictionaries', 'key-value pairs', 'get method', 'while loops', 'Điều kiện tiên quyết:', 'lists', 'if statements', 'Dictionaries', 'key', 'value', 'Định nghĩa & Bản chất:', 'dictionary', 'mutable', 'keys', 'integer indices', 'hash table', 'Nguyên lý/Cơ chế:', 'dictionary']
+Timestamp links found: []
+
+
+================================================================================
+FILE 8: Bài 8: Vòng lặp For và Mảng hai chiều (2D Lists)
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="For Loops & 2D Lists" | parent_id="root" | type="main"]
+# Bài 8: Vòng lặp For và Mảng hai chiều (2D Lists)
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="For Loops & 2D Lists Overview" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Làm thế nào để tự động hóa việc duyệt qua các cấu trúc dữ liệu tuyến tính và đa chiều trong Python mà không bị giới hạn bởi vòng lặp thủ công?
+- **Kết quả học tập:** Sau bài học này, người học có thể nắm vững cú pháp và tư duy thiết kế thuật toán với vòng lặp **for**, vận dụng thành thạo **nested loops** (vòng lặp lồng nhau), và thao tác cấu trúc dữ liệu **2D lists** (mảng hai chiều) như những ma trận dữ liệu thực tế.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Iteration & Matrix Operations" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Đã nắm vững cấu trúc dữ liệu **lists**, khái niệm cơ bản về vòng lặp **while** (Bài 4 và Bài 7), cũng như cách sử dụng biến và hàm trong Python.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="For Loop Mechanics & 2D Architecture" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Vòng lặp **for** trong Python hoạt động như một iterator quét qua từng phần tử của một chuỗi hoặc tập hợp (như string, list, tuple, range). Khác với các ngôn ngữ lập trình truyền thống dựa trên biến đếm index (như C hay Java), vòng lặp **for** của Python thiên về phong cách "for-each", trực tiếp trích xuất giá trị từng phần tử. Trong khi đó, **2D lists** (mảng hai chiều) thực chất là cấu trúc **list of lists** – một danh sách mà mỗi phần tử bên trong lại chính là một danh sách độc lập, mô phỏng hoàn hảo các ma trận toán học hoặc bảng dữ liệu dạng phẳng (grids).
+[MINDMAP_NODE: id="sec_2_definitions" | label="For Loops & List of Lists" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Khi kết hợp **nested loops** với **2D lists**, vòng lặp ngoài chịu trách nhiệm duyệt qua các hàng (rows), trong khi vòng lặp trong đi sâu vào từng cột (columns) của hàng hiện tại. Cơ chế này đòi hỏi bộ nhớ máy tính phải quản lý các con trỏ tham chiếu đến từng danh sách con, tạo ra cấu trúc phân cấp dữ liệu nhiều tầng.
+[MINDMAP_NODE: id="sec_2_principles" | label="Nested Loops & Matrix Traversal" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Mô hình không gian ma trận $M \times N$ trong đó mỗi tọa độ `matrix[row][column]` định vị chính xác một ô dữ liệu độc lập.
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Matrix Traversal Framework" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. *Khởi tạo cấu trúc:* Định nghĩa một **2D list** với số hàng và số cột tường minh.
+  2. *Xây dựng vòng lặp ngoài:* Sử dụng `for row in matrix:` để trích xuất từng danh sách con.
+  3. *Xây dựng vòng lặp trong:* Sử dụng `for col in row:` để truy cập từng giá trị nguyên tử nằm sâu bên trong danh sách con đó.
+  4. *Xử lý logic:* Thực hiện các phép toán chuyển đổi, lọc hoặc in ấn dữ liệu tại mỗi điểm tọa độ.
+[MINDMAP_NODE: id="sec_3_steps" | label="Step-by-Step Nested Iteration" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Áp dụng mô hình **Iteration Pattern** kết hợp với **Matrix Grid Indexing** để giải quyết các bài toán xử lý bảng biểu, trò chơi dạng bàn cờ (như cờ vua, caro) hoặc xử lý ảnh dạng pixel thô.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="Grid Indexing Pattern" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** Đảm bảo kiểm tra độ dài của từng hàng (`len(row)`) để tránh lỗi truy xuất vượt quá giới hạn (**IndexError**) khi làm việc với các mảng jagged array (mảng có số cột không đều nhau giữa các hàng).
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Grid Matrix Printer Case Study" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Giả sử bạn đang phát triển một hệ thống trò chơi trên bàn cờ (Board Game) và cần hiển thị một bản đồ lưới 3x3 chứa các con số biểu diễn trạng thái các ô trên bàn cờ.
+[MINDMAP_NODE: id="sec_4_context" | label="Board Game Grid Context" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Ta khai báo một biến `number_grid` chứa 3 danh sách con. Sau đó, viết một đoạn mã sử dụng hai tầng vòng lặp **for** lồng nhau để duyệt qua từng hàng và từng cột, in ra màn hình giá trị của từng ô theo định dạng ma trận phẳng.
+[MINDMAP_NODE: id="sec_4_application" | label="Nested Loop Grid Printer" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Chương trình duyệt qua toàn bộ $3 \times 3 = 9$ phần tử một cách mượt mà. Bài học rút ra là việc hiểu rõ cấu trúc **list of lists** giúp lập trình viên dễ dàng mở rộng chiều dữ liệu lên 3D hoặc nhiều hơn mà không gặp rào cản tư duy logic.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Scope & Index Errors Prevention" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:**
+  1. *Nhầm lẫn giữa giá trị phần tử và chỉ số (index):* Cố gắng truy cập phần tử bằng index trong khi vòng lặp **for** của Python đã trả về trực tiếp giá trị thực tế của phần tử.
+  2. *Quên thụt lề (Indentation Error):* Đặt sai cấp độ thụt lề của vòng lặp trong, dẫn đến việc vòng lặp trong chạy sai ngữ cảnh hàng/cột hoặc gây lỗi cú pháp.
+  3. *Modifying List during Iteration:* Thay đổi kích thước của **2D lists** (thêm/xóa hàng hoặc cột) ngay trong khi đang chạy vòng lặp duyệt qua nó, gây ra hiện tượng bỏ sót phần tử hoặc lỗi logic trầm trọng.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Indentation & Mutation Traps" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn sử dụng hàm `range(len())` kết hợp với index nếu bài toán yêu cầu thay đổi giá trị trực tiếp tại chỗ (in-place modification) trên ma trận. Đặt tên biến rõ nghĩa cho vòng lặp ngoài (`row`) và vòng lặp trong (`col`) thay vì dùng các biến chung chung như `i` và `j` khi làm việc với dữ liệu phức tạp.
+[MINDMAP_NODE: id="sec_5_best" | label="Row & Column Naming Best Practice" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Matrix Transpose & Grid Exercises" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Viết một chương trình Python khởi tạo một **2D list** kích thước 4x4 chứa các số nguyên bất kỳ. Sử dụng vòng lặp **for** lồng nhau để tính tổng toàn bộ các phần tử có trong ma trận đó.
+[MINDMAP_NODE: id="sec_6_basic" | label="Matrix Sum Calculation" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Viết hàm nhận vào một **2D list** bất kỳ và trả về một ma trận mới đã được chuyển vị (transpose - đổi hàng thành cột, cột thành hàng). Thử thách này yêu cầu bạn tư duy linh hoạt về ánh xạ chỉ số tọa độ `[row][col]` thành `[col][row]`.
+[MINDMAP_NODE: id="sec_6_advanced" | label="Matrix Transpose Challenge" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Python Official Documentation Reference" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Tài liệu chính thức từ Python.org về Cấu trúc điều khiển lặp (**Control Flow Tools**) và tài liệu kỹ thuật về kiểu dữ liệu danh sách đa chiều (**Nested List Comprehensions**).
+[MINDMAP_NODE: id="sec_7_official" | label="Python Control Flow Docs" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'for', 'nested loops', '2D lists', 'Điều kiện tiên quyết:', 'lists', 'while', 'Định nghĩa & Bản chất:', 'for', 'for', '2D lists', 'list of lists', 'Nguyên lý/Cơ chế:', 'nested loops', '2D lists', 'Sơ đồ/Mô hình:', 'Quy trình từng bước (Step-by-step):', '2D list', 'Framework/Model áp dụng:']
+Timestamp links found: []
+
+
+================================================================================
+FILE 9: Bài 9: Xử lý ngoại lệ (Try/Except) và Đọc/Ghi File
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Try/Except & File I/O" | parent_id="root" | type="main"]
+# Bài 9: Xử lý ngoại lệ (Try/Except) và Đọc/Ghi File
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Exception Handling Overview" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Làm thế nào để chương trình không bị crash đột ngột khi xảy ra lỗi dữ liệu hoặc lỗi hệ thống, đồng thời duy trì khả năng lưu trữ và truy xuất thông tin từ các tệp tin bên ngoài?
+- **Kết quả học tập:** Sau bài học này, học viên có thể chủ động bắt và xử lý các ngoại lệ bằng khối lệnh **try-except**, phân biệt rõ các loại lỗi runtime, cũng như thành thạo việc mở, đọc và ghi dữ liệu vào các tệp văn bản bằng hàm **open()**.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Try/Except & File I/O" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Nắm vững cấu trúc dữ liệu cơ bản, hàm, vòng lặp và quy tắc thụt lề (indentation) trong Python từ các bài học trước.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Exception & File Modes" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Trong lập trình hiện đại, **exception** (ngoại lệ) là những sự kiện bất thường xảy ra trong quá trình thực thi mã lệnh (như chia cho số không hoặc cố gắng mở một tệp không tồn tại) khiến chương trình bị dừng đột ngột nếu không được dự phòng. Song song đó, **file I/O** (Input/Output) là cơ chế giao tiếp giữa chương trình Python với bộ nhớ lưu trữ dài hạn thông qua các thao tác đọc và ghi tệp.
+[MINDMAP_NODE: id="sec_2_definitions" | label="Exception Handling" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Cơ chế **try-except** hoạt động dựa trên triết lý "thử nghiệm và dự phòng". Đoạn mã dễ phát sinh lỗi sẽ được bọc trong khối **try**. Khi lỗi xuất hiện, Python lập tức dừng luồng thực thi thông thường ở khối **try** và chuyển hướng điều khiển sang khối **except** tương ứng, giúp chương trình tiếp tục chạy mượt mà thay vì sập toàn bộ hệ thống. Đối với tệp tin, các chế độ như **read mode** (`"r"`), **write mode** (`"w"`), và **append mode** (`"a"`) quyết định quyền hạn thao tác của lập trình viên trên đối tượng tệp.
+[MINDMAP_NODE: id="sec_2_principles" | label="Try/Except Block" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Mô hình xử lý ngoại lệ tuần tự từ việc kiểm tra biểu thức, định vị vùng ngoại lệ, bắt lỗi cụ thể (như `ZeroDivisionError`, `ValueError`) cho đến việc đóng tệp an toàn bằng phương thức **close()**.
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="File I/O & Exception Workflow" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. Xác định đoạn mã tiềm ẩn rủi ro runtime (ví dụ: chuyển đổi kiểu dữ liệu người dùng nhập).
+  2. Bao bọc đoạn mã đó trong khối **try**.
+  3. Định nghĩa các khối **except** để bắt chính xác loại ngoại lệ có thể xảy ra.
+  4. Mở tệp tin bằng hàm **open()** với đường dẫn và chế độ truy cập phù hợp.
+  5. Thực hiện thao tác đọc (**read()**, **readline()**, **readlines()**) hoặc ghi (**write()**, **writelines()**).
+  6. Luôn đóng tệp bằng **close()** để giải phóng tài nguyên hệ thống.
+[MINDMAP_NODE: id="sec_3_steps" | label="Open, Read, Write, Close" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Mô hình **EAFP** (Easier to Ask for Forgiveness than Permission) đặc trưng của Python: thay vì kiểm tra trước mọi điều kiện xem có lỗi hay không, chương trình cứ tiến hành thực thi và sẵn sàng xử lý hậu quả thông qua **try-except**.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="EAFP Principle" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:**
+  - Chế độ `"r"`: Chỉ đọc. Báo lỗi `FileNotFoundError` nếu tệp không tồn tại.
+  - Chế độ `"w"`: Ghi đè. Tạo mới tệp nếu chưa có, hoặc xóa sạch nội dung cũ nếu tệp đã tồn tại.
+  - Chế độ `"a"`: Ghi nối tiếp (Append). Thêm nội dung mới vào cuối tệp mà không làm mất dữ liệu cũ.
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="User Input & File Logging" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Xây dựng một ứng dụng dòng lệnh cho phép người dùng nhập vào một con số bất kỳ để thực hiện phép tính chia, đồng thời ghi lại lịch sử các thao tác hoặc danh sách nhân viên vào một tệp văn bản ngoài mang tên `employees.txt`.
+[MINDMAP_NODE: id="sec_4_context" | label="Employees File Management" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** 
+  - Sử dụng khối **try-except** để bắt lỗi khi người dùng nhập chữ cái thay vì số (`ValueError`) hoặc nhập số `0` ở mẫu số (`ZeroDivisionError`).
+  - Sử dụng hàm **open("employees.txt", "a")** để bổ sung thêm tên nhân viên mới vào cuối tệp mà không làm ghi đè danh sách cũ.
+[MINDMAP_NODE: id="sec_4_application" | label="Try/Except Implementation" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Chương trình hoạt động cực kỳ bền bỉ. Dù người dùng cố tình nhập dữ liệu sai định dạng, ứng dụng không hề bị văng ra ngoài mà vẫn hiển thị thông báo cảnh báo thân thiện, đồng thời các dữ liệu hợp lệ được ghi nhận chính xác vào tệp lưu trữ.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Common Exceptions & Best Practices" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:**
+  - *Bắt lỗi chung chung (Bare except):* Viết `except:` mà không chỉ định rõ loại lỗi khiến việc gỡ rối (debugging) trở nên vô cùng khó khăn vì nó che giấu cả các lỗi hệ thống quan trọng.
+  - *Quên đóng tệp:* Mở tệp nhưng quên gọi phương thức **close()**, dẫn đến rò rỉ bộ nhớ hoặc khóa tệp trên hệ điều hành.
+  - *Nhầm lẫn chế độ ghi tệp:* Sử dụng nhầm chế độ `"w"` thay vì `"a"`, khiến toàn bộ dữ liệu cũ trong tệp bị xóa trắng một cách đáng tiếc.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Bare Except & File Leaks" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn bắt chính xác tên ngoại lệ (ví dụ: `except ValueError:`), luôn đóng tệp sau khi thao tác xong, hoặc ưu tiên sử dụng cấu trúc ngữ cảnh **with** (`with open(...) as file:`) để Python tự động quản lý việc đóng tệp một cách an toàn và gọn gàng nhất.
+[MINDMAP_NODE: id="sec_5_best" | label="Context Manager With" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Safe Division & File Logger" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Viết một chương trình Python yêu cầu người dùng nhập vào hai số nguyên `a` và `b`. Thực hiện phép tính chia `a / b`. Sử dụng **try-except** để bắt lỗi `ZeroDivisionError` và `ValueError`. Nếu không có lỗi, in ra kết quả màn hình và ghi kết quả đó vào một tệp văn bản có tên `results.txt`.
+[MINDMAP_NODE: id="sec_6_basic" | label="Safe Division Exercise" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Nâng cấp chương trình trên thành một ứng dụng quản lý danh sách việc cần làm (To-Do List). Cho phép người dùng nhập các công việc mới, ghi chúng vào tệp `todo.txt` ở chế độ nối tiếp (`"a"`), và khi người dùng chọn đọc, chương trình sẽ mở tệp đọc toàn bộ nội dung ra màn hình, đồng thời xử lý ngoại lệ an toàn nếu tệp chưa từng được tạo trước đó.
+[MINDMAP_NODE: id="sec_6_advanced" | label="To-Do List Application" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Python Built-in Exceptions Doc" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Tài liệu tài nguyên lập trình Python chính thống về quản lý ngoại lệ và thao tác tệp tin.
+[MINDMAP_NODE: id="sec_7_official" | label="Python Docs I/O" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'try-except', 'open()', 'Điều kiện tiên quyết:', 'Định nghĩa & Bản chất:', 'exception', 'file I/O', 'Nguyên lý/Cơ chế:', 'try-except', 'try', 'try', 'except', 'read mode', 'write mode', 'append mode', 'Sơ đồ/Mô hình:', 'close()', 'Quy trình từng bước (Step-by-step):', 'try']
+Timestamp links found: []
+
+
+================================================================================
+FILE 10: Bài 10: Lập trình hướng đối tượng (Classes & Objects)
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Python Object-Oriented Programming" | parent_id="root" | type="main"]
+# Lập trình hướng đối tượng trong Python (Classes & Objects)
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="OOP Fundamentals & Objectives" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Làm thế nào để mô hình hóa các thực thể trong thế giới thực thành các cấu trúc dữ liệu và logic có tính tái sử dụng cao trong Python?
+- **Kết quả học tập:** Sau bài học này, học viên có thể định nghĩa các **class** tùy chỉnh, khởi tạo và thao tác với các **object**, hiểu rõ vai trò của **constructor** và phương thức đối tượng.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Classes and Objects" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Nắm vững hàm (**Functions**), cấu trúc dữ liệu cơ bản (List, Dictionary) và cách quản lý tệp tin trong Python.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Object-Oriented Core Concepts" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Lập trình hướng đối tượng (**OOP**) là một trường phái lập trình dựa trên khái niệm về "đối tượng", nơi chứa cả dữ liệu (thuộc tính) và mã lệnh (phương thức).
+[MINDMAP_NODE: id="sec_2_definitions" | label="Class and Object" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Một **class** hoạt động như một bản vẽ kỹ thuật (blueprint) hoặc khuôn mẫu, trong khi **object** là thực thể cụ thể được đúc ra từ khuôn mẫu đó. Phương thức khởi tạo **__init__** đóng vai trò thiết lập trạng thái ban đầu cho đối tượng khi nó vừa sinh ra.
+[MINDMAP_NODE: id="sec_2_principles" | label="Constructor Method" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Mô hình hóa đối tượng qua cấu trúc: `Blueprint (Class) → Instantiation → Instance (Object)`.
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Object Creation Workflow" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. Định nghĩa tên class bằng từ khóa `class`.
+  2. Xây dựng phương thức khởi tạo **__init__** với tham số `self`.
+  3. Khai báo các thuộc tính gắn liền với đối tượng thông qua `self.attribute`.
+  4. Viết các phương thức hành vi (methods) để thao tác với dữ liệu của đối tượng.
+  5. Tiến hành khởi tạo (**instantiation**) các đối tượng thực tế từ class.
+[MINDMAP_NODE: id="sec_3_steps" | label="Class Definition Steps" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Mô hình thiết kế đối tượng hướng miền dữ liệu (Domain-driven modeling).
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Student Management System" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Xây dựng một hệ thống quản lý thông tin sinh viên cho một trường đại học, nơi cần lưu trữ họ tên, ngành học, điểm số và kiểm tra xem sinh viên đó có đạt chuẩn tốt nghiệp hay không.
+[MINDMAP_NODE: id="sec_4_context" | label="Student Data Modeling" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Xây dựng một class `Student` với các thuộc tính `name`, `major`, `gpa`, và một phương thức `is_on_honor_roll()` để trả về kết quả logic dựa trên điểm số.
+[MINDMAP_NODE: id="sec_4_application" | label="Student Class Implementation" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Mã nguồn trở nên gọn gàng, trực quan và dễ mở rộng khi số lượng sinh viên tăng lên hàng nghìn đối tượng mà không cần dùng đến các cấu trúc dữ liệu rời rạc phức tạp.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Common OOP Pitfalls" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:** 
+  - Quên truyền tham số `self` vào đầu mỗi phương thức trong class, dẫn đến lỗi `TypeError`.
+  - Nhầm lẫn giữa biến của class (class variables) và biến của đối tượng (instance variables).
+  - Không gọi đúng tên phương thức khởi tạo **__init__** (viết sai cú pháp dấu gạch dưới kép).
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Missing Self Parameter" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Tuân thủ quy tắc đặt tên chuẩn **PascalCase** cho tên class (ví dụ: `StudentProfile`, `ShoppingCart`) và luôn viết **docstring** mô tả ngắn gọn chức năng của class.
+[MINDMAP_NODE: id="sec_5_best" | label="PascalCase Convention" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Question Class Exercise" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Viết một class `Question` nhận vào hai tham số `prompt` (câu hỏi) và `answer` (đáp án chuẩn), sau đó khởi tạo danh sách các câu hỏi trắc nghiệm.
+[MINDMAP_NODE: id="sec_6_basic" | label="Question Object Modeling" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Mở rộng class `Question` bằng cách thêm một phương thức `evaluate_response(user_answer)` để kiểm tra tính đúng sai và tự động cộng điểm cho người chơi.
+[MINDMAP_NODE: id="sec_6_advanced" | label="Quiz Evaluation Method" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Python Official Documentation" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Tài liệu chính thức từ Python.org về **Classes** và cơ chế lập trình hướng đối tượng.
+[MINDMAP_NODE: id="sec_7_official" | label="Python Classes Docs" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Kết quả học tập:', 'class', 'object', 'constructor', 'Điều kiện tiên quyết:', 'Functions', 'Định nghĩa & Bản chất:', 'OOP', 'Nguyên lý/Cơ chế:', 'class', 'object', '__init__', 'Sơ đồ/Mô hình:', 'Quy trình từng bước (Step-by-step):', '__init__', 'instantiation', 'Framework/Model áp dụng:', 'Bối cảnh:', 'Áp dụng:']
+Timestamp links found: []
+
+
+================================================================================
+FILE 11: Bài 11: Tính kế thừa (Inheritance) trong Python
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Python Inheritance" | parent_id="root" | type="main"]
+# Bài 11: Tính kế thừa (Inheritance) trong Python
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Inheritance Fundamentals" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Làm thế nào để tái sử dụng mã nguồn giữa các **class** mà không phải lặp lại cấu trúc (DRY principle)?
+- **Kết quả học tập:** Sau bài này, người học sẽ nắm vững cách thiết lập **parent class** và **child class**, ghi đè phương thức (**method overriding**) và mở rộng chức năng hệ thống hướng đối tượng.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Parent and Child Class" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Đã nắm vững kiến thức cơ bản về lập trình hướng đối tượng (**OOP**) và cách khởi tạo **object** trong Python.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Inheritance Concepts" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Kế thừa (**inheritance**) là cơ chế cho phép một lớp con (**subclass**) kế thừa toàn bộ thuộc tính và phương thức từ lớp cha (**superclass**). Điều này tạo ra một hệ thống phân cấp logic, giảm thiểu sự trùng lặp mã nguồn (**code duplication**) và tăng tính bảo trì.
+[MINDMAP_NODE: id="sec_2_definitions" | label="Superclass and Subclass" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Khi gọi một thuộc tính hoặc phương thức trên **subclass**, Python sẽ tìm kiếm trực tiếp trong lớp đó trước. Nếu không tìm thấy, nó sẽ tự động leo ngược lên lớp cha (**parent class**) thông qua cây phân cấp kế thừa.
+[MINDMAP_NODE: id="sec_2_principles" | label="Method Resolution Order" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Sơ đồ phân cấp cây hướng đối tượng (**Class Hierarchy Tree**): Mô tả quan hệ "Is-A" (Ví dụ: `Chef` là một trường hợp đặc biệt của `Employee`).
+[MINDMAP_NODE: id="sec_2_models" | label="Class Hierarchy Tree" | parent_id="sec_2" | type="sub"]
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Inheritance Workflow" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. Định nghĩa **base class** với các thuộc tính và phương thức chung.
+  2. Tạo **subclass** và truyền **base class** vào trong dấu ngoặc đơn `class SubClass(BaseClass):`.
+  3. Sử dụng hàm **super()** để gọi phương thức khởi tạo từ lớp cha nếu cần mở rộng thêm thuộc tính mới.
+[MINDMAP_NODE: id="sec_3_steps" | label="Super Function Setup" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Mô hình phân rã hướng đối tượng (**Object-Oriented Decomposition**), nguyên lý mở/đóng (**Open-Closed Principle - OCP**).
+[MINDMAP_NODE: id="sec_3_frameworks" | label="Open Closed Principle" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** Phân biệt giữa quan hệ "Is-A" (dùng kế thừa) và "Has-A" (dùng composition/tập hợp).
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Chef and Employee Case" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Giả sử bạn đang xây dựng phần mềm quản lý nhân sự cho một nhà hàng. Bạn đã có lớp `Employee` chuyên quản lý thông tin chung và hành vi chấm công của mọi nhân viên.
+[MINDMAP_NODE: id="sec_4_context" | label="Employee Management System" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Tạo một lớp đặc thù mang tên `Chef` kế thừa từ `Employee`. Lớp `Chef` này không chỉ sở hữu các phương thức `make_chicken()` và `make_salad()` cơ bản giống mọi nhân viên, mà còn được bổ sung thêm kỹ năng chuyên biệt `make_special_dish()` cùng khả năng ghi đè phương thức quản lý thực đơn.
+[MINDMAP_NODE: id="sec_4_application" | label="Method Overriding Chef" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Mã nguồn trở nên gọn gàng hơn đáng kể, tránh việc viết lại các đoạn logic chung cho từng loại nhân viên khác nhau.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Inheritance Pitfalls" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:** 
+  - Lạm dụng đa kế thừa (**multiple inheritance**) gây phức tạp cấu trúc (gọi là "Diamond Problem").
+  - Quên gọi hàm khởi tạo của lớp cha dẫn đến thiếu hụt thuộc tính cơ sở.
+  - Vi phạm nguyên tắc "Is-A" bằng cách ép buộc kế thừa giữa các đối tượng không có quan hệ logic thực tế.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Diamond Problem Pitfall" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Giữ cho cây phân cấp kế thừa nông (thường không quá 2-3 tầng), ưu tiên sử dụng composition khi không chắc chắn về quan hệ phân cấp chặt chẽ.
+[MINDMAP_NODE: id="sec_5_best" | label="Shallow Hierarchy Rule" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Vehicle Inheritance Exercise" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Xây dựng một lớp `Vehicle` chứa các thuộc tính chung như `brand` và `speed`, kèm phương thức `drive()`. Sau đó, tạo lớp con `ElectricCar` kế thừa từ `Vehicle`, bổ sung thêm thuộc tính `battery_capacity` và phương thức `charge()`.
+[MINDMAP_NODE: id="sec_6_basic" | label="ElectricCar Subclass" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Thiết kế hệ thống phân cấp cho các loại tài khoản ngân hàng (`BankAccount`, `SavingsAccount`, `CheckingAccount`) với các quy tắc tính lãi suất khác nhau thông qua việc ghi đè phương thức.
+[MINDMAP_NODE: id="sec_6_advanced" | label="Bank Account Hierarchy" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Python OOP Documentation" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Tài liệu chính thức về Lập trình hướng đối tượng từ trang chủ Python Documentation và cuốn sách "Fluent Python" của Luciano Ramalho.
+[MINDMAP_NODE: id="sec_7_official" | label="Fluent Python Guide" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'class', 'Kết quả học tập:', 'parent class', 'child class', 'method overriding', 'Điều kiện tiên quyết:', 'OOP', 'object', 'Định nghĩa & Bản chất:', 'inheritance', 'subclass', 'superclass', 'code duplication', 'Nguyên lý/Cơ chế:', 'subclass', 'parent class', 'Sơ đồ/Mô hình:', 'Class Hierarchy Tree', 'Quy trình từng bước (Step-by-step):']
+Timestamp links found: []
+
+
+================================================================================
+FILE 12: Bài 12: Xây dựng ứng dụng trắc nghiệm thực tế
+================================================================================
+
+[MINDMAP_NODE: id="root" | label="Xây dựng ứng dụng trắc nghiệm" | parent_id="root" | type="main"]
+# Bài 12: Xây dựng ứng dụng trắc nghiệm thực tế
+
+---
+
+## 1. 🎯 Tổng quan & Mục tiêu học tập
+[MINDMAP_NODE: id="sec_1" | label="Tổng quan ứng dụng trắc nghiệm" | parent_id="root" | type="main"]
+
+- **Câu hỏi cốt lõi:** Làm thế nào để tổng hợp toàn bộ các kiến thức nền tảng như **Class**, **Object**, **List** và cấu trúc điều khiển thành một sản phẩm phần mềm hoàn chỉnh, có tính ứng dụng cao và trải nghiệm người dùng mượt mà?
+- **Kết quả học tập:** Sau bài học này, người học sẽ có khả năng tự thiết kế cấu trúc dữ liệu cho một hệ thống hỏi đáp, viết mã nguồn quản lý trạng thái câu hỏi, xử lý điểm số thông qua lập trình hướng đối tượng và áp dụng tư duy modular hóa mã nguồn.
+[MINDMAP_NODE: id="sec_1_objectives" | label="Mục tiêu thiết kế ứng dụng" | parent_id="sec_1" | type="sub"]
+- **Điều kiện tiên quyết:** Nắm vững kiến thức về **Classes & Objects**, phương thức khởi tạo **__init__**, cách duyệt danh sách và xử lý ngoại lệ cơ bản trong các bài học trước.
+
+---
+
+## 2. 📚 Kiến thức nền tảng & Khái niệm cốt lõi
+[MINDMAP_NODE: id="sec_2" | label="Kiến trúc hướng đối tượng" | parent_id="root" | type="main"]
+
+- **Định nghĩa & Bản chất:** Để xây dựng một ứng dụng trắc nghiệm chuyên nghiệp, chúng ta không thể chỉ sử dụng các biến rời rạc mà phải mô hình hóa dữ liệu thành các thực thể độc lập. **Question Class** là bản thiết kế (blueprint) định nghĩa cấu trúc của một câu hỏi, bao gồm nội dung câu hỏi và các đáp án.
+[MINDMAP_NODE: id="sec_2_definitions" | label="Question Class & Object" | parent_id="sec_2" | type="sub"]
+- **Nguyên lý/Cơ chế:** Cơ chế hoạt động dựa trên sự tương tác giữa **Object** (thể hiện cụ thể của câu hỏi) và vòng lặp điều khiển chính (main loop). Khi người dùng nhập đáp án, hệ thống sẽ so sánh giá trị này với thuộc tính lưu đáp án đúng bên trong object đó để tích lũy điểm số.
+[MINDMAP_NODE: id="sec_2_principles" | label="Cơ chế so sánh đáp án" | parent_id="sec_2" | type="sub"]
+- **Sơ đồ/Mô hình:** Mô hình kiến trúc phân lớp gồm tầng dữ liệu (Data Layer chứa danh sách câu hỏi), tầng logic (Business Logic xử lý điểm số và lượt chơi) và tầng giao diện dòng lệnh (CLI Presentation Layer).
+[MINDMAP_NODE: id="sec_2_models" | label="Mô hình phân lớp ứng dụng" | parent_id="sec_2" | type="sub"]
+
+---
+
+## 3. 🛠️ Quy trình / Phương pháp / Framework cốt lõi
+[MINDMAP_NODE: id="sec_3" | label="Quy trình phát triển trắc nghiệm" | parent_id="root" | type="main"]
+
+- **Quy trình từng bước (Step-by-step):** 
+  1. Định nghĩa lớp **Question** với hai tham số cơ bản là **prompt** (nội dung) và **answer** (đáp án đúng).
+  2. Khởi tạo danh sách các câu hỏi từ lớp **Question** vừa định nghĩa để tạo thành bộ ngân hàng đề thi.
+  3. Xây dựng hàm điều phối bài thi (**run_test**) nhận vào danh sách câu hỏi, duyệt qua từng phần tử bằng vòng lặp.
+  4. Thu thập dữ liệu đầu vào từ người dùng thông qua hàm **input()** và đối chiếu kết quả.
+  5. Tổng kết và in ra màn hình điểm số đạt được trên tổng số câu hỏi.
+[MINDMAP_NODE: id="sec_3_steps" | label="Các bước xây dựng chương trình" | parent_id="sec_3" | type="sub"]
+- **Framework/Model áp dụng:** Áp dụng mô hình **Separation of Concerns** (Phân tách mối quan tâm) bằng cách tách biệt hoàn toàn định nghĩa cấu trúc câu hỏi khỏi logic điều khiển luồng trò chơi.
+[MINDMAP_NODE: id="sec_3_frameworks" | label="Separation of Concerns" | parent_id="sec_3" | type="sub"]
+- **Bảng tham số/Quy tắc quyết định:** Quy tắc chấm điểm dựa trên phép so sánh chuỗi chính xác tuyệt đối (case-sensitive hoặc chuẩn hóa về chữ thường bằng phương thức **lower()** để tránh lỗi ngớ ngẩn từ người dùng).
+
+---
+
+## 4. 💡 Ví dụ minh họa / Case Study thực tế
+[MINDMAP_NODE: id="sec_4" | label="Case Study Quiz Application" | parent_id="root" | type="main"]
+
+- **Bối cảnh:** Một giảng viên công nghệ muốn tạo ra một bài kiểm tra trắc nghiệm kiến thức lập trình cơ bản gồm 3 câu hỏi về màu sắc, toán học và khoa học để kiểm tra nhanh năng lực học viên trên môi trường dòng lệnh.
+[MINDMAP_NODE: id="sec_4_context" | label="Xây dựng bộ câu hỏi mẫu" | parent_id="sec_4" | type="sub"]
+- **Áp dụng:** Viết mã nguồn Python hoàn chỉnh. Đầu tiên, định nghĩa class **Question**:
+  ```python
+  class Question:
+      def __init__(self, prompt, answer):
+          self.prompt = prompt
+          self.answer = answer
+  ```
+  Sau đó, tạo mảng câu hỏi và hàm chạy bài kiểm tra:
+  ```python
+  question_prompts = [
+      "Quả táo có màu gì?\n(a) Đỏ\n(b) Xanh\n(c) Vàng\n\n",
+      "2 + 2 bằng mấy?\n(a) 3\n(b) 4\n(c) 5\n\n",
+      "Mặt trời mọc hướng nào?\n(a) Tây\n(b) Bắc\n(c) Đông\n\n"
+  ]
+  questions = [
+      Question(question_prompts[0], "a"),
+      Question(question_prompts[1], "b"),
+      Question(question_prompts[2], "c")
+  ]
+  def run_test(questions):
+      score = 0
+      for question in questions:
+          answer = input(question.prompt)
+          if answer == question.answer:
+              score += 1
+      print(f"Bạn trả lời đúng {score}/{len(questions)} câu!")
+  run_test(questions)
+  ```
+[MINDMAP_NODE: id="sec_4_application" | label="Triển khai mã nguồn Python" | parent_id="sec_4" | type="sub"]
+- **Kết quả & Phân tích:** Chương trình chạy ổn định, hiển thị lần lượt các câu hỏi, ghi nhận chính xác phản hồi từ người dùng và đưa ra tổng kết điểm số tổng quan. Đây là minh chứng tuyệt vời cho việc kết hợp nhịp nhàng giữa **Object-Oriented Programming** và cấu trúc dữ liệu tuyến tính.
+
+---
+
+## 5. ⚠️ Sai lầm thường gặp & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Sai lầm và Best Practices" | parent_id="root" | type="main"]
+
+- **3-5 Sai lầm phổ biến:**
+  1. Quên định nghĩa phương thức khởi tạo **__init__** dẫn đến lỗi không truyền được tham số vào đối tượng.
+  2. So sánh chuỗi trực tiếp mà không xử lý khoảng trắng thừa hoặc chữ hoa/chữ thường khiến người dùng nhập đúng đáp án "A" nhưng vẫn bị tính là sai.
+  3. Hardcode dữ liệu trực tiếp trong hàm điều khiển thay vì tách biệt thành các **Class** và **Object** độc lập, làm giảm khả năng mở rộng.
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Lỗi so sánh và cấu trúc" | parent_id="sec_5" | type="sub"]
+- **Best Practices / Quy chuẩn:** Luôn chuẩn hóa dữ liệu đầu vào bằng các hàm xử lý chuỗi như **strip()** và **lower()** trước khi tiến hành đối chiếu kết quả. Đặt tên biến và tên lớp tuân thủ chuẩn **PEP 8** (ví dụ: dùng **CamelCase** cho tên Class và **snake_case** cho tên hàm).
+[MINDMAP_NODE: id="sec_5_best" | label="Chuẩn hóa đầu vào với strip" | parent_id="sec_5" | type="sub"]
+
+---
+
+## 6. 🧪 Bài tập thực hành & Tự đánh giá
+[MINDMAP_NODE: id="sec_6" | label="Bài tập mở rộng trắc nghiệm" | parent_id="root" | type="main"]
+
+- **Bài tập 1 (Áp dụng cơ bản):** Mở rộng ứng dụng trắc nghiệm hiện tại lên 5 câu hỏi thuộc chủ đề lịch sử hoặc địa lý. Thêm tính năng hiển thị thông báo "Chính xác!" hoặc "Sai rồi!" ngay sau khi người dùng nhập đáp án cho mỗi câu hỏi.
+[MINDMAP_NODE: id="sec_6_basic" | label="Mở rộng 5 câu hỏi lịch sử" | parent_id="sec_6" | type="sub"]
+- **Bài tập 2 (Mở rộng/Tư duy phản biện):** Thiết kế thêm một lớp **QuizManager** chuyên quản lý danh sách câu hỏi, lưu trữ lịch sử điểm số của người chơi vào một file văn bản bên ngoài bằng cách ứng dụng kiến thức đọc/ghi file từ các bài học trước.
+[MINDMAP_NODE: id="sec_6_advanced" | label="Xây dựng lớp QuizManager" | parent_id="sec_6" | type="sub"]
+
+---
+
+## 7. 📚 Tài liệu tham khảo & Nguồn mở rộng
+[MINDMAP_NODE: id="sec_7" | label="Tài liệu và nguồn mở rộng" | parent_id="root" | type="main"]
+
+- **Nguồn chính thức:** Tài liệu lập trình hướng đối tượng chính thức từ trang chủ Python Documentation và các tiêu chuẩn viết mã sạch **PEP 8 Style Guide**.
+[MINDMAP_NODE: id="sec_7_official" | label="Python Official Documentation" | parent_id="sec_7" | type="sub"]
+
+--- ANALYSIS ---
+Timestamp links: 0
+Bold terms: ['Câu hỏi cốt lõi:', 'Class', 'Object', 'List', 'Kết quả học tập:', 'Điều kiện tiên quyết:', 'Classes & Objects', '__init__', 'Định nghĩa & Bản chất:', 'Question Class', 'Nguyên lý/Cơ chế:', 'Object', 'Sơ đồ/Mô hình:', 'Quy trình từng bước (Step-by-step):', 'Question', 'prompt', 'answer', 'Question', 'run_test', 'input()']
+Timestamp links found: []
