@@ -87,6 +87,7 @@ export default function FileViewer({
   onRestoreContent,
   folderName,
   folderId,
+  initialSeek,
   onAiSummary,
 }) {
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -640,6 +641,14 @@ export default function FileViewer({
     );
   }
 
+  // Tự động nhảy giây trên video YouTube khi `initialSeek` có giá trị
+  useEffect(() => {
+    if (typeof initialSeek === "number" && initialSeek >= 0) {
+      // Gọi hàm handleSeek sẵn có trong FileViewer
+      handleSeek(initialSeek);
+    }
+  }, [initialSeek, file?.id]); // Chạy lại khi mốc thời gian hoặc file thay đổi
+
   const getYoutubeId = (url) => {
     if (!url) return null;
     const regExp =
@@ -765,7 +774,9 @@ export default function FileViewer({
       setIsSpeaking(false);
     } else {
       setIsSpeaking(true);
-      speakContent(file.content, () => {
+      // Loại bỏ thẻ neo mindmap trước khi truyền vào hệ thống đọc
+      const cleanContent = stripMindmapAnchors(file.content);
+      speakContent(cleanContent, () => {
         setIsSpeaking(false);
       });
     }
@@ -853,6 +864,30 @@ export default function FileViewer({
     (acc, t, i) => (t.seconds <= activeTime ? i : acc),
     -1,
   );
+
+  // Hàm chuyển đổi định dạng mốc thời gian dạng thành link dạng markdown timestamp://
+  function parseTimestampsToMarkdownLinks(content) {
+    if (!content) return "";
+    // Nhận diện cú pháp mốc thời gian dạng [MM:SS] hoặc [HH:MM:SS]
+    return content.replace(
+      /\[(\d{1,2}):(\d{2})(?::(\d{2}))?\]/g,
+      (match, p1, p2, p3) => {
+        let totalSeconds = 0;
+        if (p3 !== undefined) {
+          totalSeconds =
+            parseInt(p1, 10) * 3600 + parseInt(p2, 10) * 60 + parseInt(p3, 10);
+        } else {
+          totalSeconds = parseInt(p1, 10) * 60 + parseInt(p2, 10);
+        }
+        return `[${match}](timestamp://${totalSeconds})`;
+      },
+    );
+  }
+
+  // Tiền xử lý nội dung văn bản trước khi đưa vào ReactMarkdown
+  const processedContent = useMemo(() => {
+    return parseTimestampsToMarkdownLinks(file?.content || "");
+  }, [file?.content]);
 
   return (
     <div className="flex-1 bg-[rgb(var(--color-bg))] flex flex-col h-full overflow-hidden text-[rgb(var(--color-text-secondary))]">
@@ -1299,7 +1334,7 @@ export default function FileViewer({
                 remarkPlugins={[remarkGfm]}
                 components={FileMarkdownComponents}
               >
-                {stripMindmapAnchors(file.content)}
+                {stripMindmapAnchors(processedContent)}
               </ReactMarkdown>
             </article>
           )}
