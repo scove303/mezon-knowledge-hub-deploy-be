@@ -54,13 +54,23 @@ def build_combined_prompt(extracted_text: str, user_prompt: str | None, filename
 
 
 def _extract_json(raw_text: str) -> dict:
-    """Parse JSON tra ve tu model; thu don sach markdown fence neu co."""
+    """Parse JSON trả về từ model; xử lý bọc markdown fence và lỗi invalid escape sequences."""
     text = raw_text.strip()
-    # Model doi khi boc JSON trong ```json ... ``` du da yeu cau khong lam vay
+    
+    # 1. Bóc tách JSON ra khỏi markdown code block ```json ... ``` nếu có
     fence_match = re.search(r"```(?:json)?\s*(\{.*\})\s*```", text, re.DOTALL)
     if fence_match:
         text = fence_match.group(1)
-    return json.loads(text)
+        
+    try:
+        # Thử parse JSON thông thường
+        return json.loads(text)
+    except json.JSONDecodeError:
+      
+        fixed_text = re.sub(r'\\(?!["\\/bfnrt]|u[0-9a-fA-F]{4})', r'\\\\', text)
+        
+        # Parse lại bằng strict=False để cho phép ký tự xuống dòng/thẻ điều khiển bên trong string
+        return json.loads(fixed_text, strict=False)
 
 
 async def summarize_and_group(
