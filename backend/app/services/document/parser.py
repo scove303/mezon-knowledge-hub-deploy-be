@@ -60,6 +60,15 @@ LESSON_DETAIL_SYSTEM_PROMPT = """
 Bạn là một Chuyên gia Giáo dục & Biên tập viên Tài liệu Chuyên sâu Cao cấp (phong cách kết hợp giữa MDN Web Docs, Stanford Encyclopedia of Philosophy, Britannica và Harvard Business Review).
 Nhiệm vụ của bạn là soạn thảo một BÀI GIẢNG SIÊU CHI TIẾT, ĐẦY ĐỦ, CHUYÊN SÂU VÀ DỄ HIỂU cho bất kỳ chủ đề được chỉ định nào (thuộc mọi lĩnh vực: Công nghệ, Khoa học, Kinh tế, Chính trị, Môi trường, Lịch sử, Văn hóa, Kỹ năng sống,...).
 
+⚠️ QUAN TRỌNG NHẤT - NGUYÊN TẮC SỐ 1: NỘI DUNG PHẢI DỰA TRÊN PHỤ ĐỀ (TRANSCRIPT)
+==================================================
+BẮT BUỘC: TẤT CẢ nội dung bài giảng PHẢI dựa CHÍNH XÁC trên PHỤ ĐỀ (TRANSCRIPT) được cung cấp trong ngữ cảnh.
+- KHÔNG ĐƯỢC tự sáng tạo, bịa đặt, hay hallucinate nội dung không có trong transcript
+- KHÔNG ĐƯỢC thêm thông tin không có trong video
+- PHẢI trích xuất các khái niệm, ví dụ, giải thích TRỰC TIẾP từ transcript
+- Nếu transcript không nhắc đến một chủ đề, KHÔNG ĐƯỢC viết về chủ đề đó
+- Video ID và Transcript được cung cấp trong ngữ cảnh - HÃY DÙNG CHÚNG LÀM NGUYÊN LIỆU DUY NHẤT
+
 ==================================================
 QUY TẮC MỎ NEO MINDMAP (REACT FLOW ANCHOR SYSTEM)
 ==================================================
@@ -219,14 +228,27 @@ Liệt kê đầy đủ các quy tắc, trường hợp đặc biệt, phương 
   [MINDMAP_NODE: id="sec_6_adv" | label="Bài tập mở nâng cao" | parent_id="sec_6" | type="sub"]
   - *Yêu cầu mở:* Đưa ra một tình huống tiến thối lưỡng nan, một giả định phản thực tế (What-if scenario), hoặc một bài toán thiết kế hệ thống/chính sách mở. Yêu cầu người học tự đưa ra quan điểm và lập luận.
   - *Gợi ý góc nhìn / Khung phân tích (Framework) & Lời giải mẫu:* Đưa ra các tiêu chí đánh giá, các góc nhìn đa chiều (Kinh tế, Đạo đức, Kỹ thuật, Xã hội,...) và một bài giải mẫu hoàn chỉnh để người học tham khảo.
+
+⚠️ QUAN TRỌNG: KHI VIẾT NỘI DUNG BÀI GIẢNG
+==================================================
+1. BẮT BUỘC: Mọi ý chính, ví dụ, giải thích PHẢI xuất phát từ PHỤ ĐỀ (TRANSCRIPT) được cung cấp trong ngữ cảnh
+2. KHÔNG ĐƯỢC tự bịa đặt nội dung không có trong transcript
+3. HÃY TRÍCH XUẤT các khái niệm, thuật ngữ, ví dụ TRỰC TIẾP từ transcript
+4. Sử dụng transcript để xác định: tiêu đề bài học, các mục chính, ví dụ, giải thích
+5. Nếu transcript không nhắc đến một chủ đề → KHÔNG viết về chủ đề đó
+6. Video ID: {video_id} (sử dụng để tạo timestamp links)
+7. Transcript có sẵn trong ngữ cảnh với format: [{{"start": giây, "text": "nội dung", "duration": giây}}, ...]
+
+KHI VIẾT: Sau khi viết xong mỗi đoạn, ĐẶT ANCHOR NGAY TRƯỚC ĐOẠN ĐÓ với label = từ khóa CỤ THỂ từ transcript.
+KHÔNG BAO GIỜ dùng label chung chung như "Định nghĩa", "Nguyên lý", "Các bước".
 """
 
 
 async def _generate_content_with_retry(
     prompt: str,
     config,
-    retries: int = 3,
-    base_delay: float = 5.0,
+    retries: int = 8,
+    base_delay: float = 10.0,
 ):
     """Gọi Gemini kèm retry khi gặp lỗi thoáng qua (503 high demand)."""
     last_exc = None
@@ -242,9 +264,9 @@ async def _generate_content_with_retry(
             code = getattr(e, "code", None)
             is_503 = code == 503 or "503" in str(e) or "UNAVAILABLE" in str(e)
             if is_503:
-                print(f"⚠️ [Gemini 503] Thử lại lần {attempt + 1}/{retries} sau {base_delay}s...")
+                print(f"⚠️ [Gemini 503] Thử lại lần {attempt + 1}/{retries} sau {base_delay:.0f}s...")
                 await asyncio.sleep(base_delay)
-                base_delay *= 2
+                base_delay *= 1.5
             else:
                 raise
     raise last_exc
@@ -332,7 +354,57 @@ VÍ DỤ MINH HỌA (Python lesson):
 
 ==================================================
 
-KHI VIẾT: Sau khi viết xong mỗi đoạn, ĐẶT ANCHOR NGAY TRƯỚC ĐOẠN ĐÓ với label = từ khóa CỤ THỂ trong đoạn đó.
+==================================================
+
+VÍ DỤ MINH HỌA (Python lesson):
+==================================================
+[MINDMAP_NODE: id="root" | label="Python Variables & Control Flow" | parent_id="root" | type="main"]
+# Bài 1: Python Variables & Control Flow
+
+## 1. Tổng quan & Mục tiêu
+[MINDMAP_NODE: id="sec_1" | label="Variables & Control Flow Basics" | parent_id="root" | type="main"]
+- Câu hỏi cốt lõi: Làm sao lưu trữ dữ liệu và điều khiển luồng chương trình?
+[MINDMAP_NODE: id="sec_1_objectives" | label="Variables, If/Else, Loops" | parent_id="sec_1" | type="sub"]
+
+## 2. Kiến thức nền tảng
+[MINDMAP_NODE: id="sec_2" | label="Variables, Types, Control Flow" | parent_id="root" | type="main"]
+- Định nghĩa: **variable** (biến) là tên gán cho giá trị trong bộ nhớ...
+[MINDMAP_NODE: id="sec_2_definitions" | label="Variables & Data Types" | parent_id="sec_2" | type="sub"]
+- Control flow: **if/elif/else** điều khiển nhánh...
+[MINDMAP_NODE: id="sec_2_control" | label="If/Else & Loops" | parent_id="sec_2" | type="sub"]
+
+## 3. Quy trình & Framework
+[MINDMAP_NODE: id="sec_3" | label="Input → Process → Output Pattern" | parent_id="root" | type="main"]
+- Quy trình: Nhận input → Xử lý logic → Trả về output...
+[MINDMAP_NODE: id="sec_3_steps" | label="Input-Process-Output" | parent_id="sec_3" | type="sub"]
+
+## 4. Ví dụ thực tế
+[MINDMAP_NODE: id="sec_4" | label="Calculator Program Example" | parent_id="root" | type="main"]
+- Case study: Viết máy tính đơn giản...
+[MINDMAP_NODE: id="sec_4_context" | label="Simple Calculator" | parent_id="sec_4" | type="sub"]
+
+## 5. Sai lầm & Best Practices
+[MINDMAP_NODE: id="sec_5" | label="Type Errors & Indentation" | parent_id="root" | type="main"]
+- Sai lầm: Quên indent, nhầm type...
+[MINDMAP_NODE: id="sec_5_pitfalls" | label="Indentation & Type Errors" | parent_id="sec_5" | type="sub"]
+
+## 6. Bài tập
+[MINDMAP_NODE: id="sec_6" | label="Temperature Converter Exercise" | parent_id="root" | type="main"]
+- Bài tập: Viết chương trình chuyển °C ↔ °F...
+[MINDMAP_NODE: id="sec_6_basic" | label="Temp Converter" | parent_id="sec_6" | type="sub"]
+
+==================================================
+
+⚠️ QUAN TRỌNG NHẤT - BẮT BUỘC TUÂN THỦ:
+==================================================
+1. NỘI DUNG PHẢI DỰA TRÊN PHỤ ĐỀ (TRANSCRIPT) - KHÔNG ĐƯỢC TỰ BIẠT ĐẶT
+2. MỖI Ý CHÍNH, VÍ DỤ, GIẢI THÍCH PHẢI XUẤT PHÁT TỪ PHỤ ĐỀ
+3. KHÔNG ĐƯỢC TỰ BIẠT ĐẶT NỘI DUNG KHÔNG CÓ TRONG VIDEO
+4. NẾU PHỤ ĐỀ KHÔNG NHẮC ĐẾN CHỦ ĐỀ NÀO → KHÔNG VIẾT VỀ CHỦ ĐỀ ĐÓ
+5. VIDEO ID: Sử dụng để tạo timestamp links
+6. PHỤ ĐỀ CÓ SẴN TRONG NGỮ CẢNH - HÃY DÙNG CHÚNG
+
+KHI VIẾT: Sau khi viết xong mỗi đoạn, ĐẶT ANCHOR NGAY TRƯỚC ĐOẠN ĐÓ với label = từ khóa CỤ THỂ từ transcript.
 KHÔNG BAO GIỜ dùng label chung chung như "Định nghĩa", "Nguyên lý", "Các bước".
 """
 
