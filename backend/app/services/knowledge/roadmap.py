@@ -183,6 +183,7 @@ async def roadmap_service(
         session=session,
         user_id=user_id,
         roadmap_data=roadmap_data,
+        type="roadmap"
     )
 
     # Save prompt vector to DB for future semantic cache matches

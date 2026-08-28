@@ -7,11 +7,11 @@ from app.schemas.folder import FolderCreate
 from app.crud.folder import create_folder
 
 
-def store_folder_structure_roadmap(session: Session, user_id: int, roadmap_data: dict) -> Folder:
+def store_folder_structure_roadmap(session: Session, user_id: int, roadmap_data: dict,type: str) -> Folder:
     # 1. Tạo Folder Lộ trình mới bằng CRUD
     folder_in = FolderCreate(
         name=roadmap_data.get("folder_name", "Lộ trình học tập mới"),
-        type="roadmap"
+        type=type
     )
     new_folder = create_folder(session=session, data=folder_in, user_id=user_id)
 

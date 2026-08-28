@@ -901,28 +901,6 @@ export default function FileViewer({
             <h2 className="text-sm font-semibold text-[rgb(var(--color-text-primary))] truncate">
               {file.name}
             </h2>
-            {!zenOpen && (
-              <div className="flex items-center space-x-2 text-[10px] text-[rgb(var(--color-text-muted))] font-medium min-w-0 overflow-hidden">
-                <button
-                  onClick={() => folderId && store.setSelectedFolder(folderId)}
-                  className="truncate min-w-0 max-w-[200px] hover:text-indigo-400 transition-colors cursor-pointer"
-                  title="Về thư mục này"
-                >
-                  {folderName || "Thư mục gốc"}
-                </button>
-                <ChevronRight className="w-3 h-3 shrink-0" />
-                <span className="truncate min-w-0">{file.name}</span>
-                <span>•</span>
-                <Calendar className="w-3 h-3" />
-                <span>Cập nhật {file.createdAt}</span>
-                <span>•</span>
-                <FileText className="w-3 h-3" />
-                <span>
-                  {contentStats.words} từ • {contentStats.readingMinutes} phút
-                  đọc
-                </span>
-              </div>
-            )}
           </div>
         </div>
 

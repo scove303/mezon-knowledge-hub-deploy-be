@@ -154,7 +154,8 @@ NỘI DUNG NGUỒN (TRANSCRIPT HOẶC METADATA):
             new_folder = store_folder_structure_roadmap(
                 session=session,
                 user_id=user_id,
-                roadmap_data=roadmap_data
+                roadmap_data=roadmap_data,
+                type="youtube"
             )
 
             # Save embedding for future cache hits
