@@ -1,22 +1,34 @@
 "use client"; // Bắt buộc khi sử dụng React hooks
 
-import { useWorkspaceStore, CHAT_PANE_WIDTH_DEFAULT } from '@/features/folders/store';
-import { fileService } from '@/features/files/services';
-import { folderService } from '@/features/folders/services';
-import { aiService } from '@/features/ai/services';
-import FileViewer from '@/features/files/components/FileViewer';
-import ResizeHandle from '@/components/common/ResizeHandle';
-import dynamic from 'next/dynamic';
-import { useEffect, useState, use, useRef } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { MessageProps } from '@/components/chat/ChatMessage';
-import { PanelRightClose, PanelRight, Network, FileText, Upload, Loader2, Download, X } from 'lucide-react';
-import { useToastStore } from '@/stores/toast';
-import { useMediaQuery } from '@/hooks/useMediaQuery';
+import {
+  useWorkspaceStore,
+  CHAT_PANE_WIDTH_DEFAULT,
+} from "@/features/folders/store";
+import { fileService } from "@/features/files/services";
+import { folderService } from "@/features/folders/services";
+import { aiService } from "@/features/ai/services";
+import FileViewer from "@/features/files/components/FileViewer";
+import ResizeHandle from "@/components/common/ResizeHandle";
+import dynamic from "next/dynamic";
+import { useEffect, useState, use, useRef } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { MessageProps } from "@/components/chat/ChatMessage";
+import {
+  PanelRightClose,
+  PanelRight,
+  Network,
+  FileText,
+  Upload,
+  Loader2,
+  Download,
+  X,
+} from "lucide-react";
+import { useToastStore } from "@/stores/toast";
+import { useMediaQuery } from "@/hooks/useMediaQuery";
 
 // Tách bundle: Mindmap (@xyflow/react) và Chat chỉ tải khi cần
 const MindmapViewer = dynamic(
-  () => import('@/features/mindmap/components/MindmapViewer'),
+  () => import("@/features/mindmap/components/MindmapViewer"),
   {
     ssr: false,
     loading: () => (
@@ -26,11 +38,10 @@ const MindmapViewer = dynamic(
     ),
   },
 );
-const ChatHistory = dynamic(
-  () => import('@/components/chat/ChatHistory'),
-  { ssr: false },
-);
-const ChatInput = dynamic(() => import('@/components/chat/ChatInput'), {
+const ChatHistory = dynamic(() => import("@/components/chat/ChatHistory"), {
+  ssr: false,
+});
+const ChatInput = dynamic(() => import("@/components/chat/ChatInput"), {
   ssr: false,
   loading: () => (
     <div className="p-4 animate-pulse">
@@ -48,7 +59,7 @@ export default function FolderPage({
   const folderId = resolvedParams.folderId;
   const router = useRouter();
   const searchParams = useSearchParams();
-  const viewParam = searchParams.get('view');
+  const viewParam = searchParams.get("view");
 
   const {
     folders,
@@ -72,9 +83,11 @@ export default function FolderPage({
   const [isUploading, setIsUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
-  const isMobile = useMediaQuery('(max-width: 767px)');
-  const [showMindmap, setShowMindmap] = useState(
-    () => viewParam === "mindmap",
+  const isMobile = useMediaQuery("(max-width: 767px)");
+  const [showMindmap, setShowMindmap] = useState(() => viewParam === "mindmap");
+  // Thêm State lưu trữ mốc thời gian cần nhảy tới khi mở file từ Mindmap
+  const [initialSeekSeconds, setInitialSeekSeconds] = useState<number | null>(
+    null,
   );
   const [messages, setMessages] = useState<MessageProps[]>([
     {
@@ -177,7 +190,9 @@ export default function FolderPage({
       a.download = `${folder?.name || "thu-muc"}.md`;
       a.click();
       URL.revokeObjectURL(url);
-      useToastStore.getState().addToast("Đã xuất thư mục ra file .md", "success");
+      useToastStore
+        .getState()
+        .addToast("Đã xuất thư mục ra file .md", "success");
     } catch (err) {
       console.error("Lỗi export folder:", err);
       useToastStore.getState().addToast("Xuất thư mục thất bại", "error");
@@ -251,7 +266,10 @@ export default function FolderPage({
         setMessages((prev) =>
           prev.map((m) =>
             m.id === botMsg.id
-              ? { ...m, content: `Không thể tóm tắt: ${res.message || "lỗi không xác định"}` }
+              ? {
+                  ...m,
+                  content: `Không thể tóm tắt: ${res.message || "lỗi không xác định"}`,
+                }
               : m,
           ),
         );
@@ -265,7 +283,10 @@ export default function FolderPage({
       setMessages((prev) =>
         prev.map((m) =>
           m.id === botMsg.id
-            ? { ...m, content: `Lỗi: ${typeof msg === "string" ? msg : JSON.stringify(msg)}` }
+            ? {
+                ...m,
+                content: `Lỗi: ${typeof msg === "string" ? msg : JSON.stringify(msg)}`,
+              }
             : m,
         ),
       );
@@ -298,12 +319,15 @@ export default function FolderPage({
   const setStatusMessage = (content: string) => {
     if (statusMsgId.current) {
       setMessages((prev) =>
-        prev.map((m) => (m.id === statusMsgId.current ? { ...m, content } : m))
+        prev.map((m) => (m.id === statusMsgId.current ? { ...m, content } : m)),
       );
     } else {
       const id = `msg-${Date.now()}`;
       statusMsgId.current = id;
-      setMessages((prev) => [...prev, { id, role: "bot", content, isStatus: true }]);
+      setMessages((prev) => [
+        ...prev,
+        { id, role: "bot", content, isStatus: true },
+      ]);
     }
   };
 
@@ -314,7 +338,12 @@ export default function FolderPage({
   const appendBotMessage = (content: string, isStatus?: boolean) => {
     setMessages((prev) => [
       ...prev,
-      { id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`, role: "bot", content, isStatus },
+      {
+        id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        role: "bot",
+        content,
+        isStatus,
+      },
     ]);
   };
 
@@ -376,7 +405,7 @@ export default function FolderPage({
           onEdit: (evt: any) => {
             clearStatusMessage();
             appendBotMessage(
-              `Đã chỉnh sửa bài học: ${evt.title}\n(File: ${evt.file_id})`
+              `Đã chỉnh sửa bài học: ${evt.title}\n(File: ${evt.file_id})`,
             );
           },
           onDone: async () => {
@@ -412,7 +441,9 @@ export default function FolderPage({
         className={`relative flex flex-col shrink-0 h-full ${
           isDocumentSideOpen ? "border-r border-[rgb(var(--color-border))]" : ""
         }`}
-        style={{ width: isDocumentSideOpen ? (isMobile ? 0 : chatPaneWidth) : "100%" }}
+        style={{
+          width: isDocumentSideOpen ? (isMobile ? 0 : chatPaneWidth) : "100%",
+        }}
       >
         {isDocumentSideOpen && !isMobile && (
           <ResizeHandle
@@ -478,7 +509,9 @@ export default function FolderPage({
                   : "text-[rgb(var(--color-text-secondary))]"
               }`}
               title={showMindmap ? "Đóng sơ đồ tư duy" : "Xem sơ đồ tư duy"}
-              aria-label={showMindmap ? "Đóng sơ đồ tư duy" : "Xem sơ đồ tư duy"}
+              aria-label={
+                showMindmap ? "Đóng sơ đồ tư duy" : "Xem sơ đồ tư duy"
+              }
             >
               <Network size={20} />
             </button>
@@ -554,27 +587,43 @@ export default function FolderPage({
         {showMindmap ? (
           <MindmapViewer
             folderId={folderId}
-            onOpenLesson={(fileId: string, query?: string) => {
+            onOpenLesson={(
+              fileId: string,
+              query?: string,
+              seconds?: number,
+            ) => {
               let targetFileId = fileId;
 
-              // Nếu chưa có fileId trực tiếp (node concept tổng quát), tìm file chứa từ khóa trong folder
+              // 1. Lưu lại mốc thời gian giây (nếu nút trên Mindmap có thông tin này)
+              if (typeof seconds === "number" && seconds >= 0) {
+                setInitialSeekSeconds(seconds);
+              } else {
+                setInitialSeekSeconds(null);
+              }
+
+              // 2. Tìm fileId nếu là nút concept tổng quát
               if (!targetFileId && query && folder?.files?.length) {
                 const queryLower = query.toLowerCase();
-                const matched = folder.files.find((f: any) =>
-                  String(f.name || '').toLowerCase().includes(queryLower) ||
-                  String(f.markdown_content || '').toLowerCase().includes(queryLower)
+                const matched = folder.files.find(
+                  (f: any) =>
+                    String(f.name || "")
+                      .toLowerCase()
+                      .includes(queryLower) ||
+                    String(f.markdown_content || "")
+                      .toLowerCase()
+                      .includes(queryLower),
                 );
                 if (matched) {
                   targetFileId = matched.id;
                 }
               }
 
-              // Nếu vẫn chưa tìm được, lấy file đầu tiên của folder
+              // 3. Nếu vẫn chưa tìm được, chọn file đầu tiên
               if (!targetFileId && folder?.files?.length) {
                 targetFileId = folder.files[0].id;
               }
 
-              // Đặt searchQuery trong store để FileViewer tự động scroll & highlight từ khóa
+              // 4. Highlight từ khóa nếu có
               if (query) {
                 useWorkspaceStore.getState().setSearch(query);
               }
@@ -667,6 +716,7 @@ export default function FolderPage({
             file={fileDetails}
             folderName={folder?.name || ""}
             folderId={folderId}
+            initialSeek={initialSeekSeconds}
             onSaveContent={handleSaveContent}
             onAiSummary={handleAiSummary}
             onRestoreContent={(content: string) => {

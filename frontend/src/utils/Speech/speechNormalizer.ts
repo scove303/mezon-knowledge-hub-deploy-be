@@ -32,17 +32,48 @@ export const normalizeTextForSpeech = (markdownText: string): string => {
   if (!markdownText) return "";
   let text = markdownText;
 
+  // Bước 1: Chuyển đổi biểu thức toán học LaTeX
   text = convertLatexToSpokenVietnamese(text);
+
+  // Bước 2: Loại bỏ khối mã nguồn nhiều dòng (Code Blocks)
   text = text.replace(
     /```(\w+)?[\s\S]*?```/g,
     (_match, lang) => ` Khối mã nguồn ${lang || ""} được bỏ qua. `,
   );
+
+  // Bước 3: Loại bỏ mã nguồn nội dòng (Inline Code)
   text = text.replace(/`([^`]+)`/g, "$1");
+
+  // Bước 4: Loại bỏ thẻ neo Mindmap đặc thù [MINDMAP_NODE:xxx]
+  text = text.replace(/\[MINDMAP_NODE:[^\]]+\]/g, "");
+
+  // Bước 5: Loại bỏ liên kết hình ảnh ![mô tả](url) -> giữ lại mô tả nếu có
+  text = text.replace(/!\[([^\]]*)\]\([^)]+\)/g, "$1");
+
+  // Bước 6: Loại bỏ liên kết mốc thời gian timestamp:// và liên kết web thông thường [nhãn](url) -> giữ lại nhãn
   text = text.replace(/\[([^\]]+)\]\(timestamp:\/\/\d+\)/g, "$1");
   text = text.replace(/\[([^\]]+)\]\([^)]+\)/g, "$1");
-  text = text.replace(/[#*_~>|]/g, " ");
 
-  // Chuẩn hóa khoảng trắng ngang nhưng GIỮ LẠI dấu xuống dòng (\n)
+  // Bước 7: Loại bỏ thẻ HTML (nếu có)
+  text = text.replace(/<[^>]*>/g, " ");
+
+  // Bước 8: Loại bỏ cú pháp Bảng Markdown (Loại bỏ đường kẻ phân cách bảng và ký tự gạch đứng |)
+  text = text.replace(/^[\|\s\-:]+$/gm, "");
+  text = text.replace(/\|/g, " ");
+
+  // Bước 9: Loại bỏ ký hiệu Tiêu đề (#), Trích dẫn (>), Đường kẻ ngang (---, ***)
+  text = text.replace(/^#{1,6}\s+/gm, "");
+  text = text.replace(/^\s*>\s+/gm, "");
+  text = text.replace(/^[ \t]*[-*_]{3,}[ \t]*$/gm, "");
+
+  // Bước 10: Loại bỏ ký hiệu danh sách (gạch đầu dòng -, +, * hoặc số 1., 2.)
+  text = text.replace(/^[ \t]*[-+*]\s+/gm, "");
+  text = text.replace(/^[ \t]*\d+\.\s+/gm, "");
+
+  // Bước 11: Loại bỏ định dạng in đậm, in nghiêng, gạch ngang (*, _, ~)
+  text = text.replace(/[*_~]/g, "");
+
+  // Bước 12: Chuẩn hóa khoảng trắng ngang nhưng giữ lại dấu xuống dòng (\n)
   return text
     .split("\n")
     .map((line) => line.replace(/[ \t]+/g, " ").trim())
@@ -52,18 +83,18 @@ export const normalizeTextForSpeech = (markdownText: string): string => {
 
 export const splitTextIntoChunks = (
   text: string,
-  maxLength: number = 80, // Giới hạn an toàn (tối đa Google là ~100)
+  maxLength: number = 80,
 ): string[] => {
   if (!text) return [];
   const cleanText = normalizeTextForSpeech(text);
   if (!cleanText) return [];
 
-  // Bước 1: Tách dòng theo ký tự xuống dòng
+  // Tách dòng theo ký tự xuống dòng
   const lines = cleanText.split(/\n+/);
   const rawSegments: string[] = [];
 
   for (const line of lines) {
-    // Bước 2: Tách từng dòng theo dấu câu (. ? ! ; : ,) nhưng giữ lại ngắt câu tự nhiên
+    // Tách từng dòng theo dấu câu (. ? ! ; : ,) nhưng giữ ngắt câu tự nhiên
     const clauses = line
       .split(/(?<=[.?!;:,])\s+/)
       .map((c) => c.trim())
@@ -75,9 +106,8 @@ export const splitTextIntoChunks = (
   const chunks: string[] = [];
   let currentChunk = "";
 
-  // Bước 3: Gom các mệnh đề ngắn lại sao cho tổng chiều dài <= maxLength
+  // Gom các mệnh đề ngắn sao cho tổng chiều dài <= maxLength
   for (const segment of rawSegments) {
-    // Trường hợp câu/mệnh đề đơn lẻ vượt quá maxLength, bắt buộc phải cắt theo từ
     if (segment.length > maxLength) {
       if (currentChunk) {
         chunks.push(currentChunk);
@@ -97,7 +127,6 @@ export const splitTextIntoChunks = (
       continue;
     }
 
-    // Ghép câu/mệnh đề vào chunk hiện tại nếu chưa vượt ngưỡng
     const testChunk = currentChunk ? `${currentChunk} ${segment}` : segment;
     if (testChunk.length <= maxLength) {
       currentChunk = testChunk;

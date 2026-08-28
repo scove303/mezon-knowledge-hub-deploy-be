@@ -1,47 +1,38 @@
 import json
 import re
 from sqlmodel import Session
-from mezon_sdk.models import ChannelMessageContent
+from mezon_sdk.models import ChannelMessageContent, InteractiveMessageProps
+from mezon_sdk.structures.interactive_message import InteractiveBuilder
 
 from app.core.database import engine
 from app.bot.client import client
 from app.bot.commands.roadmap import run_roadmap_service
+from app.bot.utils.embeds import build_warning_embed
 
 
-def build_folder_tree_message(folder_name: str, folder_id: str, files: list) -> str:
-    web_ui_url = f"http://localhost:3001"
+def build_folder_tree_embed(folder_name: str, folder_id: str, files: list) -> InteractiveMessageProps:
+    builder = InteractiveBuilder(f"📁 {folder_name}")
+    builder.set_description(f"**{len(files)} bài học** • [Mở Web UI](http://localhost:3001)")
+    builder.set_color("#00BFFF")
 
-    # 1. Trích xuất danh sách (Object/Dict -> Tên string)
     file_names = [
         f.get("title") or f.get("name") if isinstance(f, dict) else getattr(f, "name", "Untitled")
         for f in files
     ]
 
-    # 2. Sort chuẩn theo số nguyên (Tránh lỗi Bài 10 đứng trước Bài 2)
     sorted_files = sorted(
         file_names, 
         key=lambda name: int(m.group()) if (m := re.search(r'\d+', name)) else 999
     )
 
-    # 3. Vẽ cây thư mục
-    tree_lines = [f"📁 **{folder_name}/**"]
-    total = len(sorted_files)
+    for i, name in enumerate(sorted_files[:15]):
+        builder.add_field(name=f"📄 {name}", value=" ", inline=False)
 
-    for i, name in enumerate(sorted_files):
-        branch = "└── 📄 " if i == total - 1 else "├── 📄 "
-        tree_lines.append(f"{branch}{name}")
+    if len(sorted_files) > 15:
+        builder.add_field(name="...", value=f"Và {len(sorted_files) - 15} bài khác", inline=False)
 
-    tree_str = "\n".join(tree_lines)
-
-    return (
-        f"🎉 **Lộ trình học tập đã được tạo thành công!**\n\n"
-        f"### 🗂️ Cấu trúc thư mục:\n"
-        f"```text\n"
-        f"{tree_str}\n"
-        f"```\n"
-        f"📊 **Tổng số bài học:** `{total} bài`\n\n"
-        f"👉 **[Bấm vào đây để mở và đọc chi tiết trên Web UI]({web_ui_url})**"
-    )
+    builder.set_footer(text="Mezon Knowledge Bot")
+    return InteractiveMessageProps(**builder.build())
 
 
 async def process_roadmap_task(channel_id: str, content: str, user_id: int) -> None:
@@ -72,18 +63,20 @@ async def process_roadmap_task(channel_id: str, content: str, user_id: int) -> N
             folder_id = getattr(response_data, "id", "")
             files = getattr(response_data, "files", [])
 
-        # 3. Tạo message chứa Folder Tree + Web Link
+        # 3. Tạo embed message
         if files:
-            full_text = build_folder_tree_message(folder_name, folder_id, files)
+            embed = build_folder_tree_embed(folder_name, folder_id, files)
+            message_text = f"✅ Lộ trình **{folder_name}** đã tạo xong!"
         else:
             # Fallback nếu không parse được danh sách file
-            full_text = f"✅ **Đã khởi tạo xong Folder:** `{folder_name}`\n\n*(Không tìm thấy bài học chi tiết)*"
+            embed = build_warning_embed(f"📁 {folder_name}", "Không tìm thấy bài học chi tiết")
+            message_text = f"✅ **Đã khởi tạo xong Folder:** `{folder_name}`"
 
         # 4. Lấy channel & Gửi tin nhắn qua Mezon Client
         channel = await client.channels.fetch(channel_id)
         
         await channel.send(
-            content=ChannelMessageContent(t=full_text)
+            content=ChannelMessageContent(t=message_text, embed=[embed])
         )
 
     except Exception as e:
@@ -92,7 +85,8 @@ async def process_roadmap_task(channel_id: str, content: str, user_id: int) -> N
             channel = await client.channels.fetch(channel_id)
             await channel.send(
                 content=ChannelMessageContent(
-                    t=f"❌ **Đã xảy ra lỗi khi tạo lộ trình:** {str(e)}"
+                    t="",
+                    embed=[InteractiveMessageProps(**InteractiveBuilder("❌ Lỗi tạo lộ trình").set_description(str(e)).set_color("#FF0000").build())]
                 )
             )
         except Exception as send_err:

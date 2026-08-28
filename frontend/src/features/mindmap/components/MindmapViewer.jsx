@@ -1,18 +1,37 @@
-'use client';
+"use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import React, {
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { ReactFlow, Controls, MarkerType } from "@xyflow/react";
+import "@xyflow/react/dist/style.css";
+import { toPng } from "html-to-image";
 import {
-  ReactFlow,
-  Controls,
-  MarkerType,
-} from '@xyflow/react';
-import '@xyflow/react/dist/style.css';
-import { toPng } from 'html-to-image';
-import { Loader2, Network, RefreshCw, SplitSquareHorizontal, Orbit, FileQuestion, ImageDown } from 'lucide-react';
-import MindmapNode from './MindmapNode';
-import KineticGrid from '@/components/ui/kinetic-grid';
-import { getMindmapData, getConceptMindmap, regenerateConceptMindmap } from '../services';
-import { buildTree, buildConceptTree, layoutHorizontal, layoutRadial } from '../layout';
+  Loader2,
+  Network,
+  RefreshCw,
+  SplitSquareHorizontal,
+  Orbit,
+  FileQuestion,
+  ImageDown,
+} from "lucide-react";
+import MindmapNode from "./MindmapNode";
+import KineticGrid from "@/components/ui/kinetic-grid";
+import {
+  getMindmapData,
+  getConceptMindmap,
+  regenerateConceptMindmap,
+} from "../services";
+import {
+  buildTree,
+  buildConceptTree,
+  layoutHorizontal,
+  layoutRadial,
+} from "../layout";
 
 const nodeTypes = { mindmapNode: MindmapNode };
 
@@ -21,8 +40,8 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
   const [isConceptData, setIsConceptData] = useState(false);
   const [loading, setLoading] = useState(true);
   const [regenerating, setRegenerating] = useState(false);
-  const [error, setError] = useState('');
-  const [layoutKind, setLayoutKind] = useState('horizontal');
+  const [error, setError] = useState("");
+  const [layoutKind, setLayoutKind] = useState("horizontal");
   const [flowKey, setFlowKey] = useState(0);
   const [refreshKey, setRefreshKey] = useState(0);
   const [hoveredId, setHoveredId] = useState(null);
@@ -38,12 +57,15 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
         if (!cancelled && conceptRes && conceptRes.root) {
           setData(conceptRes);
           setIsConceptData(true);
-          setError('');
+          setError("");
           setLoading(false);
           return;
         }
       } catch (err) {
-        console.warn('Lỗi lấy Concept Mindmap, chuyển sang Fallback legacy:', err);
+        console.warn(
+          "Lỗi lấy Concept Mindmap, chuyển sang Fallback legacy:",
+          err,
+        );
       }
 
       // Fallback: Lấy dữ liệu bài học cũ (File/Section based)
@@ -52,13 +74,13 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
         if (!cancelled) {
           setData(mindmapData);
           setIsConceptData(false);
-          setError('');
+          setError("");
           setLoading(false);
         }
       } catch (err) {
-        console.error('Lỗi tải dữ liệu mindmap legacy:', err);
+        console.error("Lỗi tải dữ liệu mindmap legacy:", err);
         if (!cancelled) {
-          setError('Không thể tải dữ liệu sơ đồ tư duy. Vui lòng thử lại.');
+          setError("Không thể tải dữ liệu sơ đồ tư duy. Vui lòng thử lại.");
           setLoading(false);
         }
       }
@@ -75,7 +97,7 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
 
   const refresh = () => {
     setLoading(true);
-    setError('');
+    setError("");
     setRefreshKey((k) => k + 1);
   };
 
@@ -89,26 +111,26 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
         setFlowKey((k) => k + 1);
       }
     } catch (err) {
-      console.error('Lỗi tạo lại mindmap:', err);
+      console.error("Lỗi tạo lại mindmap:", err);
     } finally {
       setRegenerating(false);
     }
   };
 
   const exportPng = useCallback(async () => {
-    const el = document.querySelector('.mindmap-canvas .react-flow');
+    const el = document.querySelector(".mindmap-canvas .react-flow");
     if (!el) return;
     try {
       const dataUrl = await toPng(el, {
-        backgroundColor: '#0b1220',
+        backgroundColor: "#0b1220",
         pixelRatio: 2,
       });
-      const a = document.createElement('a');
+      const a = document.createElement("a");
       a.download = `mindmap-${folderId}.png`;
       a.href = dataUrl;
       a.click();
     } catch (err) {
-      console.error('Lỗi xuất ảnh sơ đồ tư duy:', err);
+      console.error("Lỗi xuất ảnh sơ đồ tư duy:", err);
     }
   }, [folderId]);
 
@@ -121,7 +143,9 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
       tree = buildTree(data.folderName, data.files);
     }
     if (!tree) return null;
-    return layoutKind === 'radial' ? layoutRadial(tree) : layoutHorizontal(tree);
+    return layoutKind === "radial"
+      ? layoutRadial(tree)
+      : layoutHorizontal(tree);
   }, [data, isConceptData, layoutKind]);
 
   const childMap = useMemo(() => {
@@ -174,7 +198,7 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
             const inSubtree = subtreeIds ? subtreeIds.has(n.id) : false;
             return {
               ...n,
-              className: inSubtree ? 'mindmap-active' : undefined,
+              className: inSubtree ? "mindmap-active" : undefined,
               data: { ...n.data, dimmed: subtreeIds ? !inSubtree : false },
             };
           })
@@ -199,15 +223,15 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
                 ...e.style,
                 color: e.style.stroke,
                 opacity: subtreeIds ? (active ? 1 : 0.12) : 1,
-                transition: 'opacity 320ms cubic-bezier(0.4, 0, 0.2, 1)',
+                transition: "opacity 320ms cubic-bezier(0.4, 0, 0.2, 1)",
                 strokeWidth: isHoveredEdge
                   ? e.style.strokeWidth + 1.8
                   : e.style.strokeWidth,
               },
               className: active
                 ? isHoveredEdge
-                  ? 'mindmap-active mindmap-edge-hover'
-                  : 'mindmap-active'
+                  ? "mindmap-active mindmap-edge-hover"
+                  : "mindmap-active"
                 : undefined,
             };
           })
@@ -219,9 +243,17 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
     (_, flowNode) => {
       const nodeObj = flowNode.data?.node;
       const fileId = nodeObj?.fileId || flowNode.data?.fileId;
-      const query = nodeObj?.excerpt || nodeObj?.label || '';
+      const query = nodeObj?.excerpt || nodeObj?.label || "";
+
+      // Trích xuất số giây từ dữ liệu Nút (nếu backend trả về timestamp hoặc seconds)
+      const seconds =
+        nodeObj?.seconds || nodeObj?.timestamp
+          ? timeStringToSeconds(nodeObj.timestamp)
+          : null;
+
       if (onOpenLesson) {
-        onOpenLesson(fileId, query, nodeObj);
+        // Truyền thêm tham số seconds vào callback
+        onOpenLesson(fileId, query, nodeObj, seconds);
       }
     },
     [onOpenLesson],
@@ -311,10 +343,13 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
     return (
       <div className="flex-1 flex items-center justify-center text-[rgb(var(--color-text-muted))] p-8">
         <div className="flex flex-col items-center gap-3 text-center max-w-xs">
-          <FileQuestion size={40} className="text-[rgb(var(--color-text-disabled))]" />
+          <FileQuestion
+            size={40}
+            className="text-[rgb(var(--color-text-disabled))]"
+          />
           <p className="text-sm">
-            Thư mục chưa có bài học nào để vẽ sơ đồ tư duy. Hãy tạo lộ trình hoặc thêm tài liệu
-            trước.
+            Thư mục chưa có bài học nào để vẽ sơ đồ tư duy. Hãy tạo lộ trình
+            hoặc thêm tài liệu trước.
           </p>
         </div>
       </div>
@@ -337,11 +372,11 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
         </div>
         <div className="flex items-center gap-1.5">
           <button
-            onClick={() => switchLayout('horizontal')}
+            onClick={() => switchLayout("horizontal")}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-colors ${
-              layoutKind === 'horizontal'
-                ? 'bg-indigo-600 text-white border-indigo-500'
-                : 'text-[rgb(var(--color-text-secondary))] border-[rgb(var(--color-border))] hover:text-indigo-400'
+              layoutKind === "horizontal"
+                ? "bg-indigo-600 text-white border-indigo-500"
+                : "text-[rgb(var(--color-text-secondary))] border-[rgb(var(--color-border))] hover:text-indigo-400"
             }`}
             title="Bố cục ngang"
           >
@@ -349,11 +384,11 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
             Ngang
           </button>
           <button
-            onClick={() => switchLayout('radial')}
+            onClick={() => switchLayout("radial")}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs border transition-colors ${
-              layoutKind === 'radial'
-                ? 'bg-indigo-600 text-white border-indigo-500'
-                : 'text-[rgb(var(--color-text-secondary))] border-[rgb(var(--color-border))] hover:text-indigo-400'
+              layoutKind === "radial"
+                ? "bg-indigo-600 text-white border-indigo-500"
+                : "text-[rgb(var(--color-text-secondary))] border-[rgb(var(--color-border))] hover:text-indigo-400"
             }`}
             title="Bố cục tròn (tâm tỏa)"
           >
@@ -366,7 +401,10 @@ export default function MindmapViewer({ folderId, onOpenLesson }) {
             className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs bg-indigo-600/20 text-indigo-400 border border-indigo-500/30 hover:bg-indigo-600/30 transition-colors disabled:opacity-50"
             title="AI Tạo lại sơ đồ ý tưởng mới"
           >
-            <RefreshCw size={13} className={regenerating ? "animate-spin" : ""} />
+            <RefreshCw
+              size={13}
+              className={regenerating ? "animate-spin" : ""}
+            />
             {regenerating ? "Đang tạo lại..." : "Tạo lại AI"}
           </button>
           <button
