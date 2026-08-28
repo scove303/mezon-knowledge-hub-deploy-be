@@ -1,7 +1,7 @@
 import json
 import asyncio
 from sqlmodel import Session, select
-from mezon_sdk.models import ChannelMessageContent
+from mezon_sdk.models import ChannelMessageContent, InteractiveMessageProps
 from mezon_sdk.protobuf.api import api_pb2
 
 from app.bot.client import client
@@ -15,6 +15,12 @@ from app.bot.commands.folder import list_all_folder, get_folder_by_id
 from app.bot.commands.file import get_file_by_id
 from app.workers.tasks.youtube_task import process_youtube_native_pipeline
 from app.bot.commands.digest import _run_digest_pipeline
+from app.bot.utils.embeds import (
+    build_status_embed,
+    build_error_embed,
+    build_warning_embed,
+    build_help_embed,
+)
 
 PREFIX = "/"
 
@@ -79,6 +85,10 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
     text = text.strip()
     is_youtube_link = "youtube.com" in text.lower() or "youtu.be" in text.lower()
 
+    # Check for file attachments (handle before early return)
+    attachments = getattr(message, "attachments", []) or []
+    has_attachments = len(attachments) > 0
+
     # -----------------------------------------------------------------
     # PENDING CONFIRMATION HANDLER: xử lý "có"/"không" sau khi bot hỏi xác nhận
     # (chạy trước tất cả command check để không bị bỏ qua)
@@ -91,7 +101,8 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
             channel = await client.channels.fetch(message.channel_id)
             await channel.send(
                 content=ChannelMessageContent(
-                    t=f"⏳ Đang tạo lộ trình từ thông tin video **'{job['video_title']}'** (dùng tìm kiếm web)..."
+                    t="",
+                    embed=[build_status_embed("⏳ Đang tạo lộ trình", f"Từ video **'{job['video_title']}'** (tìm kiếm web)...")]
                 )
             )
             asyncio.create_task(_run_youtube_pipeline(channel, job["url"], job["user_id"], job["video_title"]))
@@ -99,8 +110,51 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
         elif reply in ("không", "khong", "no", "n", "thôi", "bỏ", "bo", "cancel"):
             pending_confirmations.pop(pending_key)
             channel = await client.channels.fetch(message.channel_id)
-            await channel.send(content=ChannelMessageContent(t="✅ Đã huỷ. Không tạo lộ trình từ video này."))
+            await channel.send(
+                content=ChannelMessageContent(
+                    t="",
+                    embed=[build_status_embed("✅ Đã huỷ", "Không tạo lộ trình từ video này.")]
+                )
+            )
             return
+
+    # -----------------------------------------------------------------
+    # AUTO HANDLE FILE ATTACHMENTS: chỉ khi gửi file MÀ KHÔNG CÓ LỆNH
+    # (text rỗng hoặc chỉ là text tự do, không bắt đầu bằng /)
+    # -----------------------------------------------------------------
+    if has_attachments and not text.startswith(PREFIX) and not is_youtube_link and not text:
+        user_id = get_or_create_user(message)
+        channel = await client.channels.fetch(message.channel_id)
+        first_file = attachments[0]
+        file_url = getattr(first_file, "url", None) or getattr(first_file, "file_url", "")
+        filename = getattr(first_file, "filename", None) or getattr(first_file, "name", "file.pdf")
+
+        if not file_url:
+            await channel.send(
+                content=ChannelMessageContent(
+                    t="",
+                    embed=[build_error_embed("❌ Lỗi", "Không tìm thấy link tải của file đính kèm.")]
+                )
+            )
+            return
+
+        await channel.send(
+            content=ChannelMessageContent(
+                t="",
+                embed=[build_status_embed("📰 Đã nhận file!", f"`{filename}` - Đang đọc, tóm tắt và phân loại...")]
+            )
+        )
+
+        asyncio.create_task(
+            _run_digest_pipeline(
+                channel=channel,
+                file_url=file_url,
+                filename=filename,
+                prompt=None,
+                user_id=user_id,
+            )
+        )
+        return
 
     if not text.startswith(PREFIX) and not is_youtube_link:
         return  # Bỏ qua nếu không phải tin nhắn dạng Command và không chứa link YouTube
@@ -116,7 +170,8 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
         if not content:
             await channel.send(
                 content=ChannelMessageContent(
-                    t="⚠️ **Thiếu chủ đề!** Cú pháp đúng: `/roadmap [chủ đề]`\n*Ví dụ: `/roadmap Python`*"
+                    t="",
+                    embed=[build_warning_embed("⚠️ Thiếu chủ đề!", "Cú pháp: `/roadmap [chủ đề]`\n*Ví dụ: `/roadmap Python`*")]
                 )
             )
             return
@@ -126,7 +181,8 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
         # Phản hồi tức thì cho người dùng
         await channel.send(
             content=ChannelMessageContent(
-                t=f"⏳ **Đang khởi tạo lộ trình cho:** `{content}`... Vui lòng đợi trong giây lát!"
+                t="",
+                embed=[build_status_embed("⏳ Đang khởi tạo lộ trình", f"Chủ đề: `{content}`... Vui lòng đợi!")]
             )
         )
 
@@ -144,8 +200,8 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
     # -----------------------------------------------------------------
     elif text.startswith("/listallfolders") or text.startswith("/folders"):
         user_id = get_or_create_user(message)
-        response_msg = list_all_folder(user_id=user_id)
-        await channel.send(content=ChannelMessageContent(t=response_msg))
+        embed = list_all_folder(user_id=user_id)
+        await channel.send(content=ChannelMessageContent(t="", embed=[embed]))
 
     # -----------------------------------------------------------------
     # COMMAND 3: /folder-id <folder_id> hoặc /folder <folder_id>
@@ -158,14 +214,15 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
         if not folder_id:
             await channel.send(
                 content=ChannelMessageContent(
-                    t="⚠️ **Thiếu Folder ID!** Cú pháp đúng: `/folder-id <id>`\n*Ví dụ: `/folder-id folder-a1b2c3d4`*"
+                    t="",
+                    embed=[build_warning_embed("⚠️ Thiếu Folder ID!", "Cú pháp: `/folder-id <id>`\n*Ví dụ: `/folder-id folder-a1b2c3d4`*")]
                 )
             )
             return
 
         user_id = get_or_create_user(message)
-        response_msg = get_folder_by_id(user_id=user_id, folder_id=folder_id)
-        await channel.send(content=ChannelMessageContent(t=response_msg))
+        embed = get_folder_by_id(user_id=user_id, folder_id=folder_id)
+        await channel.send(content=ChannelMessageContent(t="", embed=[embed]))
 
     # -----------------------------------------------------------------
     # COMMAND 4: /file-id <file_id> hoặc /file <file_id>
@@ -178,13 +235,14 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
         if not file_id:
             await channel.send(
                 content=ChannelMessageContent(
-                    t="⚠️ **Thiếu File ID!** Cú pháp đúng: `/file-id <id>`\n*Ví dụ: `/file-id file-x1y2z3`*"
+                    t="",
+                    embed=[build_warning_embed("⚠️ Thiếu File ID!", "Cú pháp: `/file-id <id>`\n*Ví dụ: `/file-id file-x1y2z3`*")]
                 )
             )
             return
 
-        response_msg = get_file_by_id(file_id=file_id)
-        await channel.send(content=ChannelMessageContent(t=response_msg))
+        embed = get_file_by_id(file_id=file_id)
+        await channel.send(content=ChannelMessageContent(t="", embed=[embed]))
 
     # -----------------------------------------------------------------
     # COMMAND 5: /revise <prompt/topic>
@@ -194,7 +252,8 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
         if not content:
             await channel.send(
                 content=ChannelMessageContent(
-                    t="⚠️ **Thiếu nội dung ôn tập!** Cú pháp: `/revise [chủ đề/file_id]`"
+                    t="",
+                    embed=[build_warning_embed("⚠️ Thiếu nội dung!", "Cú pháp: `/revise [chủ đề/file_id]`")]
                 )
             )
             return
@@ -202,7 +261,8 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
         # TODO: Hook service ôn tập / quiz tại đây
         await channel.send(
             content=ChannelMessageContent(
-                t=f"📝 **Tính năng Ôn tập (Revise):** Đang chuẩn bị bài tập ôn tập cho `{content}`..."
+                t="",
+                embed=[build_status_embed("📝 Tính năng Ôn tập", f"Đang chuẩn bị bài tập cho `{content}`...")]
             )
         )
 
@@ -216,7 +276,8 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
         if not attachments:
             await channel.send(
                 content=ChannelMessageContent(
-                    t="⚠️ **Thiếu file!** Vui lòng đính kèm file (.pdf, .docx, .txt) khi gõ lệnh `/digest`."
+                    t="",
+                    embed=[build_warning_embed("⚠️ Thiếu file!", "Vui lòng đính kèm file (.pdf, .docx, .txt) khi gõ `/digest`.")]
                 )
             )
             return
@@ -229,14 +290,16 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
         if not file_url:
             await channel.send(
                 content=ChannelMessageContent(
-                    t="❌ Không tìm thấy link tải của file đính kèm."
+                    t="",
+                    embed=[build_error_embed("❌ Lỗi", "Không tìm thấy link tải của file đính kèm.")]
                 )
             )
             return
 
         await channel.send(
             content=ChannelMessageContent(
-                t=f"📰 **Đã nhận file `{filename}`!** Đang tiến hành đọc, tóm tắt và phân loại vào workspace..."
+                t="",
+                embed=[build_status_embed("📰 Đã nhận file!", f"`{filename}` - Đang đọc, tóm tắt và phân loại...")]
             )
         )
 
@@ -259,7 +322,8 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
         if not url:
             await channel.send(
                 content=ChannelMessageContent(
-                    t="⚠️ **Thiếu đường dẫn YouTube!** Cú pháp: `/youtube <link_video>`"
+                    t="",
+                    embed=[build_warning_embed("⚠️ Thiếu đường dẫn!", "Cú pháp: `/youtube <link_video>`")]
                 )
             )
             return
@@ -270,7 +334,8 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
         # 1. Send initial status message
         await channel.send(
             content=ChannelMessageContent(
-                t=f"🎬 **YouTube Summarizer:** Đang phân tích video `{url}`..."
+                t="",
+                embed=[build_status_embed("🎬 YouTube Summarizer", f"Đang phân tích video `{url}`...")]
             )
         )
 
@@ -278,7 +343,7 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
         asyncio.create_task(_run_youtube_pipeline(channel, url, user_id, video_title))
 
     elif text.startswith("/help") or text.startswith("/start"):
-        await channel.send(content=ChannelMessageContent(t=get_help_message()))
+        await channel.send(content=ChannelMessageContent(t="", embed=[build_help_embed()]))
 
 
 async def _run_youtube_pipeline(channel, url: str, user_id: int, video_title: str):
@@ -293,42 +358,19 @@ async def _run_youtube_pipeline(channel, url: str, user_id: int, video_title: st
             )
         await channel.send(
             content=ChannelMessageContent(
-                t=f"✅ **Hoàn thành!** Lộ trình học tập từ video **'{video_title}'** đã được tạo vào workspace của bạn!"
+                t="",
+                embed=[build_status_embed("✅ Hoàn thành!", f"Lộ trình từ video **'{video_title}'** đã tạo xong!")]
             )
         )
     except Exception as e:
         print(f"[Mezon Bot Error]: {e}")
         await channel.send(
             content=ChannelMessageContent(
-                t=f"❌ **Lỗi:** Không thể xử lý video YouTube. Vui lòng kiểm tra lại đường dẫn."
+                t="",
+                embed=[build_error_embed("❌ Lỗi", "Không thể xử lý video YouTube. Kiểm tra lại đường dẫn.")]
             )
         )
 
 
 async def checklog(message: api_pb2.ChannelMessage):
     print(f"[BOT] Message received from sender: {message.sender_id}", flush=True)
-
-
-def get_help_message() -> str:
-    """Trả về tin nhắn hướng dẫn sử
-     dụng (Help Menu) đẹp mắt."""
-    return (
-        "🤖 **BẢNG HƯỚNG DẪN SỬ DỤNG MEZON KNOWLEDGE BOT**\n\n"
-        "Chào mừng bạn! Dưới đây là danh sách các lệnh bạn có thể sử dụng:\n\n"
-        "📌 **TẠO VÀ QUẢN LÝ LỘ TRÌNH HỌC TẬP:**\n"
-        "• `/roadmap <chủ đề>` — *Tạo lộ trình học tập toàn diện từ cơ bản tới nâng cao*\n"
-        "  └ *Ví dụ:* `/roadmap Lập trình Python cho người mới`\n\n"
-        "• `/listallfolders` *(hoặc `/folders`)* — *Xem danh sách các thư mục lộ trình của bạn*\n\n"
-        "• `/folder-id <id>` — *Xem cấu trúc và danh sách bài học của 1 thư mục*\n"
-        "  └ *Ví dụ:* `/folder-id folder-a1b2c3d4`\n\n"
-        "• `/file-id <id>` — *Đọc full nội dung bài học chi tiết*\n"
-        "  └ *Ví dụ:* `/file-id file-x1y2z3a4`\n\n"
-        "📌 **CÔNG CỤ HỌC TẬP BỔ TRỢ:**\n"
-        "• `/revise <chủ đề/id>` — *Tạo bài tập ôn tập & kiểm tra kiến thức*\n"
-        "  └ *Ví dụ:* `/revise Python biến và kiểu dữ liệu`\n\n"
-        "• `/youtube <url>` — *Tóm tắt kiến thức & tạo ghi chú từ Video YouTube*\n"
-        "  └ *Ví dụ:* `/youtube https://youtu.be/...`\n\n"
-        "• `/digest` — *Tạo bản tóm tắt nội dung học tập tổng hợp*\n\n"
-        "• `/help` — *Hiển thị lại bảng hướng dẫn này*\n\n"
-        "💡 *Mẹo: Bạn có thể bấm thẳng vào các đường link Web UI trong tin nhắn của Bot để học bài trực quan hơn!*"
-    )

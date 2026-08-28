@@ -1,10 +1,11 @@
 import asyncio
 import json
+import uuid
 import httpx
 from sqlmodel import Session, select
 
 # SDK Mezon
-from mezon_sdk.models import ChannelMessageContent
+from mezon_sdk.models import ChannelMessageContent, InteractiveMessageProps
 from mezon_sdk.protobuf.api import api_pb2
 
 # Database & Models
@@ -26,6 +27,8 @@ from app.services.knowledge.summarize import (
     SummarizeGenerationError,
 )
 
+from app.bot.utils.embeds import build_digest_result_embed, build_error_embed, build_warning_embed
+
 
 async def _run_digest_pipeline(channel, file_url: str, filename: str, prompt: str, user_id: int):
     """Background helper để tải file từ Mezon CDN, crawl text, gọi AI tóm tắt và lưu vào DB."""
@@ -42,7 +45,11 @@ async def _run_digest_pipeline(channel, file_url: str, filename: str, prompt: st
                 print(f"[Digest Download Failed] Status Code: {file_resp.status_code}, URL: {file_url}", flush=True)
                 await channel.send(
                     content=ChannelMessageContent(
-                        t=f"❌ Không thể tải file `{filename}` từ Mezon CDN (Mã lỗi HTTP: {file_resp.status_code})."
+                        t="",
+                        embed=[build_error_embed(
+                            "❌ Tải file thất bại",
+                            f"Không thể tải `{filename}` từ Mezon CDN (Mã lỗi HTTP: {file_resp.status_code})"
+                        )]
                     )
                 )
                 return
@@ -80,8 +87,9 @@ async def _run_digest_pipeline(channel, file_url: str, filename: str, prompt: st
             # Thêm các tài liệu tóm tắt được tạo ra vào Folder
             for doc in documents:
                 db_file = KnowledgeFile(
+                    id=f"file-{uuid.uuid4().hex[:8]}",
                     name=doc["title"],
-                    content=doc["content"],
+                    markdown_content=doc["content"],
                     folder_id=folder.id,
                     user_id=user_id,
                 )
@@ -91,37 +99,39 @@ async def _run_digest_pipeline(channel, file_url: str, filename: str, prompt: st
                 created_docs.append({"id": db_file.id, "name": db_file.name})
 
         # 5. Phản hồi kết quả tóm tắt lại cho channel Mezon
-        docs_summary = "\n".join(
-            [f"• **{d['name']}** (ID: `{d['id']}`)" for d in created_docs]
-        )
-
         await channel.send(
             content=ChannelMessageContent(
-                t=(
-                    f"✅ **Tóm tắt & Phân loại file thành công!**\n\n"
-                    f"📁 **Folder tạo ra:** `{folder_name}`\n"
-                    f"📊 **Dung lượng file:** {len(file_bytes)} bytes ({len(extracted_text)} ký tự)\n\n"
-                    f"📝 **Tài liệu học tập đã tạo:**\n{docs_summary}"
-                )
+                t="",
+                embed=[build_digest_result_embed(folder_name, len(file_bytes), len(extracted_text), created_docs)]
             )
         )
 
     except UnsupportedFileTypeError as e:
         await channel.send(
-            content=ChannelMessageContent(t=f"⚠️ **Định dạng file không hỗ trợ:** {str(e)}")
+            content=ChannelMessageContent(
+                t="",
+                embed=[build_warning_embed("⚠️ Định dạng không hỗ trợ", str(e))]
+            )
         )
     except EmptyFileContentError as e:
         await channel.send(
-            content=ChannelMessageContent(t=f"⚠️ **Nội dung rỗng:** {str(e)}")
+            content=ChannelMessageContent(
+                t="",
+                embed=[build_warning_embed("⚠️ Nội dung rỗng", str(e))]
+            )
         )
     except SummarizeGenerationError as e:
         await channel.send(
-            content=ChannelMessageContent(t=f"❌ **Lỗi khi gọi AI tóm tắt:** {str(e)}")
+            content=ChannelMessageContent(
+                t="",
+                embed=[build_error_embed("❌ Lỗi AI", f"Lỗi khi gọi AI tóm tắt: {str(e)}")]
+            )
         )
     except Exception as e:
         print(f"[Digest Task Error]: {e}", flush=True)
         await channel.send(
             content=ChannelMessageContent(
-                t=f"⚠️ **Lỗi hệ thống khi xử lý file:** {str(e)}"
+                t="",
+                embed=[build_error_embed("⚠️ Lỗi hệ thống", f"Lỗi khi xử lý file: {str(e)}")]
             )
         )
