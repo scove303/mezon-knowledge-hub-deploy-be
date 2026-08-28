@@ -657,9 +657,7 @@ async def parse_context_to_structure(
             f.write(f"Timestamp links: {len(links)}\n")
             f.write(f"Bold terms: {bold_terms[:20]}\n")
             f.write(f"Timestamp links found: {links}\n")
-    
     print(f"  [Debug] Full AI output saved to: {debug_file}")
-    
     return {
         "folder_name": folder_name,
         "files": final_files,
