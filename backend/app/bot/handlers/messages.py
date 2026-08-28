@@ -1,7 +1,7 @@
 import json
 import asyncio
 from sqlmodel import Session, select
-from mezon_sdk.models import ChannelMessageContent, InteractiveMessageProps
+from mezon_sdk.models import ChannelMessageContent, InteractiveMessageProps, ApiMessageAttachment
 from mezon_sdk.protobuf.api import api_pb2
 
 from app.bot.client import client
@@ -23,6 +23,37 @@ from app.bot.utils.embeds import (
 )
 
 PREFIX = "/"
+
+
+def extract_attachments(message: api_pb2.ChannelMessage) -> list[ApiMessageAttachment]:
+    """Safely extract attachments from protobuf message (handles both raw bytes and parsed list)."""
+    raw = getattr(message, "attachments", None)
+    if raw is None:
+        return []
+    # Already parsed list (from ChannelMessage model)
+    if isinstance(raw, list):
+        return raw
+    # Raw protobuf bytes - decode
+    if isinstance(raw, bytes):
+        try:
+            attachment_list = api_pb2.MessageAttachmentList()
+            attachment_list.ParseFromString(raw)
+            return [
+                ApiMessageAttachment(
+                    filename=a.filename,
+                    filetype=a.filetype,
+                    height=a.height,
+                    size=a.size,
+                    url=a.url,
+                    width=a.width,
+                    thumbnail=a.thumbnail,
+                    duration=a.duration,
+                )
+                for a in attachment_list.attachments
+            ]
+        except Exception:
+            return []
+    return []
 
 # Lưu trạng thái chờ xác nhận từ người dùng (khi video không có transcript)
 # key: (channel_id, sender_id) -> {"url": ..., "user_id": ..., "video_title": ...}
@@ -85,8 +116,8 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
     text = text.strip()
     is_youtube_link = "youtube.com" in text.lower() or "youtu.be" in text.lower()
 
-    # Check for file attachments (handle before early return)
-    attachments = getattr(message, "attachments", []) or []
+    # Check for file attachments (properly decode protobuf)
+    attachments = extract_attachments(message)
     has_attachments = len(attachments) > 0
 
     # -----------------------------------------------------------------
@@ -119,10 +150,15 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
             return
 
     # -----------------------------------------------------------------
-    # AUTO HANDLE FILE ATTACHMENTS: chỉ khi gửi file MÀ KHÔNG CÓ LỆNH
-    # (text rỗng hoặc chỉ là text tự do, không bắt đầu bằng /)
+    # AUTO HANDLE FILE ATTACHMENTS: chỉ khi gửi file KHÔNG KÈM LỆNH
+    # (text rỗng - chỉ thả file, không gõ gì thêm)
     # -----------------------------------------------------------------
-    if has_attachments and not text.startswith(PREFIX) and not is_youtube_link and not text:
+    # Danh sách lệnh đã xử lý file riêng (tránh double-trigger)
+    file_commands = ("/digest", "/roadmap", "/youtube", "/revise", "/folder", "/file")
+    
+    is_file_command = any(text.startswith(cmd) for cmd in file_commands)
+    
+    if has_attachments and not text and not is_youtube_link and not is_file_command:
         user_id = get_or_create_user(message)
         channel = await client.channels.fetch(message.channel_id)
         first_file = attachments[0]
@@ -271,8 +307,7 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
     # -----------------------------------------------------------------
     elif text.startswith("/digest"):
         prompt = text[7:].strip()
-        attachments = getattr(message, "attachments", []) or []
-
+        # Use already decoded attachments from extract_attachments()
         if not attachments:
             await channel.send(
                 content=ChannelMessageContent(
