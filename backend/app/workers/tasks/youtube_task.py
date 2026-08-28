@@ -23,7 +23,8 @@ async def send_status_event(on_event: callable, message: str) -> None:
         print(f"⚠️ [Worker Event Warning] Could not dispatch event: {evt_err}")
 
 
-async def _get_folders_sync(session: Session):
+# SỬA TẠI ĐÂY: Dùng def thay vì async def để asyncio.to_thread hoạt động đúng
+def _get_folders_sync(session: Session):
     return session.exec(select(Folder).where(Folder.type == "roadmap")).all()
 
 
@@ -39,6 +40,7 @@ async def _check_semantic_cache(
     if not new_embedding:
         return None
 
+    # Bây giờ _get_folders_sync là hàm sync nên asyncio.to_thread sẽ trả về list danh sách folder thực tế
     existing_folders = await asyncio.to_thread(_get_folders_sync, session)
 
     for cached_folder in existing_folders:
@@ -82,25 +84,25 @@ async def process_youtube_native_pipeline(
     folder_id: str = None
 ) -> None:
     try:
-        await send_status_event(on_event, "Đang lấy phụ đề từ YouTube...")
+        await send_status_event(on_event, "Đang phân tích thông tin từ YouTube...")
 
-        # 1. Fetch real subtitles & generate outline
-        outline_data = await YouTubeNativeService.get_roadmap_outline_from_transcript(youtube_url)
+        # 1. Fetch transcript or metadata outline
+        context_text, outline_data = await YouTubeNativeService.get_roadmap_outline_from_transcript(youtube_url)
         
-        if not outline_data.get("transcript") or not outline_data.get("transcript", []):
-            raise ValueError("Không tìm thấy nội dung phụ đề cho video này.")
+        if not context_text or not context_text.strip():
+            raise ValueError("Không thể lấy dữ liệu phụ đề hoặc thông tin nội dung từ video này.")
 
-        folder_name = outline_data.get("folder_name", "Lộ Trình YouTube")
-
-        # Extract video_id directly from URL as primary source (fallback if AI fails)
+        # Extract video_id directly from URL as primary source
         extracted_video_id = extract_video_id(youtube_url)
+        video_id = outline_data.get("video_id") or extracted_video_id
 
         # Ưu tiên: dùng tên folder từ AI nếu hợp lý, không thì dùng tiêu đề video thực
         video_title = outline_data.get("video_title", "")
         ai_folder_name = outline_data.get("folder_name", "")
-        video_id = outline_data.get("video_id", "")
         transcript = outline_data.get("transcript", [])
-        generic_names = {"youtube summary", "tìm hiểu về youtube", "youtube", "tóm tắt youtube", "youtube summary"}
+        has_transcript = outline_data.get("has_transcript", bool(transcript))
+        lessons = outline_data.get("lessons", [])
+        generic_names = {"youtube summary", "tìm hiểu về youtube", "youtube", "tóm tắt youtube"}
 
         if ai_folder_name and ai_folder_name.lower() not in generic_names and len(ai_folder_name) > 5:
             folder_name = ai_folder_name
@@ -115,17 +117,22 @@ async def process_youtube_native_pipeline(
             await send_status_event(on_event, f"⚡ Đã tìm thấy lộ trình tương tự, đang tải...")
             return cached_folder
 
-        # Include transcript data in context for AI to generate timestamp links
-        transcript_json = json.dumps(transcript, ensure_ascii=False)
+        # Include context info for AI parser
         context = f"""Nguồn Video YouTube: {youtube_url}
 Video ID: {video_id}
 Tiêu đề video: {video_title}
-Có phụ đề: {bool(transcript)}
-Cấu trúc tóm tắt nội dung video: {json.dumps(outline_data, ensure_ascii=False)}
-PHỤ ĐỀ CÓ TIMESTAMP (dùng để tạo link):
-{transcript_json}
+Có phụ đề (Transcript Available): {has_transcript}
 
-⚠️ QUAN TRỌNG: AI PHẢI DỰA TRÊN PHỤ ĐỀ (TRANSCRIPT) TRÊN ĐỂ VIẾT NỘI DUNG. KHÔNG ĐƯỢC TỰ BIẠT ĐẶT NỘI DUNG KHÔNG CÓ TRONG PHỤ ĐỀ."""
+CẤU TRÚC BÀI HỌC DỰ KIẾN:
+{json.dumps(lessons, ensure_ascii=False, indent=2)}
+
+NỘI DUNG NGUỒN (TRANSCRIPT HOẶC METADATA):
+{context_text[:25000]}
+
+⚠️ QUAN TRỌNG: 
+1. AI dựa vào NỘI DUNG NGUỒN để tạo các file bài học chi tiết.
+2. Nếu có phụ đề (Có phụ đề: True), hãy đính kèm link Anchor Timestamp theo dạng: https://www.youtube.com/watch?v={video_id}&t={{start_seconds}}s.
+3. Nếu không có phụ đề (Có phụ đề: False), hãy xây dựng nội dung bài học chi tiết dựa trên thông tin tiêu đề và mô tả video."""
 
         roadmap_data = await parse_context_to_structure(
             topic=folder_name,
