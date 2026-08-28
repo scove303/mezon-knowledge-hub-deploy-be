@@ -15,6 +15,12 @@ from app.bot.commands.folder import list_all_folder, get_folder_by_id
 from app.bot.commands.file import get_file_by_id
 from app.workers.tasks.youtube_task import process_youtube_native_pipeline
 from app.bot.commands.digest import _run_digest_pipeline
+from app.bot.commands.shared_chat import (
+    share_chat_command,
+    import_chat_command,
+    list_shared_chats_command,
+    browse_public_chats_command,
+)
 from app.bot.utils.embeds import (
     build_status_embed,
     build_error_embed,
@@ -376,6 +382,73 @@ async def handle_message(message: api_pb2.ChannelMessage) -> None:
 
         # 2. Dispatch the non-blocking task using helper function
         asyncio.create_task(_run_youtube_pipeline(channel, url, user_id, video_title))
+
+    # -----------------------------------------------------------------
+    # COMMAND 8: /share-chat <folder_id> [title] [description]
+    # -----------------------------------------------------------------
+    elif text.startswith("/share-chat"):
+        parts = text[11:].strip().split(" ", 2)
+        if not parts[0]:
+            await channel.send(
+                content=ChannelMessageContent(
+                    t="",
+                    embed=[build_warning_embed("⚠️ Thiếu Folder ID!", "Cú pháp: `/share-chat <folder_id> [title] [description]`")]
+                )
+            )
+            return
+        
+        folder_id = parts[0]
+        title = parts[1] if len(parts) > 1 else ""
+        description = parts[2] if len(parts) > 2 else ""
+        
+        user_id = get_or_create_user(message)
+        await channel.send(
+            content=ChannelMessageContent(
+                t="",
+                embed=[build_status_embed("📤 Đang chia sẻ...", f"Thư mục: `{folder_id}`")]
+            )
+        )
+        asyncio.create_task(share_chat_command(channel, user_id, folder_id, title, description))
+
+    # -----------------------------------------------------------------
+    # COMMAND 9: /import-chat <share_code> [new_folder_name]
+    # -----------------------------------------------------------------
+    elif text.startswith("/import-chat"):
+        parts = text[12:].strip().split(" ", 1)
+        if not parts[0]:
+            await channel.send(
+                content=ChannelMessageContent(
+                    t="",
+                    embed=[build_warning_embed("⚠️ Thiếu Share Code!", "Cú pháp: `/import-chat <share_code> [new_folder_name]`")]
+                )
+            )
+            return
+        
+        share_code = parts[0]
+        new_name = parts[1] if len(parts) > 1 else ""
+        
+        user_id = get_or_create_user(message)
+        await channel.send(
+            content=ChannelMessageContent(
+                t="",
+                embed=[build_status_embed("📥 Đang nhập chat...", f"Code: `{share_code}`")]
+            )
+        )
+        asyncio.create_task(import_chat_command(channel, user_id, share_code, new_name))
+
+    # -----------------------------------------------------------------
+    # COMMAND 10: /my-shared-chats
+    # -----------------------------------------------------------------
+    elif text.startswith("/my-shared-chats") or text.startswith("/shared-chats"):
+        user_id = get_or_create_user(message)
+        asyncio.create_task(list_shared_chats_command(channel, user_id))
+
+    # -----------------------------------------------------------------
+    # COMMAND 11: /browse-chats
+    # -----------------------------------------------------------------
+    elif text.startswith("/browse-chats") or text.startswith("/public-chats"):
+        user_id = get_or_create_user(message)
+        asyncio.create_task(browse_public_chats_command(channel, user_id))
 
     elif text.startswith("/help") or text.startswith("/start"):
         await channel.send(content=ChannelMessageContent(t="", embed=[build_help_embed()]))

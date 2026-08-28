@@ -1,6 +1,6 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import auth, folders, files, ai, tts
+from app.api.v1.endpoints import auth, folders, files, ai, tts, shared_chats
 
 api_router = APIRouter()
 api_router.include_router(auth.router, prefix="/auth", tags=["Auth"])
@@ -8,3 +8,4 @@ api_router.include_router(folders.router, prefix="/folders", tags=["Folders"])
 api_router.include_router(files.router, prefix="/files", tags=["Files"])
 api_router.include_router(ai.router, prefix="/ai", tags=["AI Services"])
 api_router.include_router(tts.router, prefix="/tts", tags=["TTS"])
+api_router.include_router(shared_chats.router, prefix="/shared-chats", tags=["Shared Chats"])

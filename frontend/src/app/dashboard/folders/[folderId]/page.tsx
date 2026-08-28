@@ -22,7 +22,15 @@ import {
   Loader2,
   Download,
   X,
+  Share2,
+  Copy,
+  Check,
+  ExternalLink,
 } from "lucide-react";
+import { useLanguage } from "@/localization/LanguageContext";
+import vn from "@/localization/languages/vn.json";
+import en from "@/localization/languages/en.json";
+import { sharedChatService } from "@/features/shared-chats/services";
 import { useToastStore } from "@/stores/toast";
 import { useMediaQuery } from "@/hooks/useMediaQuery";
 
@@ -84,7 +92,19 @@ export default function FolderPage({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isExporting, setIsExporting] = useState(false);
   const isMobile = useMediaQuery("(max-width: 767px)");
+  const { currentLanguage } = useLanguage();
+  const translation = { en, vn };
+  const t = translation[currentLanguage];
+  const addToast = useToastStore((s) => s.addToast);
+
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => { setMounted(true); }, []);
+
   const [showMindmap, setShowMindmap] = useState(() => viewParam === "mindmap");
+  const [sharing, setSharing] = useState(false);
+  const [shareResult, setShareResult] = useState<{ share_url: string; share_code: string } | null>(null);
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [copied, setCopied] = useState(false);
   // Thêm State lưu trữ mốc thời gian cần nhảy tới khi mở file từ Mindmap
   const [initialSeekSeconds, setInitialSeekSeconds] = useState<number | null>(
     null,
@@ -198,6 +218,37 @@ export default function FolderPage({
       useToastStore.getState().addToast("Xuất thư mục thất bại", "error");
     } finally {
       setIsExporting(false);
+    }
+  };
+
+  // Chia sẻ thư mục thành chat
+  const handleShareFolder = async () => {
+    if (!folder) return;
+    setSharing(true);
+    try {
+      const res = await sharedChatService.shareChat({
+        folder_id: folderId,
+        title: "Chat: " + folder.name,
+        description: "Shared from " + folder.name,
+        topic: folder.name,
+        conversation_history: messages
+          .filter((m) => m.role === "user" || m.role === "bot")
+          .map((m) => ({ role: m.role, content: m.content, timestamp: new Date().toISOString() })),
+        is_public: false,
+      });
+      if (res.share_url) {
+        setShareResult({ share_url: res.share_url, share_code: res.share_code });
+        setShowShareModal(true);
+        setCopied(false);
+        addToast(t.sharedChats?.shared || "Folder shared successfully!", "success");
+      } else {
+        addToast("Share failed", "error");
+      }
+    } catch (err) {
+      console.error("Share folder error:", err);
+      addToast(t.sharedChats?.shareError || "Share failed", "error");
+    } finally {
+      setSharing(false);
     }
   };
 
@@ -434,6 +485,13 @@ export default function FolderPage({
     }
   };
 
+  const copyShareUrl = () => {
+    if (!shareResult) return;
+    navigator.clipboard.writeText(shareResult.share_url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
   return (
     <div className="relative flex h-full w-full overflow-hidden bg-[rgb(var(--color-bg))]">
       {/* Left Pane: Chat Interface (resizable) */}
@@ -527,6 +585,22 @@ export default function FolderPage({
                 <PanelRight size={20} />
               )}
             </button>
+            {/* Share Button - only render after mount to avoid hydration mismatch */}
+            {mounted && (
+              <button
+                onClick={handleShareFolder}
+                disabled={sharing || !folder}
+                className="p-1.5 hover:bg-[rgb(var(--color-surface-2))] text-[rgb(var(--color-text-secondary))] rounded-lg transition-colors disabled:opacity-40"
+                title={t.sharedChats?.shareFolder || "Share folder as chat"}
+                aria-label={t.sharedChats?.shareFolder || "Share folder as chat"}
+              >
+                {sharing ? (
+                  <Loader2 size={20} className="animate-spin text-indigo-400" />
+                ) : (
+                  <Share2 size={20} />
+                )}
+              </button>
+            )}
           </div>
         </div>
 
@@ -757,6 +831,48 @@ export default function FolderPage({
           </div>
         )}
       </div>
+
+      {showShareModal && shareResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowShareModal(false)}>
+          <div className="w-full max-w-lg bg-[rgb(var(--color-surface-1))] rounded-xl border border-[rgb(var(--color-border))] p-6" onClick={(e) => e.stopPropagation()}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-lg">{t.sharedChats?.shareFolder || "Share Chat"}</h3>
+              <button onClick={() => setShowShareModal(false)} className="p-1 hover:bg-[rgb(var(--color-surface-2))] rounded-lg text-[rgb(var(--color-text-muted))] transition-colors">
+                <X size={20} />
+              </button>
+            </div>
+            <div className="space-y-3">
+              <div>
+                <label className="block text-sm text-[rgb(var(--color-text-secondary))] mb-2">{t.sharedChats?.copyLink || "Anyone with the link can view"}</label>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    value={shareResult.share_url}
+                    readOnly
+                    className="flex-1 px-4 py-2.5 rounded-lg bg-[rgb(var(--color-bg))] border border-[rgb(var(--color-border))] text-[rgb(var(--color-text-primary))] focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                  />
+                  <button
+                    onClick={copyShareUrl}
+                    className="px-4 py-2.5 rounded-lg bg-indigo-600 text-white font-medium hover:bg-indigo-500 transition-colors flex items-center gap-2"
+                  >
+                    {copied ? <Check size={18} /> : <Copy size={18} />}
+                    <span>{copied ? (t.sharedChats?.copied || "Copied!") : (t.sharedChats?.copyLink || "Copy link")}</span>
+                  </button>
+                </div>
+              </div>
+              <a
+                href={shareResult.share_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="w-full py-2.5 rounded-lg border border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] text-center flex items-center justify-center gap-2 transition-colors"
+              >
+                <ExternalLink size={18} />
+                {t.sharedChats?.viewOriginal || "View Shared Chat"}
+              </a>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

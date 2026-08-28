@@ -110,6 +110,20 @@ def build_help_embed() -> InteractiveMessageProps:
         inline=False
     )
 
+    # Chia sẻ & Nhập chat
+    builder.add_field(
+        name="📌 CHIA SẺ & NHẬP CHAT (MỚI)",
+        value=(
+            "• `/share-chat <folder_id> [title] [desc]` — Chia sẻ thư mục + hội thoại thành link\n"
+            "  └ Ví dụ: `/share-chat folder-a1b2c3d4 \"Python Chat\" \"Học Python\"`\n\n"
+            "• `/import-chat <share_code> [new_name]` — Nhập chat chia sẻ vào tài khoản\n"
+            "  └ Ví dụ: `/import-chat abc12345 \"Python của tôi\"`\n\n"
+            "• `/my-shared-chats` — Xem chat bạn đã chia sẻ\n\n"
+            "• `/browse-chats` — Duyệt chat công khai từ cộng đồng"
+        ),
+        inline=False
+    )
+
     # Công cụ bổ trợ
     builder.add_field(
         name="📌 CÔNG CỤ HỌC TẬP BỔ TRỢ",

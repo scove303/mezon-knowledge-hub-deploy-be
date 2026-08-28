@@ -3,7 +3,8 @@ from typing import TYPE_CHECKING, List, Optional
 from sqlmodel import Field, Relationship, SQLModel
 
 if TYPE_CHECKING:
-    from app.models.folder import Folder,FolderRoot
+    from app.models.folder import Folder, FolderRoot
+    from app.models.shared_chat import SharedChat, ChatImport
 
 
 class User(SQLModel, table=True):
@@ -24,3 +25,5 @@ class User(SQLModel, table=True):
     root_link: Optional["FolderRoot"] = Relationship(back_populates="user")
     
     folders: List["Folder"] = Relationship(back_populates="user")
+    shared_chats: List["SharedChat"] = Relationship(back_populates="creator")
+    chat_imports: List["ChatImport"] = Relationship(back_populates="importer")
