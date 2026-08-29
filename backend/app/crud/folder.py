@@ -419,3 +419,39 @@ def get_file_backlinks(
     return session.exec(
         select(FileLink).where(FileLink.target_file_id == file_id)
     ).all()
+
+
+# =====================================================================
+# Chat History Operations
+# =====================================================================
+
+def get_folder_chat_history(session: Session, folder_id: str, user_id: int) -> List[dict]:
+    """Get chat history for a folder."""
+    folder = get_folder(session, folder_id, user_id)
+    if not folder:
+        return []
+    return folder.conversation_history or []
+
+
+def save_folder_chat_history(session: Session, folder_id: str, user_id: int, messages: List[dict]) -> Optional[Folder]:
+    """Save chat history for a folder. Only saves user/bot messages, filters out status messages."""
+    folder = get_folder(session, folder_id, user_id)
+    if not folder:
+        return None
+    
+    # Filter out status messages and keep only user/bot messages
+    filtered_messages = [
+        {"role": m.get("role"), "content": m.get("content"), "timestamp": m.get("timestamp")}
+        for m in messages
+        if m.get("role") in ("user", "bot") and not m.get("isStatus")
+    ]
+    
+    # Limit to last 50 messages to avoid large payloads
+    if len(filtered_messages) > 50:
+        filtered_messages = filtered_messages[-50:]
+    
+    folder.conversation_history = filtered_messages
+    session.add(folder)
+    session.commit()
+    session.refresh(folder)
+    return folder

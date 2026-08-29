@@ -30,4 +30,24 @@ export const folderService = {
     const { data } = await axiosInstance.put("/folders/reorder", { folder_ids: folderIds });
     return data;
   },
+
+  async getChatHistory(folderId) {
+    try {
+      const { data } = await axiosInstance.get(`/folders/${folderId}/chat-history`);
+      return data;
+    } catch (err) {
+      console.log(`Error getting chat history: ${err}`);
+      return { success: false, data: [] };
+    }
+  },
+
+  async saveChatHistory(folderId, messages) {
+    try {
+      const { data } = await axiosInstance.put(`/folders/${folderId}/chat-history`, { messages });
+      return data;
+    } catch (err) {
+      console.log(`Error saving chat history: ${err}`);
+      return { success: false };
+    }
+  },
 };

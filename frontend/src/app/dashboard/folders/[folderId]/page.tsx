@@ -236,13 +236,13 @@ export default function FolderPage({
           .map((m) => ({ role: m.role, content: m.content, timestamp: new Date().toISOString() })),
         is_public: false,
       });
-      if (res.share_url) {
-        setShareResult({ share_url: res.share_url, share_code: res.share_code });
+      if (res.success && res.data?.share_url) {
+        setShareResult({ share_url: res.data.share_url, share_code: res.data.share_code });
         setShowShareModal(true);
         setCopied(false);
         addToast(t.sharedChats?.shared || "Folder shared successfully!", "success");
       } else {
-        addToast("Share failed", "error");
+        addToast(res.message || "Share failed", "error");
       }
     } catch (err) {
       console.error("Share folder error:", err);

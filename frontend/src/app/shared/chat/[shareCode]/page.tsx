@@ -142,8 +142,6 @@ export default function SharedChatPage({
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-4 text-xs text-[rgb(var(--color-text-muted))] mb-4">
               <span className="flex items-center gap-1">👤 {chat.creator_display_name || chat.creator_username}</span>
-              <span className="flex items-center gap-1">📥 {chat.import_count} imports</span>
-              <span className="flex items-center gap-1">👁 {chat.view_count} views</span>
               <span className="flex items-center gap-1">📅 {new Date(chat.created_at).toLocaleDateString()}</span>
             </div>
 

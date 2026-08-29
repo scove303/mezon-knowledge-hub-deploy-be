@@ -3,7 +3,8 @@ from datetime import datetime
 import uuid
 
 from sqlmodel import Field, SQLModel, Relationship, JSON
-from sqlalchemy import CheckConstraint
+from sqlalchemy import CheckConstraint, Column
+from sqlalchemy.dialects.postgresql import JSONB
 
 if TYPE_CHECKING:
     from app.models.user import User
@@ -32,6 +33,7 @@ class Folder(SQLModel, table=True):
     root_entry: Optional["FolderRoot"] = Relationship(back_populates="folder", cascade_delete=True)
     prompt_embedding: Optional[str] = Field(default=None, sa_type=JSON)
     mindmap_json: Optional[str] = Field(default=None)  # Cached AI-generated concept mindmap
+    conversation_history: Optional[List[dict]] = Field(default=None, sa_column=Column(JSONB))
 
     # Hierarchical relationships
     parent: Optional["Folder"] = Relationship(

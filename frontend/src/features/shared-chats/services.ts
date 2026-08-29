@@ -4,7 +4,10 @@ import axiosInstance from "@/libs/axios";
 function unwrap(res: any) {
   const data = res?.data;
   if (data?.success && data?.data) {
-    return data.data;
+    return { success: true, message: data.message, data: data.data };
+  }
+  if (data?.success === false) {
+    return { success: false, message: data.message, data: data.data };
   }
   return data ?? res;
 }

@@ -195,3 +195,33 @@ def rename_folder(
         message="Đã cập nhật tên folder",
         data={"id": folder.id, "updated_at": folder.updated_at},
     )
+
+
+# =====================================================================
+# Chat History Endpoints
+# =====================================================================
+
+class ChatHistoryRequest(BaseModel):
+    messages: List[dict]
+
+
+@router.get("/{folder_id}/chat-history")
+def get_chat_history(
+    folder_id: str, session: SessionDep, current_user: CurrentActor
+):
+    """Get chat history for a folder."""
+    history = folder_crud.get_folder_chat_history(session, folder_id, current_user.id)
+    return success_response(message="Lấy lịch sử chat thành công", data=history)
+
+
+@router.put("/{folder_id}/chat-history")
+def save_chat_history(
+    folder_id: str, data: ChatHistoryRequest, session: SessionDep, current_user: CurrentActor
+):
+    """Save chat history for a folder."""
+    folder = folder_crud.save_folder_chat_history(session, folder_id, current_user.id, data.messages)
+    if not folder:
+        raise HTTPException(
+            status_code=404, detail=error_response("Không tìm thấy thư mục")
+        )
+    return success_response(message="Lưu lịch sử chat thành công", data=folder.conversation_history)
