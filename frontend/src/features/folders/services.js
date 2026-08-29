@@ -33,20 +33,24 @@ export const folderService = {
 
   async getChatHistory(folderId) {
     try {
+      console.log('[folderService] Getting chat history for:', folderId);
       const { data } = await axiosInstance.get(`/folders/${folderId}/chat-history`);
+      console.log('[folderService] Chat history response:', data);
       return data;
     } catch (err) {
-      console.log(`Error getting chat history: ${err}`);
+      console.log(`[folderService] Error getting chat history: ${err}`);
       return { success: false, data: [] };
     }
   },
 
   async saveChatHistory(folderId, messages) {
     try {
+      console.log('[folderService] Saving chat history for:', folderId, 'messages:', messages.length);
       const { data } = await axiosInstance.put(`/folders/${folderId}/chat-history`, { messages });
+      console.log('[folderService] Save chat history response:', data);
       return data;
     } catch (err) {
-      console.log(`Error saving chat history: ${err}`);
+      console.log(`[folderService] Error saving chat history: ${err}`);
       return { success: false };
     }
   },

@@ -29,6 +29,9 @@ export const useWorkspaceStore = create((set, get) => ({
   isLoading: false,
   error: null,
 
+  // Chat History State
+  chatHistoryByFolderId: {},
+
   // Layout State
   isSidebarOpen: false,
   isDocumentSideOpen: false,
@@ -52,6 +55,19 @@ export const useWorkspaceStore = create((set, get) => ({
       const remaining = state.folders.filter((f) => !folderIds.includes(f.id));
       return { folders: [...reordered, ...remaining] };
     }),
+
+  // Chat History Setters
+  setChatHistory: (folderId, messages) =>
+    set((state) => ({
+      chatHistoryByFolderId: {
+        ...state.chatHistoryByFolderId,
+        [folderId]: messages,
+      },
+    })),
+  getChatHistory: (folderId) => {
+    const { chatHistoryByFolderId } = get();
+    return chatHistoryByFolderId[folderId] || [];
+  },
 
   // Multiselect Setters
   toggleFileSelection: (id) =>

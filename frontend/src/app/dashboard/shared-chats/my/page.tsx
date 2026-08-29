@@ -137,10 +137,10 @@ function MySharedChatCard({ chat, onCopyUrl, onDelete, t }: { chat: SharedChat; 
             <Copy size={18} />
           </button>
           <Link
-            href={chat.share_url}
+            href={chat.share_url || "#"}
             target="_blank"
             rel="noopener noreferrer"
-            className="p-2 hover:bg-[rgb(var(--color-surface-2))] rounded-lg text-[rgb(var(--color-text-secondary))] transition-colors"
+            className={`p-2 hover:bg-[rgb(var(--color-surface-2))] rounded-lg text-[rgb(var(--color-text-secondary))] transition-colors ${!chat.share_url ? 'opacity-50 pointer-events-none' : ''}`}
             title={t.sharedChats?.view || 'View'}
           >
             <ExternalLink size={18} />

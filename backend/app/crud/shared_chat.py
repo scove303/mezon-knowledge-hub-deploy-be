@@ -2,6 +2,7 @@ import uuid
 from typing import Optional, List
 from datetime import datetime, timedelta
 
+from sqlalchemy.orm import selectinload
 from sqlmodel import Session, select
 
 from app.models.shared_chat import SharedChat, ChatImport
@@ -11,8 +12,12 @@ from app.schemas.shared_chat import SharedChatCreate, ImportChatRequest
 
 
 def create_shared_chat(session: Session, user_id: int, data: SharedChatCreate) -> SharedChat:
-    # Get folder with files
-    folder = session.get(Folder, data.folder_id)
+    # Get folder with files (eagerly load files relationship)
+    folder = session.exec(
+        select(Folder)
+        .where(Folder.id == data.folder_id)
+        .options(selectinload(Folder.files))
+    ).first()
     if not folder or folder.user_id != user_id:
         raise ValueError("Folder not found or access denied")
     
@@ -139,6 +144,8 @@ def import_shared_chat(session: Session, user_id: int, data: ImportChatRequest) 
     
     # Clone files
     files_snapshot = shared_chat.folder_snapshot.get("files", [])
+    if not files_snapshot:
+        raise ValueError("No files in shared chat to import")
     for idx, f_data in enumerate(files_snapshot):
         file = KnowledgeFile(
             id=f"file-{uuid.uuid4().hex[:8]}",
@@ -152,6 +159,12 @@ def import_shared_chat(session: Session, user_id: int, data: ImportChatRequest) 
             user_id=user_id,
         )
         session.add(file)
+    
+    # Clone conversation history to the new folder
+    conversation_history = shared_chat.conversation_history or []
+    if conversation_history:
+        from app.crud.folder import save_folder_chat_history
+        save_folder_chat_history(session, folder.id, user_id, conversation_history)
     
     # Record import
     chat_import = ChatImport(

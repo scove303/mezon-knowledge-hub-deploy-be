@@ -1,16 +1,27 @@
 import React, { useRef, useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 import ChatMessage, { MessageProps } from './ChatMessage';
 
 interface ChatHistoryProps {
   messages: MessageProps[];
+  isLoading?: boolean;
 }
 
-export default function ChatHistory({ messages }: ChatHistoryProps) {
+export default function ChatHistory({ messages, isLoading = false }: ChatHistoryProps) {
   const bottomRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  if (isLoading) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center h-full text-[rgb(var(--color-text-muted))] p-8 text-center gap-4">
+        <Loader2 className="w-8 h-8 animate-spin text-indigo-400" />
+        <p>Đang tải lịch sử chat...</p>
+      </div>
+    );
+  }
 
   if (!messages || messages.length === 0) {
     return (

@@ -40,8 +40,8 @@ export default function SharedChatPage({
     setLoading(true);
     try {
       const res = await sharedChatService.getSharedChat(shareCode);
-      if (res && res.share_code) {
-        setChat(res);
+      if (res && res.success && res.data) {
+        setChat(res.data);
       } else {
         setNotFound(true);
         router.push('/dashboard/shared-chats/public');
@@ -72,7 +72,7 @@ export default function SharedChatPage({
         addToast(errorMsg, 'error');
       }
     } catch (err: any) {
-      const errorMsg = err?.response?.data?.detail?.message || err?.response?.data?.message || t.sharedChats?.importError || 'Import failed';
+      const errorMsg = err?.response?.data?.message || err?.response?.data?.detail?.message || t.sharedChats?.importError || 'Import failed';
       addToast(errorMsg, 'error');
     } finally {
       setImporting(false);

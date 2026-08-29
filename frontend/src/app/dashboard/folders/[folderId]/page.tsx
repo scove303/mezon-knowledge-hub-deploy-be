@@ -10,7 +10,7 @@ import { aiService } from "@/features/ai/services";
 import FileViewer from "@/features/files/components/FileViewer";
 import ResizeHandle from "@/components/common/ResizeHandle";
 import dynamic from "next/dynamic";
-import { useEffect, useState, use, useRef } from "react";
+import { useEffect, useState, use, useRef, useCallback } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { MessageProps } from "@/components/chat/ChatMessage";
 import {
@@ -80,6 +80,8 @@ export default function FolderPage({
     setFolders,
     chatPaneWidth,
     setChatPaneWidth,
+    getChatHistory,
+    setChatHistory,
   } = useWorkspaceStore() as any;
 
   const [fileDetails, setFileDetails] = useState<any>(null);
@@ -105,20 +107,89 @@ export default function FolderPage({
   const [shareResult, setShareResult] = useState<{ share_url: string; share_code: string } | null>(null);
   const [showShareModal, setShowShareModal] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [includeChatHistory, setIncludeChatHistory] = useState(true);
+  const [chatHistoryLoading, setChatHistoryLoading] = useState(true);
+  const saveDebounceRef = useRef<NodeJS.Timeout | null>(null);
   // Thêm State lưu trữ mốc thời gian cần nhảy tới khi mở file từ Mindmap
   const [initialSeekSeconds, setInitialSeekSeconds] = useState<number | null>(
     null,
   );
-  const [messages, setMessages] = useState<MessageProps[]>([
-    {
-      id: "msg-1",
-      role: "bot",
-      content:
-        "Thư mục tri thức đã được khởi tạo thành công. Bạn có thể xem tài liệu ở khung bên phải, hoặc tải thêm tài liệu/dán link YouTube vào đây để AI tóm tắt thêm vào thư mục này.",
-    },
-  ]);
+  const [messages, setMessages] = useState<MessageProps[]>([]);
 
   const folder = folders.find((f: any) => String(f.id) === String(folderId));
+
+  // Load chat history on mount
+  useEffect(() => {
+    if (!folderId || folderId === "default") {
+      setChatHistoryLoading(false);
+      return;
+    }
+    const loadHistory = async () => {
+      try {
+        console.log('[FolderPage] Loading chat history for:', folderId);
+        const res = await folderService.getChatHistory(folderId);
+        console.log('[FolderPage] Load history response:', res);
+        if (res.success && res.data && res.data.length > 0) {
+          // Convert backend format to MessageProps format
+          const history = res.data.map((m: any) => ({
+            id: `msg-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+            role: m.role,
+            content: m.content,
+            timestamp: m.timestamp,
+          }));
+          setMessages(history);
+          setChatHistory(folderId, history);
+        } else {
+          // No history - show welcome message (marked as status so it won't be saved)
+          const welcomeMsg: MessageProps = {
+            id: "msg-1",
+            role: "bot",
+            content: "Thư mục tri thức đã được khởi tạo thành công. Bạn có thể xem tài liệu ở khung bên phải, hoặc tải thêm tài liệu/dán link YouTube vào đây để AI tóm tắt thêm vào thư mục này.",
+            isStatus: true,
+          };
+          setMessages([welcomeMsg]);
+        }
+      } catch (err) {
+        console.error("[FolderPage] Failed to load chat history:", err);
+        // On error, show welcome message (marked as status so it won't be saved)
+        const welcomeMsg: MessageProps = {
+          id: "msg-1",
+          role: "bot",
+          content: "Thư mục tri thức đã được khởi tạo thành công. Bạn có thể xem tài liệu ở khung bên phải, hoặc tải thêm tài liệu/dán link YouTube vào đây để AI tóm tắt thêm vào thư mục này.",
+          isStatus: true,
+        };
+        setMessages([welcomeMsg]);
+      } finally {
+        setChatHistoryLoading(false);
+      }
+    };
+    loadHistory();
+  }, [folderId, setChatHistory]);
+
+  // Auto-save chat history with debounce (2 seconds)
+  useEffect(() => {
+    if (!folderId || folderId === "default") return;
+    // Don't save if there are no real messages (only status/welcome messages)
+    const hasRealMessages = messages.some(m => m.role === "user" || (m.role === "bot" && !m.isStatus));
+    if (!hasRealMessages) return;
+    
+    if (saveDebounceRef.current) {
+      clearTimeout(saveDebounceRef.current);
+    }
+    saveDebounceRef.current = setTimeout(async () => {
+      try {
+        console.log('[FolderPage] Auto-saving chat history for:', folderId, 'messages:', messages.length);
+        await folderService.saveChatHistory(folderId, messages);
+      } catch (err) {
+        console.error("[FolderPage] Failed to save chat history:", err);
+      }
+    }, 2000);
+    return () => {
+      if (saveDebounceRef.current) {
+        clearTimeout(saveDebounceRef.current);
+      }
+    };
+  }, [messages, folderId]);
 
   // useEffect (1): Tự động mở Sidebar khi vào phòng chat
   useEffect(() => {
@@ -226,14 +297,17 @@ export default function FolderPage({
     if (!folder) return;
     setSharing(true);
     try {
+      const conversationHistory = includeChatHistory
+        ? messages
+            .filter((m) => m.role === "user" || m.role === "bot")
+            .map((m) => ({ role: m.role, content: m.content, timestamp: new Date().toISOString() }))
+        : [];
       const res = await sharedChatService.shareChat({
         folder_id: folderId,
         title: "Chat: " + folder.name,
         description: "Shared from " + folder.name,
         topic: folder.name,
-        conversation_history: messages
-          .filter((m) => m.role === "user" || m.role === "bot")
-          .map((m) => ({ role: m.role, content: m.content, timestamp: new Date().toISOString() })),
+        conversation_history: conversationHistory,
         is_public: false,
       });
       if (res.success && res.data?.share_url) {
@@ -604,7 +678,7 @@ export default function FolderPage({
           </div>
         </div>
 
-        <ChatHistory messages={messages} />
+        <ChatHistory messages={messages} isLoading={chatHistoryLoading} />
 
         <div className="p-4 bg-[rgb(var(--color-bg))] border-t border-[rgb(var(--color-border))]">
           <ChatInput
@@ -832,7 +906,7 @@ export default function FolderPage({
         )}
       </div>
 
-      {showShareModal && shareResult && (
+      {showShareModal && shareResult && shareResult.share_url && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4" onClick={() => setShowShareModal(false)}>
           <div className="w-full max-w-lg bg-[rgb(var(--color-surface-1))] rounded-xl border border-[rgb(var(--color-border))] p-6" onClick={(e) => e.stopPropagation()}>
             <div className="flex items-center justify-between mb-4">
@@ -860,6 +934,15 @@ export default function FolderPage({
                   </button>
                 </div>
               </div>
+              <label className="flex items-center gap-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={includeChatHistory}
+                  onChange={(e) => setIncludeChatHistory(e.target.checked)}
+                  className="w-4 h-4 text-indigo-600 border-[rgb(var(--color-border))] rounded focus:ring-indigo-500"
+                />
+                <span className="text-sm text-[rgb(var(--color-text-primary))]">{t.sharedChats?.includeChatHistory || "Include chat history"}</span>
+              </label>
               <a
                 href={shareResult.share_url}
                 target="_blank"

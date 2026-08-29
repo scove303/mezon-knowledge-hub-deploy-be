@@ -62,8 +62,9 @@ export default function ViewSharedChatPage() {
       } else {
         addToast(res.message || t.sharedChats?.importError || 'Import failed', 'error');
       }
-    } catch (err) {
-      addToast(t.sharedChats?.importError || 'Import failed', 'error');
+    } catch (err: any) {
+      const errorMsg = err?.response?.data?.message || err?.response?.data?.detail?.message || t.sharedChats?.importError || 'Import failed';
+      addToast(errorMsg, 'error');
     } finally {
       setImporting(false);
     }
@@ -144,7 +145,7 @@ export default function ViewSharedChatPage() {
           {t.sharedChats?.copyLink || 'Copy Link'}
         </button>
         <Link
-          href={chat.share_url}
+          href={chat?.share_url || "#"}
           target="_blank"
           rel="noopener noreferrer"
           className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] transition-colors"
