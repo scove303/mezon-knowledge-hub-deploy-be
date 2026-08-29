@@ -72,7 +72,9 @@ export default function FolderPage({
   const {
     folders,
     selectedFileId,
+    selectedFolderId,
     setSelectedFile,
+    setSelectedFolder,
     setSidebarOpen,
     isDocumentSideOpen,
     setDocumentSideOpen,
@@ -532,6 +534,42 @@ export default function FolderPage({
             appendBotMessage(
               `Đã chỉnh sửa bài học: ${evt.title}\n(File: ${evt.file_id})`,
             );
+            // Show toast with clickable link to new file
+            if (evt.file_id === "new" || evt.file_id?.startsWith("file-")) {
+              addToast(
+                `Đã tạo bài học mới: ${evt.title}`,
+                "success",
+                5000,
+                {
+                  label: "Mở",
+                  onClick: () => {
+                    setSelectedFolder(folderId);
+                    setSelectedFile(evt.file_id);
+                  }
+                }
+              );
+            }
+          },
+          onCreateSubfolder: async (evt: any) => {
+            clearStatusMessage();
+            appendBotMessage(
+              `Đã tạo thư mục con: ${evt.subfolder_name} (${evt.files?.length || 0} files)`,
+            );
+            // Show toast with clickable link to new subfolder
+            addToast(
+              `Đã tạo thư mục con: ${evt.subfolder_name} với ${evt.files?.length || 0} bài học`,
+              "success",
+              5000,
+              {
+                label: "Mở thư mục",
+                onClick: () => {
+                  router.push(`/dashboard/folders/${evt.subfolder_id}`);
+                }
+              }
+            );
+            // Refresh folder tree
+            const foldersRes = await folderService.getFolders();
+            if (foldersRes.success) setFolders(foldersRes.data);
           },
           onDone: async () => {
             clearStatusMessage();

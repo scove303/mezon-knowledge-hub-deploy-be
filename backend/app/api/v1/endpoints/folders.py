@@ -1,4 +1,4 @@
-from typing import Annotated, List
+from typing import Annotated, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
@@ -9,7 +9,7 @@ from app.api.deps import CurrentActor
 from app.crud import folder as folder_crud
 from app.crud import file as file_crud
 from app.schemas.common import error_response, success_response
-from app.schemas.folder import FolderCreate
+from app.schemas.folder import FolderCreate, SubfolderCreate
 from app.services.ai.mindmap_generator import generate_concept_mindmap
 import json
 
@@ -49,6 +49,36 @@ def create_folder(
             "name": folder.name,
             "type": folder.type,
             "created_at": folder.created_at,
+            "files": [],
+        },
+    )
+
+
+@router.post("/{folder_id}/subfolders", status_code=201)
+def create_subfolder(
+    folder_id: str,
+    data: SubfolderCreate,
+    session: SessionDep,
+    current_user: CurrentActor
+):
+    """Create a subfolder under the specified folder."""
+    try:
+        subfolder = folder_crud.create_subfolder(session, folder_id, data, current_user.id)
+    except ValueError as e:
+        raise HTTPException(
+            status_code=400,
+            detail=error_response(str(e)),
+        )
+    
+    return success_response(
+        message="Tạo thư mục con thành công",
+        data={
+            "id": subfolder.id,
+            "name": subfolder.name,
+            "type": subfolder.type,
+            "parent_id": subfolder.parent_id,
+            "depth": subfolder.depth,
+            "created_at": subfolder.created_at,
             "files": [],
         },
     )

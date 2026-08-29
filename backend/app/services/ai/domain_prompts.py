@@ -471,19 +471,25 @@ Tài liệu tìm thấy trong folder:
 Hãy xử lý và trả về JSON duy nhất:
 
 1. Nếu người dùng HỎI CÂU HỎI (giải thích, làm rõ, tóm tắt, hỏi thêm kiến thức liên quan):
-   {{"action": "answer", "text": "Câu trả lời chi tiết, dựa trên tài liệu trong folder"}}
+   {"action": "answer", "text": "Câu trả lời chi tiết, dựa trên tài liệu trong folder"}
 
 2. Nếu người dùng yêu cầu CHỈNH SỬA / VIẾT LẠI / BỔ SUNG nội dung bài học cụ thể:
    - Chọn file_id khớp nhất.
    - Trả về TOÀN BỘ nội dung markdown MỚI của bài học (giữ cấu trúc, đã cải thiện theo yêu cầu).
-   {{"action": "edit", "file_id": "<file_id>", "title": "<tiêu đề>", "content": "<TOÀN BỘ markdown mới>"}}
+   {"action": "edit", "file_id": "<file_id>", "title": "<tiêu đề>", "content": "<TOÀN BỘ markdown mới>"}
 
-3. Nếu yêu cầu tạo nội dung MỚI không thuộc bài nào:
-   {{"action": "edit", "file_id": "new", "title": "<tiêu đề mới>", "content": "<markdown mới>"}}
+3. Nếu yêu cầu tạo nội dung MỚI không thuộc bài nào (tạo file mới trong folder hiện tại):
+   {"action": "edit", "file_id": "new", "title": "<tiêu đề mới>", "content": "<markdown mới>"}
+
+4. Nếu người dùng yêu cầu TẠO THƯ MỤC CON (subfolder) mới để tổ chức lại nội dung:
+   - Ví dụ trigger: "tạo thư mục con", "tạo folder con", "subfolder", "chia nhỏ", "tách thành thư mục", "mở rộng chủ đề", "bổ sung module"
+   - Trả về tên thư mục con, loại, và danh sách file bên trong (nếu có)
+   {"action": "create_subfolder", "name": "Tên thư mục con", "type": "roadmap|document|video", "files": [{"title": "File 1", "content": "markdown content"}]}
 
 YÊU CẦU:
 - LUÔN trả về JSON hợp lệ, không văn bản ngoài JSON.
 - Với action "edit": content phải là TOÀN BỘ bài học mới, không phải đoạn vởn vẹn.
+- Với action "create_subfolder": files là tùy chọn, có thể rỗng [].
 """
 
 # ─── Summarize Prompt (Domain-Aware) ────────────────────────────────────────

@@ -133,7 +133,7 @@ export const aiService = {
 
   // 4b. Stream kết quả follow-up (answer / edit) qua SSE
   async streamFollowUp(jobId, callbacks = {}) {
-    const { onStatus, onAnswer, onEdit, onDone, onError } = callbacks;
+    const { onStatus, onAnswer, onEdit, onCreateSubfolder, onDone, onError } = callbacks;
     const headers = buildAuthHeaders();
 
     const res = await fetch(`${BASE_URL}/ai/roadmap/${jobId}/stream`, { headers });
@@ -181,6 +181,9 @@ export const aiService = {
             break;
           case "edit":
             onEdit?.(event);
+            break;
+          case "create_subfolder":
+            onCreateSubfolder?.(event);
             break;
           case "done":
             onDone?.(event);

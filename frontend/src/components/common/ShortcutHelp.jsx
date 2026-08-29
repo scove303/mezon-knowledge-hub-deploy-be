@@ -14,6 +14,8 @@ const SHORTCUTS = [
   { keys: ["Esc"], desc: "Đóng cửa sổ / trình chiếu / menu" },
   { keys: ["→", "←"], desc: "Chuyển slide (chế độ trình chiếu)" },
   { keys: ["Space"], desc: "Slide tiếp theo (chế độ trình chiếu)" },
+  { keys: ["@", "s", "u", "b"], desc: "Yêu cầu AI tạo thư mục con (gõ @subfolder trong chat)" },
+  { keys: ["/", "s", "u", "b"], desc: "Yêu cầu AI tạo thư mục con (gõ /subfolder trong chat)" },
 ];
 
 const isInputting = () =>

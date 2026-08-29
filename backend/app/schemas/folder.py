@@ -29,6 +29,7 @@ class FolderRead(BaseModel):
 class SubfolderCreate(BaseModel):
     name: str
     type: str = "general"
+    parent_id: Optional[str] = None
 
 
 class FolderTreeNode(BaseModel):

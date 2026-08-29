@@ -32,17 +32,37 @@ def get_folder(session: Session, folder_id: str, user_id: int) -> Optional[Folde
     return session.exec(statement).first()
 
 
-def create_folder(session: Session, data: FolderCreate, user_id: int) -> Folder:
+def create_folder(session: Session, data: FolderCreate, user_id: int, parent_id: Optional[str] = None) -> Folder:
+    depth = 0
+    if parent_id:
+        parent = session.get(Folder, parent_id)
+        if parent:
+            depth = parent.depth + 1
+    
     folder = Folder(
         id=f"folder-{uuid.uuid4().hex[:8]}",
         name=data.name,
         type=data.type,
         user_id=user_id,
+        parent_id=parent_id,
+        depth=depth,
     )
     session.add(folder)
     session.commit()
     session.refresh(folder)
     return folder
+
+
+def create_subfolder(session: Session, parent_folder_id: str, data: FolderCreate, user_id: int) -> Folder:
+    """Create a subfolder under a parent folder."""
+    parent = session.get(Folder, parent_folder_id)
+    if not parent or parent.user_id != user_id:
+        raise ValueError("Parent folder not found or access denied")
+    
+    if parent.depth >= 4:
+        raise ValueError("Cannot create subfolder: maximum depth (4) reached")
+    
+    return create_folder(session, data, user_id, parent_folder_id)
 
 
 def delete_folder(session: Session, folder_id: str, user_id: int) -> bool:

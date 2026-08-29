@@ -336,6 +336,26 @@ async def run_followup_job(job_id: str):
                     for f in folder.files
                 ]
 
+            elif result.get("action") == "create_subfolder":
+                job.push(
+                    {
+                        "type": "create_subfolder",
+                        "subfolder_id": result["subfolder_id"],
+                        "subfolder_name": result["subfolder_name"],
+                        "subfolder_type": result["subfolder_type"],
+                        "files": result.get("files", []),
+                    }
+                )
+
+                job.folder_id = folder.id
+                job.files = [
+                    {
+                        "file_id": f.id,
+                        "title": f.name,
+                    }
+                    for f in folder.files
+                ]
+
             else:
                 job.push(
                     {

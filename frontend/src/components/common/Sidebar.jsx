@@ -401,6 +401,7 @@ export default function Sidebar() {
 
   const selectFolder = (folderId) => {
     store.setSelectedFolder(folderId);
+    router.push(`/dashboard/folders/${folderId}`);
   };
 
   const selectFile = (folderId, fileId) => {

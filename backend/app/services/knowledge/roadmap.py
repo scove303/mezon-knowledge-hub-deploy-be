@@ -8,6 +8,8 @@ from sqlmodel import Session, select
 
 from app.models.folder import Folder
 from app.models.knowledge_file import KnowledgeFile
+from app.schemas.folder import FolderCreate
+from app.crud import folder as folder_crud
 from app.services.document.parser import parse_context_to_structure, _generate_content_with_retry
 from app.services.ai.domain_prompts import build_revise_prompt, detect_domain
 from app.services.search.tavily import tavily_search
@@ -459,6 +461,47 @@ async def revise_roadmap(
             "file_id": new_file.id,
             "title": new_file.name,
             "content": new_file.markdown_content,
+        }
+
+    # =========================================================
+    # TẠO THƯ MỤC CON (SUBFOLDER)
+    # =========================================================
+    if action == "create_subfolder":
+        subfolder_name = parsed.get("name") or "Thư mục con mới"
+        subfolder_type = parsed.get("type") or "document"
+        files_data = parsed.get("files", [])
+
+        # Create subfolder
+        subfolder_data = FolderCreate(name=subfolder_name, type=subfolder_type)
+        subfolder = folder_crud.create_subfolder(session, folder.id, subfolder_data, folder.user_id)
+
+        # Create files in subfolder
+        created_files = []
+        for idx, f_data in enumerate(files_data):
+            new_file = KnowledgeFile(
+                id=f"file-{uuid.uuid4().hex[:8]}",
+                folder_id=subfolder.id,
+                name=f_data.get("title", f"File {idx + 1}"),
+                summary="",
+                markdown_content=f_data.get("content", ""),
+                order_index=idx,
+                user_id=folder.user_id,
+            )
+            session.add(new_file)
+            created_files.append({
+                "id": new_file.id,
+                "name": new_file.name,
+            })
+
+        session.commit()
+        session.refresh(subfolder)
+
+        return {
+            "action": "create_subfolder",
+            "subfolder_id": subfolder.id,
+            "subfolder_name": subfolder.name,
+            "subfolder_type": subfolder.type,
+            "files": created_files,
         }
 
     # =========================================================
