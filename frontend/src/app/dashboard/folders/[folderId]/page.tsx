@@ -569,13 +569,19 @@ export default function FolderPage({
             );
             // Refresh folder tree
             const foldersRes = await folderService.getFolders();
-            if (foldersRes.success) setFolders(foldersRes.data);
+            if (foldersRes.success) {
+              setFolders(foldersRes.data);
+              window.dispatchEvent(new Event("mf-folders-changed"));
+            }
           },
           onDone: async () => {
             clearStatusMessage();
             // Re-fetch folders để đồng bộ nội dung bài học đã chỉnh sửa
             const foldersRes = await folderService.getFolders();
-            if (foldersRes.success) setFolders(foldersRes.data);
+            if (foldersRes.success) {
+              setFolders(foldersRes.data);
+              window.dispatchEvent(new Event("mf-folders-changed"));
+            }
           },
           onError: (msg: string) => {
             clearStatusMessage();

@@ -450,16 +450,21 @@ export default function Sidebar() {
   };
 
   // Cấu trúc cây cho Tree / CollapseButton (expand tất cả / thu gọn tất cả)
-  const treeElements = sortedFolders.map((folder) => ({
+  const buildFolderTree = (folder) => ({
     id: folder.id,
     isSelectable: true,
     name: cleanFolderName(folder.name),
-    children: (folder.files || []).map((file) => ({
-      id: file.id,
-      isSelectable: true,
-      name: file.name,
-    })),
-  }));
+    children: [
+      ...(folder.children || []).map(buildFolderTree),
+      ...(folder.files || []).map((file) => ({
+        id: file.id,
+        isSelectable: true,
+        name: file.name,
+      })),
+    ],
+  });
+
+  const treeElements = sortedFolders.map(buildFolderTree);
 
   // 2. Sửa lại useCallback: Thay 'store' thành 'setFolders' ở mảng Dependency
   const refreshFolders = useCallback(async () => {

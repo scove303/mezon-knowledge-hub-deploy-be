@@ -20,19 +20,37 @@ SessionDep = Annotated[Session, Depends(get_session)]
 @router.get("")
 def get_folders(session: SessionDep, current_user: CurrentActor):
     folders = folder_crud.get_folders_by_user(session, current_user.id)
-    result = [
-        {
+    def folder_to_dict(f, depth=0):
+        if depth > 4:  # Max depth limit
+            return {
+                "id": f.id,
+                "name": f.name,
+                "type": f.type,
+                "created_at": f.created_at,
+                "parent_id": f.parent_id,
+                "depth": f.depth,
+                "order_index": f.order_index,
+                "files": [
+                    {"id": file.id, "name": file.name, "created_at": file.created_at}
+                    for file in f.files
+                ],
+                "children": [],
+            }
+        return {
             "id": f.id,
             "name": f.name,
             "type": f.type,
             "created_at": f.created_at,
+            "parent_id": f.parent_id,
+            "depth": f.depth,
+            "order_index": f.order_index,
             "files": [
                 {"id": file.id, "name": file.name, "created_at": file.created_at}
                 for file in f.files
             ],
+            "children": [folder_to_dict(c, depth + 1) for c in (f.children or [])],
         }
-        for f in folders
-    ]
+    result = [folder_to_dict(f) for f in folders]
     return success_response(message="Lấy danh sách thư mục thành công", data=result)
 
 

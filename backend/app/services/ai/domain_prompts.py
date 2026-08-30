@@ -471,23 +471,29 @@ Tài liệu tìm thấy trong folder:
 Hãy xử lý và trả về JSON duy nhất:
 
 1. Nếu người dùng HỎI CÂU HỎI (giải thích, làm rõ, tóm tắt, hỏi thêm kiến thức liên quan):
-   {"action": "answer", "text": "Câu trả lời chi tiết, dựa trên tài liệu trong folder"}
+   {{"action": "answer", "text": "Câu trả lời chi tiết, dựa trên tài liệu trong folder"}}
 
 2. Nếu người dùng yêu cầu CHỈNH SỬA / VIẾT LẠI / BỔ SUNG nội dung bài học cụ thể:
    - Chọn file_id khớp nhất.
    - Trả về TOÀN BỘ nội dung markdown MỚI của bài học (giữ cấu trúc, đã cải thiện theo yêu cầu).
-   {"action": "edit", "file_id": "<file_id>", "title": "<tiêu đề>", "content": "<TOÀN BỘ markdown mới>"}
+   {{"action": "edit", "file_id": "<file_id>", "title": "<tiêu đề>", "content": "<TOÀN BỘ markdown mới>"}}
 
 3. Nếu yêu cầu tạo nội dung MỚI không thuộc bài nào (tạo file mới trong folder hiện tại):
-   {"action": "edit", "file_id": "new", "title": "<tiêu đề mới>", "content": "<markdown mới>"}
+   {{"action": "edit", "file_id": "new", "title": "<tiêu đề mới>", "content": "<markdown mới>"}}
 
 4. Nếu người dùng yêu cầu TẠO THƯ MỤC CON (subfolder) mới để tổ chức lại nội dung:
-   - Ví dụ trigger: "tạo thư mục con", "tạo folder con", "subfolder", "chia nhỏ", "tách thành thư mục", "mở rộng chủ đề", "bổ sung module"
+   - Ví dụ trigger: "tạo thư mục con", "tạo folder con", "subfolder", "chia nhỏ", "tách thành thư mục", "tách thành thư mục riêng", "tách ra thư mục", "tạo thư mục mới", "mở rộng chủ đề", "bổ sung module", "tách file ra", "tách bài ra", "move to subfolder", "create subfolder", "new folder for", "tách nội dung", "tổ chức lại", "tạo folder mới cho"
    - Trả về tên thư mục con, loại, và danh sách file bên trong (nếu có)
-   {"action": "create_subfolder", "name": "Tên thư mục con", "type": "roadmap|document|video", "files": [{"title": "File 1", "content": "markdown content"}]}
+   {{"action": "create_subfolder", "name": "Tên thư mục con", "type": "roadmap|document|video", "files": [{{"title": "File 1", "content": "markdown content"}}]}}
+
+QUY TẮC BẮT BUỘC: Nếu tin nhắn người dùng CHỨA từ khóa: "tách", "chia", "tạo thư mục", "tạo folder", "subfolder", "new folder" KÈM THEO yêu cầu nội dung (ví dụ: "make a file about...", "tạo file về...", "viết về..."), BẮT BUỘC dùng action "create_subfolder". KHÔNG được dùng "edit" hoặc "answer".
+   - Ví dụ: "tách thành thư mục riêng make a file about backrooms" → create_subfolder với name="Backrooms", files=[{{title="Backrooms Levels", content="..."}}]
+   - Ví dụ: "chia nhỏ bài này ra folder mới" → create_subfolder
+   - Ví dụ: "tạo folder con cho chủ đề này" → create_subfolder
 
 YÊU CẦU:
-- LUÔN trả về JSON hợp lệ, không văn bản ngoài JSON.
+- LUÔN trả về JSON hợp lệ, KHÔNG BAO GIỜ trả về văn bản ngoài JSON.
+- KHÔNG giải thích, KHÔNG thêm nhận xét, CHỈ trả về object JSON đơn lẻ.
 - Với action "edit": content phải là TOÀN BỘ bài học mới, không phải đoạn vởn vẹn.
 - Với action "create_subfolder": files là tùy chọn, có thể rỗng [].
 """

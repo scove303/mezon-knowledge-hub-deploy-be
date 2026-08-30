@@ -338,12 +338,13 @@ async def revise_roadmap(
         ]
 
         doc_block = (
-            "Không có trích đoạn khớp. "
-            "Danh sách bài học hiện có:\n"
+            "Không có trích đoạn khớp với truy vấn. "
+            "Danh sách bài học hiện có trong folder:\n"
             + "\n".join(
                 f"- {t}"
                 for t in titles
             )
+            + "\n\n(Lưu ý: Dù không có tài liệu khớp, nếu người dùng yêu cầu tạo thư mục con mới, hãy dùng action create_subfolder)"
         )
 
     if on_event:
@@ -372,18 +373,28 @@ async def revise_roadmap(
 
     raw = response.text or "{}"
 
+    print("[revise_roadmap] Raw AI response length:", len(raw))
+    print("[revise_roadmap] Raw AI response (first 200 chars):", raw[:200])
+
     try:
         parsed = json.loads(raw)
-    except json.JSONDecodeError:
-        parsed = {
-            "action": "answer",
-            "text": raw,
-        }
+    except json.JSONDecodeError as e:
+        print("[revise_roadmap] JSON decode error:", e)
+        print("[revise_roadmap] Attempting to extract JSON from response...")
+        import re
+        json_match = re.search(r'\{.*\}', raw, re.DOTALL)
+        if json_match:
+            try:
+                parsed = json.loads(json_match.group())
+                print("[revise_roadmap] Extracted JSON keys:", list(parsed.keys()))
+            except json.JSONDecodeError:
+                parsed = {"action": "answer", "text": raw}
+        else:
+            parsed = {"action": "answer", "text": raw}
 
-    action = parsed.get(
-        "action",
-        "answer",
-    )
+    action = parsed.get("action", "answer")
+    
+    print("[revise_roadmap] Parsed action:", action, "keys:", list(parsed.keys()) if isinstance(parsed, dict) else "N/A")
 
     # =========================================================
     # CHỈNH SỬA NỘI DUNG CŨ
@@ -471,9 +482,18 @@ async def revise_roadmap(
         subfolder_type = parsed.get("type") or "document"
         files_data = parsed.get("files", [])
 
+        print(f"🔧 [revise_roadmap] Creating subfolder '{subfolder_name}' under parent folder {folder.id} (depth={folder.depth})")
+        
         # Create subfolder
         subfolder_data = FolderCreate(name=subfolder_name, type=subfolder_type)
         subfolder = folder_crud.create_subfolder(session, folder.id, subfolder_data, folder.user_id)
+
+        # Verify subfolder was created with correct parent_id
+        print(f"🔍 [revise_roadmap] After create_subfolder: subfolder.id={subfolder.id}, subfolder.parent_id={subfolder.parent_id}, subfolder.depth={subfolder.depth}")
+        
+        # Re-load to verify persistence
+        session.refresh(subfolder)
+        print(f"🔍 [revise_roadmap] After refresh: subfolder.parent_id={subfolder.parent_id}, subfolder.depth={subfolder.depth}")
 
         # Create files in subfolder
         created_files = []
@@ -495,6 +515,8 @@ async def revise_roadmap(
 
         session.commit()
         session.refresh(subfolder)
+
+        print(f"✅ [revise_roadmap] Subfolder committed: id={subfolder.id}, parent_id={subfolder.parent_id}, depth={subfolder.depth}")
 
         return {
             "action": "create_subfolder",

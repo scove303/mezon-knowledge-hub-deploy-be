@@ -279,7 +279,20 @@ def _load_owned_folder(
         )
     )
 
-    return session.exec(statement).first()
+    folder = session.exec(statement).first()
+    if folder:
+        # Load immediate children
+        children_stmt = (
+            select(Folder)
+            .where(Folder.parent_id == folder_id, Folder.user_id == user_id)
+            .options(selectinload(Folder.files))
+            .order_by(Folder.order_index, Folder.created_at)
+        )
+        children = list(session.exec(children_stmt).all())
+        for child in children:
+            child.files.sort(key=lambda f: (f.order_index, f.created_at, f.id))
+        folder.children = children
+    return folder
 
 
 async def run_followup_job(job_id: str):

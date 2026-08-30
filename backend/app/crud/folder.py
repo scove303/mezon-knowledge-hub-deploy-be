@@ -13,23 +13,65 @@ from sqlalchemy import func
 
 
 def get_folders_by_user(session: Session, user_id: int) -> list[Folder]:
+    # Load only root folders (depth=0) with files, then build tree from parent_id
     statement = (
+        select(Folder)
+        .where(Folder.user_id == user_id, Folder.depth == 0)
+        .options(selectinload(Folder.files))
+        .order_by(Folder.order_index, Folder.created_at)
+    )
+    root_folders = list(session.exec(statement).all())
+    
+    # Load all other folders to build tree
+    all_folders_stmt = (
         select(Folder)
         .where(Folder.user_id == user_id)
         .options(selectinload(Folder.files))
         .order_by(Folder.order_index, Folder.created_at)
     )
-    folders = list(session.exec(statement).all())
-    for folder in folders:
+    all_folders = list(session.exec(all_folders_stmt).all())
+    
+    for folder in all_folders:
         folder.files.sort(key=lambda f: (f.order_index, f.created_at, f.id))
-    return folders
+    
+    # Build children relationships in memory
+    folder_map = {f.id: f for f in all_folders}
+    for folder in all_folders:
+        folder.children = []
+    for folder in all_folders:
+        if folder.parent_id and folder.parent_id in folder_map:
+            folder_map[folder.parent_id].children.append(folder)
+    
+    # Sort children
+    for folder in all_folders:
+        if folder.children:
+            folder.children.sort(key=lambda f: (f.order_index, f.created_at, f.id))
+    
+    return root_folders
 
 
 def get_folder(session: Session, folder_id: str, user_id: int) -> Optional[Folder]:
-    statement = select(Folder).where(
-        Folder.id == folder_id, Folder.user_id == user_id
+    # Load folder with files only, then load children separately if needed
+    statement = (
+        select(Folder)
+        .where(Folder.id == folder_id, Folder.user_id == user_id)
+        .options(selectinload(Folder.files))
     )
-    return session.exec(statement).first()
+    folder = session.exec(statement).first()
+    if folder:
+        folder.files.sort(key=lambda f: (f.order_index, f.created_at, f.id))
+        # Load immediate children
+        children_stmt = (
+            select(Folder)
+            .where(Folder.parent_id == folder_id, Folder.user_id == user_id)
+            .options(selectinload(Folder.files))
+            .order_by(Folder.order_index, Folder.created_at)
+        )
+        children = list(session.exec(children_stmt).all())
+        for child in children:
+            child.files.sort(key=lambda f: (f.order_index, f.created_at, f.id))
+        folder.children = children
+    return folder
 
 
 def create_folder(session: Session, data: FolderCreate, user_id: int, parent_id: Optional[str] = None) -> Folder:
@@ -38,6 +80,8 @@ def create_folder(session: Session, data: FolderCreate, user_id: int, parent_id:
         parent = session.get(Folder, parent_id)
         if parent:
             depth = parent.depth + 1
+    
+    print(f"🔧 [create_folder] parent_id={parent_id}, calculated_depth={depth}")
     
     folder = Folder(
         id=f"folder-{uuid.uuid4().hex[:8]}",
@@ -50,6 +94,8 @@ def create_folder(session: Session, data: FolderCreate, user_id: int, parent_id:
     session.add(folder)
     session.commit()
     session.refresh(folder)
+    
+    print(f"🔍 [create_folder] After commit: folder.id={folder.id}, folder.parent_id={folder.parent_id}, folder.depth={folder.depth}")
     return folder
 
 
@@ -62,7 +108,25 @@ def create_subfolder(session: Session, parent_folder_id: str, data: FolderCreate
     if parent.depth >= 4:
         raise ValueError("Cannot create subfolder: maximum depth (4) reached")
     
-    return create_folder(session, data, user_id, parent_folder_id)
+    print(f"🔧 [create_subfolder] parent.id={parent.id}, parent.depth={parent.depth}, parent_folder_id={parent_folder_id}")
+    
+    subfolder = create_folder(session, data, user_id, parent_folder_id)
+    
+    # Verify parent_id is correctly persisted
+    session.refresh(subfolder)
+    print(f"🔍 [create_subfolder] After create_folder: subfolder.id={subfolder.id}, subfolder.parent_id={subfolder.parent_id}, subfolder.depth={subfolder.depth}")
+    
+    if subfolder.parent_id != parent_folder_id:
+        print(f"⚠️ [create_subfolder] parent_id mismatch! Expected: {parent_folder_id}, Got: {subfolder.parent_id}")
+        subfolder.parent_id = parent_folder_id
+        subfolder.depth = parent.depth + 1
+        session.add(subfolder)
+        session.commit()
+        session.refresh(subfolder)
+        print(f"🔧 [create_subfolder] Fixed: subfolder.parent_id={subfolder.parent_id}, subfolder.depth={subfolder.depth}")
+    
+    print(f"✅ [create_subfolder] Created subfolder '{subfolder.name}' (id={subfolder.id}) under parent {parent_folder_id}, depth={subfolder.depth}")
+    return subfolder
 
 
 def delete_folder(session: Session, folder_id: str, user_id: int) -> bool:
