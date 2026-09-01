@@ -9,7 +9,6 @@ from typing import Sequence, Union
 
 from alembic import op
 import sqlalchemy as sa
-from sqlalchemy.dialects.postgresql import JSONB
 
 
 # revision identifiers, used by Alembic.
@@ -20,7 +19,7 @@ depends_on: Union[str, Sequence[str], None] = None
 
 
 def upgrade() -> None:
-    op.add_column('folders', sa.Column('conversation_history', JSONB(), nullable=True))
+    op.add_column('folders', sa.Column('conversation_history', sa.JSON(), nullable=True))
 
 
 def downgrade() -> None:
