@@ -27,18 +27,29 @@ def create_db_and_tables() -> None:
 def run_migrations() -> None:
     """Migration nhẹ chạy khi khởi động (hỗ trợ cả MySQL và SQLite)."""
     inspector = inspect(engine)
-    if "knowledge_files" not in inspector.get_table_names():
-        return
+    table_names = inspector.get_table_names()
 
-    columns = {col["name"] for col in inspector.get_columns("knowledge_files")}
-    if "summary" not in columns:
-        with engine.begin() as conn:
-            conn.execute(
-                text(
-                    "ALTER TABLE knowledge_files "
-                    "ADD COLUMN summary VARCHAR(500) NOT NULL DEFAULT ''"
+    if "knowledge_files" in table_names:
+        columns = {col["name"] for col in inspector.get_columns("knowledge_files")}
+        if "summary" not in columns:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        "ALTER TABLE knowledge_files "
+                        "ADD COLUMN summary VARCHAR(500) NOT NULL DEFAULT ''"
+                    )
                 )
-            )
+
+    if "folders" in table_names:
+        folder_cols = {col["name"] for col in inspector.get_columns("folders")}
+        if "updated_at" not in folder_cols:
+            with engine.begin() as conn:
+                conn.execute(
+                    text(
+                        "ALTER TABLE folders "
+                        "ADD COLUMN updated_at DATETIME NULL DEFAULT NULL"
+                    )
+                )
 
 
 def get_session():

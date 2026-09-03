@@ -83,7 +83,9 @@ function LoginFormInner() {
           router.replace("/login");
         }
       } catch (err) {
-        console.error("[LoginForm] Lỗi đăng nhập Mezon:", err);
+        if (process.env.NODE_ENV !== "production") {
+          console.error("[LoginForm] Lỗi đăng nhập Mezon:", err?.message || "Unknown error");
+        }
         setServerError(getErrorMessage(err));
         router.replace("/login");
       } finally {
@@ -111,7 +113,9 @@ function LoginFormInner() {
         setIsLoading(false);
       }
     } catch (err) {
-      console.error("[LoginForm] Lỗi tạo liên kết Mezon:", err);
+      if (process.env.NODE_ENV !== "production") {
+        console.error("[LoginForm] Lỗi tạo liên kết Mezon:", err?.message || "Unknown error");
+      }
       setServerError(currentText.login.server_error);
       setIsLoading(false);
     }

@@ -62,97 +62,10 @@ def get_current_user(
 
 
 def get_current_actor(
-    credentials: Annotated[
-        HTTPAuthorizationCredentials | None,
-        Depends(bearer_scheme),
-    ],
-    session: SessionDep,
-    x_guest_id: str | None = Header(default=None),
+    user: Annotated[User, Depends(get_current_user)],
 ) -> User:
-    """Trả về user đã đăng nhập, hoặc get-or-create một user khách vãng lai
-    định danh qua header X-Guest-Id (UUID do frontend sinh ra).
-    """
-
-    if credentials:
-        return get_current_user(credentials, session)
-
-    if x_guest_id and x_guest_id.strip():
-        guest_username = f"guest_{x_guest_id.strip()}"
-
-        user = session.exec(
-            select(User).where(User.username == guest_username)
-        ).first()
-
-        if user:
-            return user
-
-        import uuid
-
-        guest = User(
-            username=guest_username,
-            display_name="Khách",
-            hashed_password=get_password_hash(uuid.uuid4().hex),
-            role="GUEST",
-        )
-
-        session.add(guest)
-        session.commit()
-        session.refresh(guest)
-
-        return guest
-
-    raise HTTPException(
-        status_code=status.HTTP_401_UNAUTHORIZED,
-        detail={
-            "success": False,
-            "message": "Vui lòng đăng nhập hoặc cung cấp mã khách (X-Guest-Id)",
-            "data": None,
-        },
-        headers={"WWW-Authenticate": "Bearer"},
-    )
-
-
-def merge_guest_into_user(
-    session: Session,
-    guest_id: int,
-    user_id: int,
-) -> int:
-    """Adopt-all: chuyển toàn bộ folder của khách sang tài khoản vừa xác thực,
-    xóa folder_root của khách (unique per user) và xóa luôn user khách.
-    Trả về số folder đã gộp.
-    """
-
-    from app.models.folder import Folder
-
-    guest = session.get(User, guest_id)
-
-    if not guest or guest.role != "GUEST":
-        return 0
-
-    folders = session.exec(
-        select(Folder).where(Folder.user_id == guest_id)
-    ).all()
-
-    for f in folders:
-        f.user_id = user_id
-
-    roots = session.exec(
-        select(FolderRoot).where(FolderRoot.user_id == guest_id)
-    ).all()
-
-    for r in roots:
-        session.delete(r)
-
-    # Adopt các roadmap job đang chạy của khách
-    # sang tài khoản vừa xác thực.
-    from app.core.state import adopt_jobs_for_user
-
-    adopt_jobs_for_user(guest_id, user_id)
-
-    session.delete(guest)
-    session.commit()
-
-    return len(folders)
+    """Trả về user đã xác thực qua Bearer Token."""
+    return user
 
 
 CurrentUser = Annotated[User, Depends(get_current_user)]

@@ -21,19 +21,12 @@ export default function UserProfileMenu() {
 
   const user = useAuthStore((state) => state.user) || {};
 
-  // Backend trả về display_name / avatar_url (snake_case).
-  // Fallback cho tài khoản cũ lưu theo camelCase (name / avatarUrl).
-  const displayName = isAuthenticated
-    ? user.display_name || user.name || "Tester"
-    : "Khách";
-  const email = isAuthenticated
-    ? user.email || "tester@mezon.io"
-    : "Dữ liệu tạm sẽ được chuyển sang tài khoản khi bạn đăng nhập";
-  const avatarUrl = isAuthenticated
-    ? user.avatar_url ||
-      user.avatarUrl ||
-      "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex"
-    : "https://api.dicebear.com/7.x/avataaars/svg?seed=guest";
+  const displayName = user.display_name || user.name || "Người dùng";
+  const email = user.email || "";
+  const avatarUrl =
+    user.avatar_url ||
+    user.avatarUrl ||
+    "https://api.dicebear.com/7.x/avataaars/svg?seed=Alex";
 
   // Click outside listener
   useEffect(() => {
@@ -217,31 +210,17 @@ export default function UserProfileMenu() {
             />
           </div>
 
-          {/* Nút Logout / Đăng nhập */}
+          {/* Nút Logout */}
           <div className="pt-1 px-1">
-            {isAuthenticated ? (
-              <button
-                onClick={handleLogout}
-                className={cn(
-                  "w-full flex items-center space-x-2.5 px-2.5 py-1.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors",
-                )}
-              >
-                <LogOut className="w-3.5 h-3.5" />
-                <span className={cn("font-medium")}>Đăng xuất</span>
-              </button>
-            ) : (
-              <button
-                onClick={() => router.push("/login")}
-                className={cn(
-                  "w-full flex items-center space-x-2.5 px-2.5 py-1.5 text-xs text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-lg transition-colors",
-                )}
-              >
-                <LogIn className="w-3.5 h-3.5" />
-                <span className={cn("font-medium")}>
-                  Đăng nhập để lưu dữ liệu
-                </span>
-              </button>
-            )}
+            <button
+              onClick={handleLogout}
+              className={cn(
+                "w-full flex items-center space-x-2.5 px-2.5 py-1.5 text-xs text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 rounded-lg transition-colors",
+              )}
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span className={cn("font-medium")}>Đăng xuất</span>
+            </button>
           </div>
         </div>
       )}

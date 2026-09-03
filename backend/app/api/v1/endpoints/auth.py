@@ -7,7 +7,7 @@ import requests
 from typing import Annotated
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Header
+from fastapi import APIRouter, Depends, HTTPException, status, Query, Header, Response
 from fastapi.responses import RedirectResponse
 from jose import JWTError
 from sqlmodel import Session, select
@@ -22,8 +22,6 @@ from app.core.security import (
 )
 from app.models.user import User
 
-from app.api.deps import merge_guest_into_user
-
 from app.schemas.auth import (
     RefreshRequest,
     MezonLoginRequest,
@@ -37,23 +35,41 @@ router = APIRouter()
 SessionDep = Annotated[Session, Depends(get_session)]
 
 # ------------------------------------------------------------------
-# Lưu state Mezon OAuth đã phát hành (in-memory, TTL 10 phút)
+# Lưu state Mezon OAuth đã phát hành (in-memory, TTL 10 phút, bounded)
 # ------------------------------------------------------------------
 MEZON_STATE_TTL_SECONDS = 600
+MAX_MEZON_STATES = 1000
 _mezon_states: dict[str, float] = {}
+
+
+def _cleanup_mezon_states() -> None:
+    now = time.time()
+    expired = [
+        s for s, issued_at in _mezon_states.items()
+        if now - issued_at > MEZON_STATE_TTL_SECONDS
+    ]
+    for s in expired:
+        _mezon_states.pop(s, None)
+
+    # Nếu vẫn vượt quá MAX_MEZON_STATES, xóa các state cũ nhất
+    if len(_mezon_states) > MAX_MEZON_STATES:
+        oldest = sorted(_mezon_states.items(), key=lambda item: item[1])
+        for s, _ in oldest[: len(_mezon_states) - MAX_MEZON_STATES]:
+            _mezon_states.pop(s, None)
 
 
 def _issue_mezon_state() -> str:
     """Sinh state 11 ký tự chữ-số theo yêu cầu của Mezon và lưu lại."""
+    _cleanup_mezon_states()
     chars = string.ascii_letters + string.digits
     state = "".join(secrets.choice(chars) for _ in range(11))
-    _cleanup_mezon_states()
     _mezon_states[state] = time.time()
     return state
 
 
 def _validate_mezon_state(state: str) -> None:
     """Kiểm tra state do chính server phát hành (chống CSRF), xóa sau khi dùng."""
+    _cleanup_mezon_states()
     if not state or state not in _mezon_states:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -65,16 +81,6 @@ def _validate_mezon_state(state: str) -> None:
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error_response("Phiên đăng nhập Mezon đã hết hạn, vui lòng thử lại"),
         )
-
-
-def _cleanup_mezon_states() -> None:
-    now = time.time()
-    expired = [
-        s for s, issued_at in _mezon_states.items()
-        if now - issued_at > MEZON_STATE_TTL_SECONDS
-    ]
-    for s in expired:
-        _mezon_states.pop(s, None)
 
 
 # =============================================================
@@ -135,7 +141,7 @@ def mezon_callback(
 def login_with_mezon(
     data: MezonLoginRequest,
     session: SessionDep,
-    x_guest_id: str | None = Header(default=None),
+    response: Response = None,
 ):
 
     # ---------------------------------------------------------
@@ -162,19 +168,19 @@ def login_with_mezon(
     }
 
     try:
-        response = requests.post(
+        oauth_resp = requests.post(
             token_endpoint,
             data=payload,
             headers=headers,
             timeout=15,
         )
-        response.raise_for_status()
-        token_data = response.json()
-    except requests.exceptions.RequestException as e:
+        oauth_resp.raise_for_status()
+        token_data = oauth_resp.json()
+    except requests.exceptions.RequestException:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error_response(
-                f"Xác thực với Mezon thất bại: {str(e)}"
+                "Xác thực với Mezon thất bại. Vui lòng thử lại sau."
             ),
         )
 
@@ -203,7 +209,7 @@ def login_with_mezon(
         )
         userinfo_res.raise_for_status()
         user_info = userinfo_res.json()
-    except requests.exceptions.RequestException as e:
+    except requests.exceptions.RequestException:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=error_response(
@@ -254,20 +260,16 @@ def login_with_mezon(
         )
 
     # ---------------------------------------------------------
-    # 5. Tìm user theo mezon_id (link với tài khoản bot), fallback email/username
+    # 5. Tìm user theo mezon_id bất biến (chống account takeover)
     # ---------------------------------------------------------
     user = session.exec(
         select(User).where(User.mezon_id == mezon_id)
     ).first()
 
+    # Fallback chỉ theo email nếu có (không match theo username tùy ý)
     if not user and mezon_email:
         user = session.exec(
             select(User).where(User.email == mezon_email)
-        ).first()
-
-    if not user and mezon_username:
-        user = session.exec(
-            select(User).where(User.username == mezon_username)
         ).first()
 
     # ---------------------------------------------------------
@@ -322,31 +324,27 @@ def login_with_mezon(
             session.refresh(user)
 
     # ---------------------------------------------------------
-    # 8. Merge dữ liệu khách (guest) vào tài khoản vừa đăng nhập
-    # ---------------------------------------------------------
-    if x_guest_id and x_guest_id.strip():
-        guest_user = session.exec(
-            select(User).where(
-                User.username == f"guest_{x_guest_id.strip()}"
-            )
-        ).first()
-        if guest_user and guest_user.id != user.id:
-            merged_count = merge_guest_into_user(
-                session, guest_user.id, user.id
-            )
-            print(f"MEZON LOGIN: merged {merged_count} folders from guest {guest_user.id}")
-
-    # ---------------------------------------------------------
-    # 9. Tạo JWT nội bộ
+    # 8. Tạo JWT nội bộ & Set HttpOnly Cookie cho Refresh Token
     # ---------------------------------------------------------
     access_token = create_access_token(user.id)
-    refresh_token = create_refresh_token(user.id)
+    refresh_token_val = create_refresh_token(user.id)
+
+    if response is not None:
+        response.set_cookie(
+            key="refreshToken",
+            value=refresh_token_val,
+            httponly=True,
+            secure=False if settings.DEBUG else True,
+            samesite="lax",
+            max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400,
+            path="/",
+        )
 
     return success_response(
         message="Đăng nhập Mezon thành công",
         data={
             "accessToken": access_token,
-            "refreshToken": refresh_token,
+            "refreshToken": refresh_token_val,
             "user": {
                 "id": user.id,
                 "username": user.username,
@@ -368,13 +366,15 @@ def login_with_mezon(
 @router.post("/refresh")
 def refresh_token(
     data: RefreshRequest,
-    session: SessionDep
+    session: SessionDep,
+    response: Response = None,
 ):
 
     try:
+        token_str = data.refreshToken
 
         payload = decode_token(
-            data.refreshToken
+            token_str
         )
 
         if payload.get("type") != "refresh":
@@ -409,6 +409,17 @@ def refresh_token(
         new_refresh = create_refresh_token(
             user.id
         )
+
+        if response is not None:
+            response.set_cookie(
+                key="refreshToken",
+                value=new_refresh,
+                httponly=True,
+                secure=False if settings.DEBUG else True,
+                samesite="lax",
+                max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400,
+                path="/",
+            )
 
         return success_response(
             message="Làm mới token thành công",

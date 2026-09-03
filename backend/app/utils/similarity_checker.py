@@ -2,21 +2,27 @@ import asyncio
 
 MODEL_AVAILABLE = False
 _model = None
+_model_load_error = None
 
-try:
-    from sentence_transformers import SentenceTransformer
 
-    # Load a fast, lightweight embedding model once at startup
-    _model = SentenceTransformer("all-MiniLM-L6-v2")
-    MODEL_AVAILABLE = True
-except Exception as e:
-    print(
-        f"[similarity_checker] sentence-transformers unavailable, disable semantic cache: {e}",
-        flush=True,
-    )
+def _load_model():
+    global _model, MODEL_AVAILABLE, _model_load_error
+    if _model is not None:
+        return
+    try:
+        from sentence_transformers import SentenceTransformer
+        _model = SentenceTransformer("all-MiniLM-L6-v2")
+        MODEL_AVAILABLE = True
+    except Exception as e:
+        _model_load_error = e
+        print(
+            f"[similarity_checker] sentence-transformers unavailable, disable semantic cache: {e}",
+            flush=True,
+        )
 
 
 def _get_embedding_sync(text: str) -> list[float]:
+    _load_model()
     if not MODEL_AVAILABLE or _model is None:
         return []
     return _model.encode(text).tolist()

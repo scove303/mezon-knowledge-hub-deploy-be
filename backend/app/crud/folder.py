@@ -181,8 +181,10 @@ def rename_folder(
     if not folder:
         return None
 
-    # 2. Cập nhật tên mới
+    # 2. Cập nhật tên mới và thời gian sửa
+    from datetime import datetime, timezone
     folder.name = new_name
+    folder.updated_at = datetime.now(timezone.utc)
     
     # 3. Lưu vào DB & refresh lại data
     session.add(folder)

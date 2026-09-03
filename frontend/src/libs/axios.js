@@ -1,4 +1,5 @@
 import axios from "axios";
+import { useAuthStore } from "@/features/auth/store";
 
 const BASE_URL =
   process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
@@ -6,6 +7,7 @@ const BASE_URL =
 const axiosInstance = axios.create({
   baseURL: BASE_URL,
   headers: { "Content-Type": "application/json" },
+  withCredentials: true,
   timeout: 60000,
 });
 
@@ -13,6 +15,13 @@ const getTokens = () => {
   if (typeof window === "undefined")
     return { accessToken: null, refreshToken: null };
   try {
+    const store = useAuthStore.getState();
+    if (store?.accessToken || store?.refreshToken) {
+      return {
+        accessToken: store.accessToken || null,
+        refreshToken: store.refreshToken || null,
+      };
+    }
     const authData = localStorage.getItem("mezon-auth");
     if (authData) {
       const parsed = JSON.parse(authData);
@@ -22,39 +31,34 @@ const getTokens = () => {
       };
     }
   } catch (e) {
-    console.error("Lỗi phân tích cú pháp mezon-auth:", e);
+    if (process.env.NODE_ENV !== "production") {
+      console.error("Lỗi lấy token xác thực");
+    }
   }
   return { accessToken: null, refreshToken: null };
 };
 
-const getGuestId = () => {
-  if (typeof window === "undefined") return null;
+// Kiểm tra xem URL có phải là cùng origin / API base của ứng dụng không
+const isSameOriginOrApi = (url) => {
+  if (!url) return true;
+  if (url.startsWith("/") || url.startsWith("./") || url.startsWith("../")) return true;
   try {
-    let guestId = localStorage.getItem("mezon-guest-id");
-    if (!guestId) {
-      guestId =
-        (crypto.randomUUID && crypto.randomUUID()) ||
-        `guest-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-      localStorage.setItem("mezon-guest-id", guestId);
-    }
-    return guestId;
-  } catch (e) {
-    console.error("Lỗi đọc guest id:", e);
-    return null;
+    const targetUrl = new URL(url, BASE_URL);
+    const apiUrl = new URL(BASE_URL);
+    return targetUrl.origin === apiUrl.origin;
+  } catch {
+    return false;
   }
 };
 
 // ─── Request Interceptor ─────────────────────────────────────────────────────
 axiosInstance.interceptors.request.use(
   (config) => {
-    const { accessToken } = getTokens();
-    if (accessToken) {
-      config.headers.Authorization = `Bearer ${accessToken}`;
-    } else {
-      // Chưa đăng nhập → định danh bằng Guest ID để backend merge dữ liệu sau khi login
-      const guestId = getGuestId();
-      if (guestId) {
-        config.headers["X-Guest-Id"] = guestId;
+    // Chỉ đính kèm Authorization cho requests gửi tới API của ứng dụng
+    if (isSameOriginOrApi(config.url)) {
+      const { accessToken } = getTokens();
+      if (accessToken) {
+        config.headers.Authorization = `Bearer ${accessToken}`;
       }
     }
     return config;
@@ -78,6 +82,9 @@ axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    if (!originalRequest) {
+      return Promise.reject(error);
+    }
 
     // Chỉ thực hiện tự động làm mới token nếu gặp lỗi 401
     if (error.response?.status === 401 && !originalRequest._retry) {
@@ -91,7 +98,10 @@ axiosInstance.interceptors.response.use(
         return Promise.reject(error);
       }
 
-      // Nếu đã có refreshToken, tiến hành các bước làm mới bên dưới:
+      // Đánh dấu _retry ngay từ đầu để tránh lặp vô hạn nếu request trong queue thất bại
+      originalRequest._retry = true;
+
+      // Nếu đang trong tiến trình refresh, đẩy request vào hàng đợi
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           pendingQueue.push({ resolve, reject });
@@ -103,11 +113,9 @@ axiosInstance.interceptors.response.use(
           .catch(Promise.reject.bind(Promise));
       }
 
-      originalRequest._retry = true;
       isRefreshing = true;
 
       try {
-        // Không cần check 'if (!refreshToken)' ở đây nữa vì đã check sớm ở phía trên
         const { data } = await axios.post(`${BASE_URL}/auth/refresh`, {
           refreshToken,
         });
@@ -115,25 +123,16 @@ axiosInstance.interceptors.response.use(
         const newAccessToken = data.data.accessToken;
         const newRefreshToken = data.data.refreshToken;
 
-        if (typeof window !== "undefined") {
-          const authData = localStorage.getItem("mezon-auth");
-          if (authData) {
-            const parsed = JSON.parse(authData);
-            parsed.state.accessToken = newAccessToken;
-            parsed.state.refreshToken = newRefreshToken;
-            localStorage.setItem("mezon-auth", JSON.stringify(parsed));
-          }
-        }
+        // Cập nhật Zustand store (đồng thời zustand persist sẽ tự sync vào localStorage)
+        useAuthStore.getState().updateTokens(newAccessToken, newRefreshToken);
 
         processQueue(null, newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
         processQueue(refreshError, null);
-        // Không tự động chuyển hướng (redirect) về login nữa để cho phép chế độ Guest hoạt động
-        if (typeof window !== "undefined") {
-          localStorage.removeItem("mezon-auth");
-        }
+        // Clear auth qua Zustand store
+        useAuthStore.getState().clearAuth();
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
@@ -145,4 +144,4 @@ axiosInstance.interceptors.response.use(
 );
 
 export default axiosInstance;
-export { getTokens, getGuestId };
+export { getTokens };

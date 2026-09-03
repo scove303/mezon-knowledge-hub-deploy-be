@@ -18,9 +18,9 @@ from app.utils.similarity_checker import get_embedding, cosine_similarity
 from google.genai import types
 
 
-def _get_folders_sync(sess):
+def _get_folders_sync(sess, user_id: int):
     return sess.exec(
-        select(Folder).where(Folder.type == "roadmap")
+        select(Folder).where(Folder.type == "roadmap", Folder.user_id == user_id)
     ).all()
 
 
@@ -106,6 +106,7 @@ async def roadmap_service(
     existing_folders = await asyncio.to_thread(
         _get_folders_sync,
         session,
+        user_id,
     )
 
     if new_embedding:

@@ -12,24 +12,29 @@ from app.bot.runner import start_mezon_bot
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Khởi tạo Database
+    # Khởi tạo Database & Chạy auto-migrations
     create_db_and_tables()
     run_migrations()
     
     # Bật Bot Mezon chạy ngầm cùng lúc
-    asyncio.create_task(start_mezon_bot())
+    bot_task = asyncio.create_task(start_mezon_bot())
     
     yield
-    # Shutdown (cleanup if needed)
+    # Shutdown (cleanup)
+    bot_task.cancel()
+    try:
+        await bot_task
+    except asyncio.CancelledError:
+        pass
 
 
 app = FastAPI(
     title=settings.APP_NAME,
     version="1.0.0",
     description="Backend API cho Mezon Knowledge Hub — quản lý tài liệu, lộ trình học và tích hợp Mezon Bot.",
-    openapi_url=f"{settings.API_V1_STR}/openapi.json",
-    docs_url=f"{settings.API_V1_STR}/docs",
-    redoc_url=f"{settings.API_V1_STR}/redoc",
+    openapi_url=f"{settings.API_V1_STR}/openapi.json" if settings.DEBUG else None,
+    docs_url=f"{settings.API_V1_STR}/docs" if settings.DEBUG else None,
+    redoc_url=f"{settings.API_V1_STR}/redoc" if settings.DEBUG else None,
     lifespan=lifespan,
 )
 
