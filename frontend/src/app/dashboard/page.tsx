@@ -3,7 +3,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Loader2, Bot, User, FolderOpen, Plus, Network } from 'lucide-react';
+import { Loader2, Bot, User, FolderOpen, Plus, Network, Paperclip } from 'lucide-react';
 import Greeting from '@/components/chat/Greeting';
 import ChatInput from '@/components/chat/ChatInput';
 import StreamingText from '@/components/chat/StreamingText';
@@ -25,6 +25,7 @@ interface ChatThread {
   id: string;
   jobId: string | null;
   topic: string;
+  fileName?: string;
   status: 'submitting' | 'queued' | 'running' | 'done' | 'error';
   statusMessage: string;
   total: number;
@@ -32,7 +33,7 @@ interface ChatThread {
   folderId: string | null;
   folderName: string;
   conversationId: string | null;
-  action: 'roadmap' | 'followup';
+  action: 'roadmap' | 'followup' | 'digest';
   error: string;
 }
 
@@ -89,6 +90,64 @@ export default function DashboardIndex() {
 
     const threadId = `thread-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
     const folderName = `${message.slice(0, 30)}${message.length > 30 ? '...' : ''}`;
+
+    // Nếu có file đính kèm → gửi qua endpoint /ai/digest
+    if (file) {
+      const topicDisplay = message.trim() || `Tài liệu: ${file.name}`;
+      setThreads((prev) => [
+        ...prev,
+        {
+          id: threadId,
+          jobId: null,
+          topic: topicDisplay,
+          fileName: file.name,
+          status: 'running',
+          statusMessage: `Đang đọc, tóm tắt và xử lý tài liệu "${file.name}"...`,
+          total: 0,
+          output: '',
+          folderId: null,
+          folderName: file.name,
+          conversationId: null,
+          action: 'digest',
+          error: '',
+        },
+      ]);
+
+      try {
+        const digestRes = await aiService.digestDocument(file, undefined, message.trim() || undefined);
+        const folderId = digestRes?.data?.folder_id;
+        const suggestedName = digestRes?.data?.suggested_folder_name || file.name;
+        const docs = digestRes?.data?.documents_created || [];
+
+        updateThread(threadId, {
+          status: 'done',
+          folderId,
+          folderName: suggestedName,
+          statusMessage: 'Hoàn tất!',
+          output: `Đã xử lý xong tài liệu **${file.name}** thành công và lưu ${docs.length} tài liệu vào thư mục **${suggestedName}**.`,
+        });
+
+        const newFolders = await refreshSidebarFolders();
+        if (newFolders && folderId) {
+          const newFolder = newFolders.find((f: any) => String(f.id) === String(folderId));
+          if (newFolder && newFolder.files && newFolder.files.length > 0) {
+            setSelectedFile(newFolder.files[0].id);
+            setDocumentSideOpen(true);
+            router.push(`/dashboard/folders/${folderId}`);
+          }
+        }
+      } catch (err: any) {
+        const msg =
+          err?.response?.data?.detail?.message ||
+          err?.response?.data?.detail ||
+          err?.message ||
+          'Không thể xử lý tài liệu. Vui lòng thử lại sau!';
+        updateThread(threadId, { status: 'error', error: msg, statusMessage: 'Thất bại' });
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
 
     // Nếu có thread hoàn thành gần nhất (có folder) → đây là prompt hỏi tiếp / chỉnh sửa,
     // giữ nguyên conversation_id = folder_id cũ thay vì tạo lộ trình mới.
@@ -240,8 +299,14 @@ export default function DashboardIndex() {
                   <div className="flex gap-4 p-4 rounded-xl justify-end">
                     <div className="flex flex-col gap-2 flex-1 max-w-[80%] items-end">
                       <div className="font-semibold text-sm text-[rgb(var(--color-text-primary))]">You</div>
-                      <div className="bg-indigo-600/15 border border-indigo-500/20 text-[rgb(var(--color-text-primary))] rounded-2xl rounded-tr-sm px-4 py-2.5 whitespace-pre-wrap text-sm leading-relaxed">
-                        {thread.topic}
+                      <div className="bg-indigo-600/15 border border-indigo-500/20 text-[rgb(var(--color-text-primary))] rounded-2xl rounded-tr-sm px-4 py-2.5 whitespace-pre-wrap text-sm leading-relaxed flex flex-col gap-1.5">
+                        {thread.fileName && (
+                          <div className="inline-flex items-center gap-1.5 text-xs text-indigo-400 bg-indigo-500/10 px-2 py-1 rounded-md border border-indigo-500/20 self-start">
+                            <Paperclip size={12} />
+                            <span>{thread.fileName}</span>
+                          </div>
+                        )}
+                        <span>{thread.topic}</span>
                       </div>
                     </div>
                     <div className="flex-shrink-0 mt-1">
@@ -294,7 +359,7 @@ export default function DashboardIndex() {
                               className="self-start flex items-center gap-2 px-4 py-2 mt-1 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-500/20"
                             >
                               <FolderOpen size={16} />
-                              Mở lộ trình
+                              {thread.action === 'digest' ? 'Mở thư mục' : 'Mở lộ trình'}
                             </button>
                             <button
                               onClick={() =>
