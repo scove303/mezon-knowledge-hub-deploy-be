@@ -5,3 +5,7 @@ node_modules
 .env*.local
 *.log
 npm-debug.log*
+e2e/
+test-results/
+*.py
+scratch/

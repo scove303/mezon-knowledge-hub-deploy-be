@@ -556,8 +556,9 @@ async def digest_document(
     ),
 ):
 
-    folder_info = FolderCreate(name="Tổng hợp file" + prompt,type="digest")
-    folder = folder_crud.create_folder(session=session,data=folder_info,user_id=current_user.id)
+    initial_folder_name = f"Tổng hợp: {prompt}" if prompt else f"Tổng hợp: {file.filename or 'Tài liệu'}"
+    folder_info = FolderCreate(name=initial_folder_name, type="digest")
+    folder = folder_crud.create_folder(session=session, data=folder_info, user_id=current_user.id)
     if not folder:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,

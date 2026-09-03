@@ -130,10 +130,11 @@ export const aiService = {
   },
 
   // 3. Tiêu hóa tài liệu đính kèm (Doc-to-Summary)
-  async digestDocument(file, folderId) {
+  async digestDocument(file, folderId, prompt) {
     const formData = new FormData();
     formData.append('file', file);
-    formData.append('folder_id', folderId);
+    if (folderId) formData.append('folder_id', folderId);
+    if (prompt) formData.append('prompt', prompt);
 
     const { data } = await axiosInstance.post('/ai/digest', formData, {
       headers: { 'Content-Type': 'multipart/form-data' }
