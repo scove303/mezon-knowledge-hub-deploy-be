@@ -5,6 +5,10 @@ from jose import jwt
 import bcrypt
 
 from app.core.config import settings
+import uuid
+from datetime import datetime, timedelta, timezone
+from jose import jwt
+from app.core.config import settings
 
 
 def verify_password(plain_password: str, hashed_password: str) -> bool:
@@ -42,3 +46,18 @@ def create_refresh_token(subject: Any) -> str:
 
 def decode_token(token: str) -> dict:
     return jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+
+
+
+def create_refresh_token(subject: int) -> tuple[str, str]:
+    jti = str(uuid.uuid4())
+    expire = datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
+    
+    to_encode = {
+        "sub": str(subject),
+        "type": "refresh",
+        "jti": jti,
+        "exp": expire
+    }
+    encoded_jwt = jwt.encode(to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM)
+    return encoded_jwt, jti

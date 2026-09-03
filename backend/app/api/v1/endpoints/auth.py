@@ -29,6 +29,12 @@ from app.schemas.auth import (
 from app.schemas.common import error_response, success_response
 
 from jose import jwt
+from datetime import datetime, timedelta, timezone
+from fastapi import HTTPException, Response
+from jose import JWTError
+from sqlmodel import select
+from app.models.token import RefreshToken
+from app.models.user import User
 
 
 router = APIRouter()
@@ -369,53 +375,65 @@ def refresh_token(
     session: SessionDep,
     response: Response = None,
 ):
-
     try:
         token_str = data.refreshToken
-
-        payload = decode_token(
-            token_str
-        )
+        payload = decode_token(token_str)
 
         if payload.get("type") != "refresh":
-
-            raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=error_response(
-                    "Token không hợp lệ"
-                ),
-            )
+            raise HTTPException(status_code=401, detail=error_response("Token không hợp lệ"))
 
         user_id = int(payload["sub"])
+        jti = payload.get("jti")
 
-        user = session.get(
-            User,
-            user_id
-        )
+        if not jti:
+            raise HTTPException(status_code=401, detail=error_response("Token thiếu định danh jti"))
 
-        if not user:
+        # Tìm token trong database
+        db_token = session.exec(select(RefreshToken).where(RefreshToken.jti == jti)).first()
+
+        # 🚨 REPLAY ATTACK DETECTION: Nếu token đã bị revoke mà kẻ xấu cố xài lại
+        if db_token and db_token.is_revoked:
+            # Thu hồi TOÀN BỘ phiên đăng nhập của user này để phòng vệ
+            user_tokens = session.exec(select(RefreshToken).where(RefreshToken.user_id == user_id)).all()
+            for t in user_tokens:
+                t.is_revoked = True
+            session.commit()
 
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail=error_response(
-                    "Người dùng không tồn tại"
-                ),
+                status_code=401,
+                detail=error_response("Phát hiện nguy cơ bảo mật. Tất cả phiên đăng nhập đã bị thu hồi.")
             )
 
-        new_access = create_access_token(
-            user.id
-        )
+        if not db_token:
+            raise HTTPException(status_code=401, detail=error_response("Token không tồn tại hoặc đã hết hạn"))
 
-        new_refresh = create_refresh_token(
-            user.id
+        user = session.get(User, user_id)
+        if not user:
+            raise HTTPException(status_code=401, detail=error_response("Người dùng không tồn tại"))
+
+        # 1. HỦY TOKEN CŨ (Rotation)
+        db_token.is_revoked = True
+        session.add(db_token)
+
+        # 2. SINH CẶP TOKEN MỚI
+        new_access = create_access_token(user.id)
+        new_refresh, new_jti = create_refresh_token(user.id)
+
+        # 3. LƯU TOKEN MỚI VÀO DB
+        new_db_token = RefreshToken(
+            jti=new_jti,
+            user_id=user.id,
+            expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS)
         )
+        session.add(new_db_token)
+        session.commit()
 
         if response is not None:
             response.set_cookie(
                 key="refreshToken",
                 value=new_refresh,
                 httponly=True,
-                secure=False if settings.DEBUG else True,
+                secure=not settings.DEBUG,
                 samesite="lax",
                 max_age=settings.REFRESH_TOKEN_EXPIRE_DAYS * 86400,
                 path="/",
@@ -423,17 +441,11 @@ def refresh_token(
 
         return success_response(
             message="Làm mới token thành công",
-            data={
-                "accessToken": new_access,
-                "refreshToken": new_refresh,
-            },
+            data={"accessToken": new_access, "refreshToken": new_refresh},
         )
 
     except JWTError:
-
         raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail=error_response(
-                "Token không hợp lệ hoặc đã hết hạn"
-            ),
+            status_code=401,
+            detail=error_response("Token không hợp lệ hoặc đã hết hạn"),
         )
