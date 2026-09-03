@@ -78,12 +78,12 @@ async def upload_file(
 def list_file_revisions(
     file_id: str, session: SessionDep, current_user: CurrentActor
 ):
-    file = file_crud.get_file(session, file_id)
+    file = file_crud.get_file(session, file_id, current_user.id)
     if not file:
         raise HTTPException(
             status_code=404, detail=error_response("Không tìm thấy file")
         )
-    revisions = file_crud.list_revisions(session, file_id)
+    revisions = file_crud.list_revisions(session, file_id, current_user.id)
     return success_response(
         message="Lấy lịch sử phiên bản thành công",
         data=[
@@ -101,7 +101,7 @@ def list_file_revisions(
 def restore_file_revision(
     file_id: str, revision_id: str, session: SessionDep, current_user: CurrentActor
 ):
-    file = file_crud.restore_revision(session, file_id, revision_id)
+    file = file_crud.restore_revision(session, file_id, revision_id, current_user.id)
     if not file:
         raise HTTPException(
             status_code=404,
@@ -234,7 +234,7 @@ async def summarize_folder(
 
 @router.get("/{file_id}")
 def get_file(file_id: str, session: SessionDep, current_user: CurrentActor):
-    file = file_crud.get_file(session, file_id)
+    file = file_crud.get_file(session, file_id, current_user.id)
     if not file:
         raise HTTPException(
             status_code=404, detail=error_response("Không tìm thấy file")
@@ -258,7 +258,7 @@ def get_file(file_id: str, session: SessionDep, current_user: CurrentActor):
 def update_file(
     file_id: str, data: FileUpdate, session: SessionDep, current_user: CurrentActor
 ):
-    file = file_crud.update_file(session, file_id, data)
+    file = file_crud.update_file(session, file_id, data, current_user.id)
     if not file:
         raise HTTPException(
             status_code=404, detail=error_response("Không tìm thấy file")
@@ -273,7 +273,7 @@ def update_file(
 def rename_file(
     file_id: str, data: FileRename, session: SessionDep, current_user: CurrentActor
 ):
-    file = file_crud.rename_file(session, file_id, data.name)
+    file = file_crud.rename_file(session, file_id, data.name, current_user.id)
     if not file:
         raise HTTPException(
             status_code=404, detail=error_response("Không tìm thấy file")
@@ -301,7 +301,7 @@ def move_file(
 
 @router.delete("/{file_id}")
 def delete_file(file_id: str, session: SessionDep, current_user: CurrentActor):
-    deleted = file_crud.delete_file(session, file_id)
+    deleted = file_crud.delete_file(session, file_id, current_user.id)
     if not deleted:
         raise HTTPException(
             status_code=404, detail=error_response("Không tìm thấy file")

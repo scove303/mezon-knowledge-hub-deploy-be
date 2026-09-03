@@ -1,4 +1,4 @@
-import axiosInstance, { getTokens, getGuestId } from '@/libs/axios';
+import axiosInstance, { getTokens } from '@/libs/axios';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
@@ -7,13 +7,70 @@ function buildAuthHeaders() {
   const { accessToken } = getTokens();
   if (accessToken) {
     headers.Authorization = `Bearer ${accessToken}`;
-  } else {
-    const guestId = getGuestId();
-    if (guestId) {
-      headers["X-Guest-Id"] = guestId;
-    }
   }
   return headers;
+}
+
+async function readSSEStream(url, headers, onEvent, { signal, timeout = 300000 } = {}) {
+  const controller = new AbortController();
+  const timer = timeout ? setTimeout(() => controller.abort(new Error("Stream timeout")), timeout) : null;
+
+  if (signal) {
+    if (signal.aborted) {
+      controller.abort(signal.reason);
+    } else {
+      signal.addEventListener("abort", () => controller.abort(signal.reason), { once: true });
+    }
+  }
+
+  try {
+    const res = await fetch(url, { headers, signal: controller.signal });
+
+    if (!res.ok) {
+      let detail = `HTTP ${res.status}`;
+      try {
+        const body = await res.json();
+        detail = body.detail?.message || body.detail || detail;
+      } catch { /* ignore */ }
+      throw new Error(detail);
+    }
+
+    if (!res.body) throw new Error("Trình duyệt không hỗ trợ streaming");
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder("utf-8");
+    let buffer = "";
+
+    try {
+      while (true) {
+        const { value, done } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true });
+
+        let sepIdx;
+        while ((sepIdx = buffer.indexOf("\n\n")) !== -1) {
+          const rawEvent = buffer.slice(0, sepIdx);
+          buffer = buffer.slice(sepIdx + 2);
+          const dataLine = rawEvent.split("\n").find((l) => l.startsWith("data:"));
+          if (!dataLine) continue;
+
+          let event;
+          try {
+            event = JSON.parse(dataLine.slice(5).trim());
+          } catch {
+            continue;
+          }
+
+          const shouldStop = onEvent(event);
+          if (shouldStop) return;
+        }
+      }
+    } finally {
+      reader.releaseLock();
+    }
+  } finally {
+    if (timer) clearTimeout(timer);
+  }
 }
 
 export const aiService = {
@@ -33,47 +90,14 @@ export const aiService = {
   },
 
   // 1c. Stream sự kiện tiến trình của job qua SSE (fetch-based để gửi được custom header)
-  async streamRoadmap(jobId, callbacks = {}) {
+  async streamRoadmap(jobId, callbacks = {}, options = {}) {
     const { onStatus, onOutline, onLesson, onDone, onError } = callbacks;
     const headers = buildAuthHeaders();
 
-    const res = await fetch(`${BASE_URL}/ai/roadmap/${jobId}/stream`, { headers });
-
-    if (!res.ok) {
-      let detail = `HTTP ${res.status}`;
-      try {
-        const body = await res.json();
-        detail = body.detail?.message || body.detail || detail;
-      } catch { /* ignore */ }
-      throw new Error(detail);
-    }
-
-    if (!res.body) throw new Error("Trình duyệt không hỗ trợ streaming");
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-    let buffer = "";
-
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-
-      // SSE events cách nhau bởi dòng trống
-      let sepIdx;
-      while ((sepIdx = buffer.indexOf("\n\n")) !== -1) {
-        const rawEvent = buffer.slice(0, sepIdx);
-        buffer = buffer.slice(sepIdx + 2);
-        const dataLine = rawEvent.split("\n").find((l) => l.startsWith("data:"));
-        if (!dataLine) continue;
-
-        let event;
-        try {
-          event = JSON.parse(dataLine.slice(5).trim());
-        } catch {
-          continue;
-        }
-
+    await readSSEStream(
+      `${BASE_URL}/ai/roadmap/${jobId}/stream`,
+      headers,
+      (event) => {
         switch (event.type) {
           case "status":
             onStatus?.(event.message);
@@ -86,13 +110,15 @@ export const aiService = {
             break;
           case "done":
             onDone?.(event);
-            return;
+            return true; // Stop reading
           case "error":
             onError?.(event.message);
-            return;
+            return true; // Stop reading
         }
-      }
-    }
+        return false;
+      },
+      options
+    );
   },
 
   // 2. Tóm tắt video Youtube (Video-to-Markdown)
@@ -132,46 +158,14 @@ export const aiService = {
   },
 
   // 4b. Stream kết quả follow-up (answer / edit) qua SSE
-  async streamFollowUp(jobId, callbacks = {}) {
+  async streamFollowUp(jobId, callbacks = {}, options = {}) {
     const { onStatus, onAnswer, onEdit, onCreateSubfolder, onDone, onError } = callbacks;
     const headers = buildAuthHeaders();
 
-    const res = await fetch(`${BASE_URL}/ai/roadmap/${jobId}/stream`, { headers });
-
-    if (!res.ok) {
-      let detail = `HTTP ${res.status}`;
-      try {
-        const body = await res.json();
-        detail = body.detail?.message || body.detail || detail;
-      } catch { /* ignore */ }
-      throw new Error(detail);
-    }
-
-    if (!res.body) throw new Error("Trình duyệt không hỗ trợ streaming");
-
-    const reader = res.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-    let buffer = "";
-
-    while (true) {
-      const { value, done } = await reader.read();
-      if (done) break;
-      buffer += decoder.decode(value, { stream: true });
-
-      let sepIdx;
-      while ((sepIdx = buffer.indexOf("\n\n")) !== -1) {
-        const rawEvent = buffer.slice(0, sepIdx);
-        buffer = buffer.slice(sepIdx + 2);
-        const dataLine = rawEvent.split("\n").find((l) => l.startsWith("data:"));
-        if (!dataLine) continue;
-
-        let event;
-        try {
-          event = JSON.parse(dataLine.slice(5).trim());
-        } catch {
-          continue;
-        }
-
+    await readSSEStream(
+      `${BASE_URL}/ai/roadmap/${jobId}/stream`,
+      headers,
+      (event) => {
         switch (event.type) {
           case "status":
             onStatus?.(event.message);
@@ -187,12 +181,14 @@ export const aiService = {
             break;
           case "done":
             onDone?.(event);
-            return;
+            return true;
           case "error":
             onError?.(event.message);
-            return;
+            return true;
         }
-      }
-    }
+        return false;
+      },
+      options
+    );
   }
 };

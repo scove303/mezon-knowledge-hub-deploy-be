@@ -590,8 +590,25 @@ async def parse_context_to_structure(
     )
 
     raw_json = outline_res.text or "{}"
-    outline_data = json.loads(raw_json)
+    try:
+        outline_data = json.loads(raw_json)
+    except json.JSONDecodeError:
+        json_match = re.search(r'\{.*\}', raw_json, re.DOTALL)
+        if json_match:
+            try:
+                outline_data = json.loads(json_match.group())
+            except json.JSONDecodeError:
+                outline_data = {}
+        else:
+            outline_data = {}
+
     lessons_list = outline_data.get("lessons", [])
+    if not lessons_list:
+        lessons_list = [
+            {"title": f"Bài 1: Tổng quan về {topic}", "summary": f"Khái niệm và bức tranh toàn cảnh về {topic}"},
+            {"title": f"Bài 2: Cấu trúc và nguyên lý cơ bản của {topic}", "summary": f"Chi tiết kiến thức nền tảng"},
+            {"title": f"Bài 3: Ứng dụng và bài tập thực hành", "summary": f"Thực hành và vận dụng thực tế"},
+        ]
     total_lessons = len(lessons_list)
 
     print(f"  ---> [Bước 1/2] Đã tạo xong Outline gồm {total_lessons} bài. Đang bắt đầu viết chi tiết...")

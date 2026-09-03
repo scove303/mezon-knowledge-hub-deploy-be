@@ -21,20 +21,6 @@ const translation = {
   vn: vn
 }
 
-function GuestBanner() {
-  const isAuthenticated = useAuthStore((s: any) => s.isAuthenticated);
-  if (isAuthenticated) return null;
-  return (
-    <div className="w-full flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300">
-      <span>Bạn đang dùng chế độ Khách. Dữ liệu sẽ được tự động chuyển sang tài khoản khi bạn</span>
-      <Link href="/login" className="font-semibold underline hover:text-indigo-200">
-        đăng nhập
-      </Link>
-      .
-    </div>
-  );
-}
-
 interface ChatThread {
   id: string;
   jobId: string | null;
@@ -228,8 +214,6 @@ export default function DashboardIndex() {
     <div className="flex flex-col h-full w-full overflow-y-auto">
       <div className="flex flex-col items-center justify-start h-full w-full p-4 md:p-8">
         <div className="w-full max-w-4xl flex flex-col flex-1 min-h-0">
-          <GuestBanner />
-
           {threads.length === 0 && <DashboardStats />}
 
           {threads.length > 0 && (

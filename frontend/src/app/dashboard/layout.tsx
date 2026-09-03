@@ -1,5 +1,8 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/features/auth/store";
 import Sidebar from "@/components/common/Sidebar";
 import ResizeHandle from "@/components/common/ResizeHandle";
 import CommandPalette from "@/components/common/CommandPalette";
@@ -14,6 +17,8 @@ export default function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const router = useRouter();
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const {
     isSidebarOpen,
     toggleSidebar,
@@ -22,6 +27,16 @@ export default function DashboardLayout({
     setSidebarWidth,
   } = useWorkspaceStore() as any;
   const isOnline = useOnlineStatus();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      router.replace("/login");
+    }
+  }, [isAuthenticated, router]);
+
+  if (!isAuthenticated) {
+    return null;
+  }
 
   return (
     <div className="flex h-screen bg-[rgb(var(--color-bg))] overflow-hidden">

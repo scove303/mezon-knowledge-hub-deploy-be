@@ -67,23 +67,29 @@ pending_confirmations: dict = {}
 
 
 def get_or_create_user(message: api_pb2.ChannelMessage) -> int:
-
+    import uuid
     sender_id_str = str(message.sender_id).strip()
     username_str = getattr(message, "username", None) or sender_id_str
 
     with Session(engine) as session:
-        # 1. Tìm User theo mezon_id trước, sau đó mới tới username
+        # 1. Tìm User theo mezon_id bất biến
         db_user = session.exec(
-            select(User).where(
-                (User.mezon_id == sender_id_str) | (User.username == sender_id_str)
-            )
+            select(User).where(User.mezon_id == sender_id_str)
         ).first()
 
         if not db_user:
-            # Tạo user mới duy nhất nếu chưa có
+            # Tạo username không trùng lặp
+            base_username = username_str
+            final_username = base_username
+            while session.exec(
+                select(User).where(User.username == final_username)
+            ).first():
+                final_username = f"{base_username}_{uuid.uuid4().hex[:4]}"
+
+            # Tạo user mới với password hash ngẫu nhiên an toàn
             db_user = User(
-                username=username_str,
-                hashed_password=get_password_hash("default_pass_123"),
+                username=final_username,
+                hashed_password=get_password_hash(uuid.uuid4().hex),
                 display_name=username_str,
                 mezon_id=sender_id_str,
                 role="USER",
@@ -91,10 +97,6 @@ def get_or_create_user(message: api_pb2.ChannelMessage) -> int:
             session.add(db_user)
             session.commit()
             session.refresh(db_user)
-        elif db_user.mezon_id != sender_id_str:
-            db_user.mezon_id = sender_id_str
-            session.add(db_user)
-            session.commit()
 
         return db_user.id
 
