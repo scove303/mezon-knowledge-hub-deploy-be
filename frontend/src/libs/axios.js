@@ -11,6 +11,13 @@ const axiosInstance = axios.create({
   timeout: 60000,
 });
 
+const normalizeToken = (token) => {
+  if (Array.isArray(token)) {
+    return typeof token[0] === "string" ? token[0] : null;
+  }
+  return typeof token === "string" ? token : null;
+};
+
 const getTokens = () => {
   if (typeof window === "undefined")
     return { accessToken: null, refreshToken: null };
@@ -18,16 +25,16 @@ const getTokens = () => {
     const store = useAuthStore.getState();
     if (store?.accessToken || store?.refreshToken) {
       return {
-        accessToken: store.accessToken || null,
-        refreshToken: store.refreshToken || null,
+        accessToken: normalizeToken(store.accessToken),
+        refreshToken: normalizeToken(store.refreshToken),
       };
     }
     const authData = localStorage.getItem("mezon-auth");
     if (authData) {
       const parsed = JSON.parse(authData);
       return {
-        accessToken: parsed.state?.accessToken || null,
-        refreshToken: parsed.state?.refreshToken || null,
+        accessToken: normalizeToken(parsed.state?.accessToken),
+        refreshToken: normalizeToken(parsed.state?.refreshToken),
       };
     }
   } catch (e) {

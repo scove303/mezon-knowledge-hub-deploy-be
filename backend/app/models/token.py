@@ -7,7 +7,7 @@ class RefreshToken(SQLModel, table=True):
 
     id: int | None = Field(default=None, primary_key=True)
     jti: str = Field(index=True, unique=True)  # JWT ID duy nhất cho mỗi token
-    user_id: int = Field(index=True, foreign_key="user.id")
+    user_id: int = Field(index=True, foreign_key="users.id")
     is_revoked: bool = Field(default=False)
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
     expires_at: datetime

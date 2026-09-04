@@ -1,4 +1,6 @@
+import axios from 'axios';
 import axiosInstance, { getTokens } from '@/libs/axios';
+import { useAuthStore } from '@/features/auth/store';
 
 const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
@@ -24,7 +26,31 @@ async function readSSEStream(url, headers, onEvent, { signal, timeout = 300000 }
   }
 
   try {
-    const res = await fetch(url, { headers, signal: controller.signal });
+    let res = await fetch(url, { headers, signal: controller.signal });
+
+    // Tự động làm mới access token và retry nếu gặp 401
+    if (res.status === 401) {
+      const { refreshToken } = getTokens();
+      if (refreshToken) {
+        try {
+          const refreshRes = await axios.post(`${BASE_URL}/auth/refresh`, {
+            refreshToken,
+          });
+          const newAccessToken = refreshRes.data?.data?.accessToken;
+          const newRefreshToken = refreshRes.data?.data?.refreshToken;
+          if (newAccessToken) {
+            useAuthStore.getState().updateTokens(newAccessToken, newRefreshToken);
+            const newHeaders = {
+              ...headers,
+              Authorization: `Bearer ${newAccessToken}`,
+            };
+            res = await fetch(url, { headers: newHeaders, signal: controller.signal });
+          }
+        } catch {
+          // Nếu refresh thất bại, để logic bên dưới ném lỗi 401
+        }
+      }
+    }
 
     if (!res.ok) {
       let detail = `HTTP ${res.status}`;
@@ -123,9 +149,11 @@ export const aiService = {
 
   // 2. Tóm tắt video Youtube (Video-to-Markdown)
   async summarizeYoutube(url, folderId) {
-    const { data } = await axiosInstance.post('/ai/youtube', null, {
-      params: { url, folder_id: folderId }
-    });
+    const params = { url };
+    if (folderId) {
+      params.folder_id = folderId;
+    }
+    const { data } = await axiosInstance.post('/ai/youtube', null, { params });
     return data;
   },
 

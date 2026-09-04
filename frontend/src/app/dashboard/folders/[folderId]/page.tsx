@@ -439,7 +439,8 @@ export default function FolderPage({
 
   // Kiểm tra chuỗi nhập có phải đường link YouTube không
   const isYoutubeUrl = (text: string) => {
-    return text.includes("youtube.com/") || text.includes("youtu.be/");
+    const youtubeRegex = /(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:watch\?v=|shorts\/)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+    return youtubeRegex.test(text.trim());
   };
 
   // Cập nhật tin nhắn trạng thái (status) thay vì thêm mới mỗi lần

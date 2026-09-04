@@ -650,6 +650,18 @@ async def digest_document(
     )
 
 
+async def _run_youtube_task(user_id: int, youtube_url: str, folder_id: str = None):
+    from app.core.database import get_session as _get_session
+    with next(_get_session()) as session:
+        await process_youtube_native_pipeline(
+            session=session,
+            user_id=user_id,
+            youtube_url=youtube_url,
+            on_event=None,
+            folder_id=folder_id,
+        )
+
+
 @router.post("/youtube")
 async def summarize_youtube(
     url: str,
@@ -669,11 +681,9 @@ async def summarize_youtube(
     
     # Offload processing & DB saving to background task
     background_tasks.add_task(
-        process_youtube_native_pipeline,
-        session=session,
+        _run_youtube_task,
         user_id=current_user.id,
         youtube_url=url,
-        on_event=None,
         folder_id=target_folder_id,
     )
 
