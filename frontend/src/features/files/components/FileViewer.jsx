@@ -7,6 +7,8 @@ import React, {
 } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
 import {
   FileText,
   Calendar,
@@ -48,6 +50,7 @@ import { fileService } from "@/features/files/services";
 import { folderService } from "@/features/folders/services";
 import { useToastStore } from "@/stores/toast";
 import { MarkdownComponents } from "@/components/markdown/MarkdownComponents";
+import MarkdownRender from "@components/markdown/MarkdownRender";
 import SlideViewer from "./SlideViewer";
 import { cn } from "@/utils/formatTailwind";
 
@@ -1309,11 +1312,19 @@ export default function FileViewer({
               style={{ fontSize: `${fontScale}em` }}
             >
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[rehypeKatex]}
                 components={FileMarkdownComponents}
               >
                 {stripMindmapAnchors(processedContent)}
               </ReactMarkdown>
+
+              {/* Nếu ReactMarkdown ở trên không dùng được thì thay bằng MarkdownRender ở dưới */}
+              {/* <MarkdownRenderer
+  components={FileMarkdownComponents}
+>
+  {stripMindmapAnchors(processedContent)}
+</MarkdownRenderer> */}
             </article>
           )}
         </div>
