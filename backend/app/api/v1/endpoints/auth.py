@@ -1,15 +1,15 @@
-import uuid
 import secrets
 import string
 import time
-import requests
-
+import uuid
+from datetime import datetime, timedelta, timezone
 from typing import Annotated
 from urllib.parse import urlencode
 
-from fastapi import APIRouter, Depends, HTTPException, status, Query, Header, Response
+import requests
+from fastapi import APIRouter, Depends, HTTPException, Query, Response, status
 from fastapi.responses import RedirectResponse
-from jose import JWTError
+from jose import JWTError, jwt
 from sqlmodel import Session, select
 
 from app.core.config import settings
@@ -20,21 +20,13 @@ from app.core.security import (
     decode_token,
     get_password_hash,
 )
-from app.models.user import User
-
-from app.schemas.auth import (
-    RefreshRequest,
-    MezonLoginRequest,
-)
-from app.schemas.common import error_response, success_response
-
-from jose import jwt
-from datetime import datetime, timedelta, timezone
-from fastapi import HTTPException, Response
-from jose import JWTError
-from sqlmodel import select
 from app.models.token import RefreshToken
 from app.models.user import User
+from app.schemas.auth import (
+    MezonLoginRequest,
+    RefreshRequest,
+)
+from app.schemas.common import error_response, success_response
 
 
 router = APIRouter()
@@ -330,10 +322,19 @@ def login_with_mezon(
             session.refresh(user)
 
     # ---------------------------------------------------------
-    # 8. Tạo JWT nội bộ & Set HttpOnly Cookie cho Refresh Token
+    # 8. Tạo JWT nội bộ, lưu Refresh Token vào DB & Set Cookie
     # ---------------------------------------------------------
     access_token = create_access_token(user.id)
-    refresh_token_val = create_refresh_token(user.id)
+    refresh_token_val, jti = create_refresh_token(user.id)
+
+    # Lưu RefreshToken vào database để endpoint /refresh có thể xác thực và xoay vòng (rotate)
+    db_refresh_token = RefreshToken(
+        jti=jti,
+        user_id=user.id,
+        expires_at=datetime.now(timezone.utc) + timedelta(days=settings.REFRESH_TOKEN_EXPIRE_DAYS),
+    )
+    session.add(db_refresh_token)
+    session.commit()
 
     if response is not None:
         response.set_cookie(

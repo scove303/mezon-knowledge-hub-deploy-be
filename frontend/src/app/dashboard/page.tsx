@@ -33,7 +33,7 @@ interface ChatThread {
   folderId: string | null;
   folderName: string;
   conversationId: string | null;
-  action: 'roadmap' | 'followup' | 'digest';
+  action: 'roadmap' | 'followup' | 'digest' | 'youtube';
   error: string;
 }
 
@@ -75,8 +75,26 @@ export default function DashboardIndex() {
     bottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [threads]);
 
+  const extractYoutubeUrl = (text: string): string | null => {
+    if (!text) return null;
+    const match = text.match(/(https?:\/\/)?((?:www\.)?(?:youtube\.com\/(?:watch\?[^\s]*v=|shorts\/)|youtu\.be\/)[\w-]+[^\s]*)/i);
+    if (match) {
+      const full = match[0].replace(/[.,!?;:]+$/, '');
+      return full.startsWith('http://') || full.startsWith('https://') ? full : `https://${full}`;
+    }
+    if (text.includes('youtube.com/') || text.includes('youtu.be/')) {
+      const words = text.trim().split(/\s+/);
+      const urlWord = words.find((w) => w.includes('youtube.com/') || w.includes('youtu.be/'));
+      if (urlWord) {
+        const cleaned = urlWord.replace(/[.,!?;:]+$/, '');
+        return cleaned.startsWith('http://') || cleaned.startsWith('https://') ? cleaned : `https://${cleaned}`;
+      }
+    }
+    return null;
+  };
+
   const isYoutubeUrl = (text: string) => {
-    return text.includes('youtube.com/') || text.includes('youtu.be/');
+    return !!extractYoutubeUrl(text);
   };
 
   const getLastConversation = useCallback((): ChatThread | null => {
@@ -142,6 +160,104 @@ export default function DashboardIndex() {
           err?.response?.data?.detail ||
           err?.message ||
           'Không thể xử lý tài liệu. Vui lòng thử lại sau!';
+        updateThread(threadId, { status: 'error', error: msg, statusMessage: 'Thất bại' });
+      } finally {
+        setIsSubmitting(false);
+      }
+      return;
+    }
+
+    // Nếu là link video YouTube → gửi qua endpoint /ai/youtube
+    if (isYoutubeUrl(message)) {
+      const youtubeUrl = extractYoutubeUrl(message) || message.trim();
+      const lastConversation = getLastConversation();
+      const targetFolderId = lastConversation?.folderId || undefined;
+
+      setThreads((prev) => [
+        ...prev,
+        {
+          id: threadId,
+          jobId: null,
+          topic: message,
+          status: 'running',
+          statusMessage: 'Đang kết nối và gửi link YouTube đến hệ thống...',
+          total: 0,
+          output: '',
+          folderId: targetFolderId || null,
+          folderName: targetFolderId ? lastConversation?.folderName || 'YouTube Summary' : 'Lộ trình từ YouTube',
+          conversationId: targetFolderId || null,
+          action: 'youtube',
+          error: '',
+        },
+      ]);
+
+      try {
+        const prevFolders = await refreshSidebarFolders();
+        const existingIds = new Set((prevFolders || []).map((f: any) => String(f.id)));
+
+        const res = await aiService.summarizeYoutube(youtubeUrl, targetFolderId);
+        if (!res?.success) {
+          throw new Error(res?.message || 'Không thể xử lý video YouTube. Vui lòng thử lại!');
+        }
+
+        updateThread(threadId, {
+          status: 'running',
+          statusMessage: 'Đang phân tích video và tạo nội dung bài học...',
+        });
+
+        // Polling để cập nhật sidebar và chuyển hướng khi xử lý xong
+        let createdFolder: any = null;
+        const maxAttempts = 30; // 30 x 2s = 60s
+        for (let i = 0; i < maxAttempts; i++) {
+          await new Promise((resolve) => setTimeout(resolve, 2000));
+          const updatedFolders = await refreshSidebarFolders();
+          if (updatedFolders && Array.isArray(updatedFolders)) {
+            if (targetFolderId) {
+              const target = updatedFolders.find((f: any) => String(f.id) === String(targetFolderId));
+              const prevTarget = prevFolders?.find((f: any) => String(f.id) === String(targetFolderId));
+              if (target && target.files && (!prevTarget || target.files.length > (prevTarget.files?.length || 0))) {
+                createdFolder = target;
+                break;
+              }
+            } else {
+              const found = updatedFolders.find((f: any) => !existingIds.has(String(f.id)));
+              if (found) {
+                createdFolder = found;
+                break;
+              }
+            }
+          }
+        }
+
+        if (createdFolder) {
+          const fileCount = createdFolder.files?.length || 0;
+          updateThread(threadId, {
+            status: 'done',
+            folderId: createdFolder.id,
+            folderName: createdFolder.name,
+            statusMessage: 'Hoàn tất!',
+            output: `Đã phân tích video YouTube thành công và tạo lộ trình **${createdFolder.name}**${fileCount > 0 ? ` với ${fileCount} bài học.` : '.'}`,
+          });
+
+          if (createdFolder.files && createdFolder.files.length > 0) {
+            setSelectedFile(createdFolder.files[0].id);
+            setDocumentSideOpen(true);
+            router.push(`/dashboard/folders/${createdFolder.id}`);
+          }
+        } else {
+          await refreshSidebarFolders();
+          updateThread(threadId, {
+            status: 'done',
+            statusMessage: 'Đang tiếp tục xử lý trong nền',
+            output: 'Yêu cầu phân tích video YouTube đã được tiếp nhận và đang tiếp tục xử lý trong nền. Vui lòng kiểm tra danh sách thư mục sau vài giây!',
+          });
+        }
+      } catch (err: any) {
+        const msg =
+          err?.response?.data?.detail?.message ||
+          err?.response?.data?.detail ||
+          err?.message ||
+          'Không thể xử lý video YouTube. Vui lòng thử lại sau!';
         updateThread(threadId, { status: 'error', error: msg, statusMessage: 'Thất bại' });
       } finally {
         setIsSubmitting(false);
@@ -353,25 +469,26 @@ export default function DashboardIndex() {
                             active={false}
                             className="text-sm text-[rgb(var(--color-text-primary))] leading-relaxed"
                           />
-                          <div className="flex items-center gap-2">
-                            <button
-                              onClick={() => thread.folderId && openFolder(thread.folderId)}
-                              className="self-start flex items-center gap-2 px-4 py-2 mt-1 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-500/20"
-                            >
-                              <FolderOpen size={16} />
-                              {thread.action === 'digest' ? 'Mở thư mục' : 'Mở lộ trình'}
-                            </button>
-                            <button
-                              onClick={() =>
-                                thread.folderId &&
-                                router.push(`/dashboard/folders/${thread.folderId}?view=mindmap`)
-                              }
-                              className="self-start flex items-center gap-2 px-4 py-2 mt-1 rounded-lg text-sm font-medium border border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] hover:text-indigo-400 hover:border-indigo-500/40 transition-colors"
-                            >
-                              <Network size={16} />
-                              Xem sơ đồ tư duy
-                            </button>
-                          </div>
+                          {thread.folderId && (
+                            <div className="flex items-center gap-2">
+                              <button
+                                onClick={() => openFolder(thread.folderId!)}
+                                className="self-start flex items-center gap-2 px-4 py-2 mt-1 rounded-lg bg-indigo-600 text-white text-sm font-medium hover:bg-indigo-500 transition-colors shadow-md shadow-indigo-500/20"
+                              >
+                                <FolderOpen size={16} />
+                                {thread.action === 'digest' ? 'Mở thư mục' : 'Mở lộ trình'}
+                              </button>
+                              <button
+                                onClick={() =>
+                                  router.push(`/dashboard/folders/${thread.folderId}?view=mindmap`)
+                                }
+                                className="self-start flex items-center gap-2 px-4 py-2 mt-1 rounded-lg text-sm font-medium border border-[rgb(var(--color-border))] text-[rgb(var(--color-text-secondary))] hover:text-indigo-400 hover:border-indigo-500/40 transition-colors"
+                              >
+                                <Network size={16} />
+                                Xem sơ đồ tư duy
+                              </button>
+                            </div>
+                          )}
                         </>
                       )}
 
