@@ -50,7 +50,7 @@ import { fileService } from "@/features/files/services";
 import { folderService } from "@/features/folders/services";
 import { useToastStore } from "@/stores/toast";
 import { MarkdownComponents } from "@/components/markdown/MarkdownComponents";
-import MarkdownRender from "@components/markdown/MarkdownRender";
+import MarkdownRender from "@/components/markdown/MarkdownRender";
 import SlideViewer from "./SlideViewer";
 import { cn } from "@/utils/formatTailwind";
 
