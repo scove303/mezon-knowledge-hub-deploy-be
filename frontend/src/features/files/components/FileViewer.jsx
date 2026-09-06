@@ -53,6 +53,7 @@ import { MarkdownComponents } from "@/components/markdown/MarkdownComponents";
 import MarkdownRender from "@/components/markdown/MarkdownRender";
 import SlideViewer from "./SlideViewer";
 import { cn } from "@/utils/formatTailwind";
+import { normalizeLatex } from "@/utils/formatLatex";
 
 // Import Hệ thống Giọng đọc Tối ưu Lai (Hybrid Speech System)
 import {
@@ -1313,10 +1314,10 @@ export default function FileViewer({
             >
               <ReactMarkdown
                 remarkPlugins={[remarkGfm, remarkMath]}
-                rehypePlugins={[rehypeKatex]}
+                rehypePlugins={[[rehypeKatex, { strict: "ignore", throwOnError: false }]]}
                 components={FileMarkdownComponents}
               >
-                {stripMindmapAnchors(processedContent)}
+                {normalizeLatex(stripMindmapAnchors(processedContent))}
               </ReactMarkdown>
 
               {/* Nếu ReactMarkdown ở trên không dùng được thì thay bằng MarkdownRender ở dưới */}

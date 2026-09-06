@@ -1,3 +1,5 @@
+"use client";
+
 import React, { useRef, useEffect } from 'react';
 import { Loader2 } from 'lucide-react';
 import ChatMessage, { MessageProps } from './ChatMessage';

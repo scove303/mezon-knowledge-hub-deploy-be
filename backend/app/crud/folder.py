@@ -13,41 +13,18 @@ from sqlalchemy import func
 
 
 def get_folders_by_user(session: Session, user_id: int) -> list[Folder]:
-    # Load only root folders (depth=0) with files, then build tree from parent_id
-    statement = (
-        select(Folder)
-        .where(Folder.user_id == user_id, Folder.depth == 0)
-        .options(selectinload(Folder.files))
-        .order_by(Folder.order_index, Folder.created_at)
-    )
-    root_folders = list(session.exec(statement).all())
-    
-    # Load all other folders to build tree
     all_folders_stmt = (
         select(Folder)
         .where(Folder.user_id == user_id)
-        .options(selectinload(Folder.files))
+        .options(selectinload(Folder.files), selectinload(Folder.children))
         .order_by(Folder.order_index, Folder.created_at)
     )
     all_folders = list(session.exec(all_folders_stmt).all())
-    
     for folder in all_folders:
         folder.files.sort(key=lambda f: (f.order_index, f.created_at, f.id))
-    
-    # Build children relationships in memory
-    folder_map = {f.id: f for f in all_folders}
-    for folder in all_folders:
-        folder.children = []
-    for folder in all_folders:
-        if folder.parent_id and folder.parent_id in folder_map:
-            folder_map[folder.parent_id].children.append(folder)
-    
-    # Sort children
-    for folder in all_folders:
-        if folder.children:
-            folder.children.sort(key=lambda f: (f.order_index, f.created_at, f.id))
-    
-    return root_folders
+        folder.children.sort(key=lambda f: (f.order_index, f.created_at, f.id))
+    return [f for f in all_folders if f.depth == 0 or not f.parent_id]
+
 
 
 def get_folder(session: Session, folder_id: str, user_id: int) -> Optional[Folder]:

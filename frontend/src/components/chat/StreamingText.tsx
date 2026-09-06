@@ -1,6 +1,11 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import { normalizeLatex } from "@/utils/formatLatex";
 
 interface StreamingTextProps {
   text: string;
@@ -42,6 +47,19 @@ export default function StreamingText({
       containerRef.current.scrollIntoView({ block: "end", behavior: "smooth" });
     }
   }, [shown]);
+
+  if (!active) {
+    return (
+      <div ref={containerRef} className={className}>
+        <ReactMarkdown
+          remarkPlugins={[remarkGfm, remarkMath]}
+          rehypePlugins={[[rehypeKatex, { strict: "ignore", throwOnError: false }]]}
+        >
+          {normalizeLatex(text)}
+        </ReactMarkdown>
+      </div>
+    );
+  }
 
   return (
     <div ref={containerRef} className={className}>

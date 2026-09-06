@@ -3,6 +3,7 @@ import json
 import re
 import uuid
 from typing import List
+from json_repair import repair_json
 
 from sqlmodel import Session, select
 
@@ -379,21 +380,46 @@ async def revise_roadmap(
 
     try:
         parsed = json.loads(raw)
-    except json.JSONDecodeError as e:
-        print("[revise_roadmap] JSON decode error:", e)
-        print("[revise_roadmap] Attempting to extract JSON from response...")
-        import re
-        json_match = re.search(r'\{.*\}', raw, re.DOTALL)
-        if json_match:
-            try:
-                parsed = json.loads(json_match.group())
-                print("[revise_roadmap] Extracted JSON keys:", list(parsed.keys()))
-            except json.JSONDecodeError:
-                parsed = {"action": "answer", "text": raw}
-        else:
-            parsed = {"action": "answer", "text": raw}
+    except Exception as e:
+        print("[revise_roadmap] Standard json.loads failed:", e)
+        print("[revise_roadmap] Attempting json_repair...")
+        try:
+            repaired = repair_json(raw, return_objects=True)
+            if isinstance(repaired, dict):
+                parsed = repaired
+                print("[revise_roadmap] json_repair succeeded. Keys:", list(parsed.keys()))
+            else:
+                parsed = None
+        except Exception as repair_err:
+            print("[revise_roadmap] json_repair failed:", repair_err)
+            parsed = None
 
-    action = parsed.get("action", "answer")
+        if not parsed:
+            print("[revise_roadmap] Attempting regex extraction from response...")
+            json_match = re.search(r'\{.*\}', raw, re.DOTALL)
+            if json_match:
+                try:
+                    repaired_match = repair_json(json_match.group(), return_objects=True)
+                    if isinstance(repaired_match, dict):
+                        parsed = repaired_match
+                except Exception:
+                    pass
+
+        if not parsed:
+            # Check if this raw response was actually trying to create a subfolder
+            if '"create_subfolder"' in raw:
+                # Extract whatever fields we can
+                name_match = re.search(r'"name"\s*:\s*"([^"]+)"', raw)
+                parsed = {
+                    "action": "create_subfolder",
+                    "name": name_match.group(1) if name_match else "Thư mục con mới",
+                    "type": "document",
+                    "files": [],
+                }
+            else:
+                parsed = {"action": "answer", "text": "Không thể xử lý định dạng phản hồi từ AI."}
+
+    action = parsed.get("action", "answer") if isinstance(parsed, dict) else "answer"
     
     print("[revise_roadmap] Parsed action:", action, "keys:", list(parsed.keys()) if isinstance(parsed, dict) else "N/A")
 
@@ -506,7 +532,6 @@ async def revise_roadmap(
                 summary="",
                 markdown_content=f_data.get("content", ""),
                 order_index=idx,
-                user_id=folder.user_id,
             )
             session.add(new_file)
             created_files.append({
@@ -530,10 +555,11 @@ async def revise_roadmap(
     # =========================================================
     # TRẢ LỜI CÂU HỎI
     # =========================================================
+    ans_text = parsed.get("text") or ""
+    # Nếu vô tình ans_text vẫn là raw JSON action, làm sạch thông báo
+    if ans_text.strip().startswith('{"action":'):
+        ans_text = "Đã hoàn thành xử lý yêu cầu."
     return {
         "action": "answer",
-        "text": parsed.get(
-            "text",
-            raw,
-        ),
+        "text": ans_text,
     }

@@ -369,22 +369,35 @@ export default function Sidebar() {
     });
   }, [folders, pinnedIds, sortBy]);
 
+  // Lấy toàn bộ id của folder và subfolder đệ quy
+  const getAllFolderIds = useCallback((list) => {
+    let ids = [];
+    for (const f of list || []) {
+      ids.push(f.id);
+      if (f.children && f.children.length > 0) {
+        ids = ids.concat(getAllFolderIds(f.children));
+      }
+    }
+    return ids;
+  }, []);
+
   // Quản lý trạng thái mở rộng/thu gọn thư mục
   const [expandedFolderIds, setExpandedFolderIds] = useState(() =>
-    folders.map((f) => f.id),
+    getAllFolderIds(folders),
   );
 
   // Đồng bộ expandedFolderIds khi danh sách folders cập nhật
   useEffect(() => {
     if (folders.length > 0) {
       setExpandedFolderIds((prev) => {
-        if (!prev || prev.length === 0) return prev;
-        const folderIds = folders.map((f) => f.id);
-        const remaining = prev.filter((id) => folderIds.includes(id));
-        return remaining.length === 0 ? prev : remaining;
+        const allIds = getAllFolderIds(folders);
+        if (!prev || prev.length === 0) return allIds;
+        // Giữ các folder đang mở, và tự động mở thêm subfolder mới tạo
+        const newIds = allIds.filter((id) => !prev.includes(id));
+        return [...prev.filter((id) => allIds.includes(id)), ...newIds];
       });
     }
-  }, [folders]);
+  }, [folders, getAllFolderIds]);
 
   const isAllExpanded = expandedFolderIds && expandedFolderIds.length > 0;
 
@@ -1133,265 +1146,276 @@ export default function Sidebar() {
               onExpandedChange={(ids) => setExpandedFolderIds(ids)}
               elements={treeElements}
             >
-              {sortedFolders.map((folder) => {
-                const isSelected =
-                  selectedFolder?.id === folder.id && !selectedFile;
+              {(() => {
+                const renderFolderItem = (folder, depth = 0) => {
+                  const isSelected =
+                    selectedFolder?.id === folder.id && !selectedFile;
 
-                return (
-                  <TreeFolder
-                    key={folder.id}
-                    value={folder.id}
-                    element={
-                      <span
-                        onMouseDown={(e) => e.stopPropagation()}
-                        onDragStart={(e) => handleFolderDragStart(e, folder.id)}
-                        onDragOver={(e) => handleFolderDragOver(e, folder.id)}
-                        onDragLeave={(e) => handleFolderDragLeave(e, folder.id)}
-                        onDrop={(e) => handleFolderReorderDrop(e, folder.id)}
-                        draggable
-                        className="flex items-center w-full min-w-0 gap-1.5 cursor-grab active:cursor-grabbing"
-                        title="Kéo để sắp xếp thứ tự"
-                        aria-label="Kéo để sắp xếp thứ tự"
-                      >
-                        {pinnedIds.includes(folder.id) && (
-                          <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 inline-block shrink-0 -mt-px" />
-                        )}
-                        <span className="truncate min-w-0">
-                          {highlightMatch(cleanFolderName(folder.name), searchQuery)}
+                  return (
+                    <TreeFolder
+                      key={folder.id}
+                      value={folder.id}
+                      element={
+                        <span
+                          onMouseDown={(e) => e.stopPropagation()}
+                          onDragStart={(e) => handleFolderDragStart(e, folder.id)}
+                          onDragOver={(e) => handleFolderDragOver(e, folder.id)}
+                          onDragLeave={(e) => handleFolderDragLeave(e, folder.id)}
+                          onDrop={(e) => handleFolderReorderDrop(e, folder.id)}
+                          draggable
+                          className="flex items-center w-full min-w-0 gap-1.5 cursor-grab active:cursor-grabbing"
+                          title="Kéo để sắp xếp thứ tự"
+                          aria-label="Kéo để sắp xếp thứ tự"
+                        >
+                          {pinnedIds.includes(folder.id) && (
+                            <Star className="w-3.5 h-3.5 text-amber-400 fill-amber-400 inline-block shrink-0 -mt-px" />
+                          )}
+                          <span className="truncate min-w-0">
+                            {highlightMatch(cleanFolderName(folder.name), searchQuery)}
+                          </span>
+                          <GripVertical className="w-3.5 h-3.5 text-[rgb(var(--color-text-muted))] opacity-0 group-hover/folder:opacity-60 hover:!opacity-100 shrink-0 ml-auto mr-1" />
                         </span>
-                        <GripVertical className="w-3.5 h-3.5 text-[rgb(var(--color-text-muted))] opacity-0 group-hover/folder:opacity-60 hover:!opacity-100 shrink-0 ml-auto mr-1" />
-                      </span>
-                    }
-                    isSelect={isSelected}
-                    onSelect={(id) => selectFolder(id)}
-                    className={`px-4 py-2.5 rounded-lg text-sm font-semibold text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] ${
-                      dragOverFolderId === folder.id &&
-                      draggingFile &&
-                      draggingFile.folderId !== folder.id
-                        ? "ring-2 ring-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/0.08)]"
-                        : ""
-                    } ${dragOverFolderTarget === folder.id && draggingFolder && draggingFolder !== folder.id ? "ring-2 ring-emerald-400 bg-emerald-400/10" : ""}`}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      setDragOverFolderId(folder.id);
-                    }}
-                    onDragLeave={() =>
-                      setDragOverFolderId((id) =>
-                        id === folder.id ? null : id,
-                      )
-                    }
-                    onDrop={(e) => handleFolderDrop(e, folder.id)}
-                    onContextMenu={(e) =>
-                      openContextMenu(e, {
-                        type: "folder",
-                        folderId: folder.id,
-                        name: folder.name,
-                      })
-                    }
-                    badge={folderBadge(folder)}
-                    openIcon={getFolderIcon(folder.type, folder.name, true)}
-                    closeIcon={getFolderIcon(folder.type, folder.name, false)}
-                    actions={
-                      <>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            openRename({
-                              type: "folder",
-                              folderId: folder.id,
-                              name: folder.name,
-                            });
-                          }}
-                          className="text-[rgb(var(--color-text-muted))] hover:text-amber-400 p-0.5 rounded transition-colors"
-                          title="Đổi tên thư mục"
-                          aria-label="Đổi tên thư mục"
-                        >
-                          <Pencil className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            store.setSelectedFolder(folder.id);
-                            router.push(`/dashboard/folders/${folder.id}?view=mindmap`);
-                          }}
-                          className="text-[rgb(var(--color-text-muted))] hover:text-indigo-400 p-0.5 rounded transition-colors"
-                          title="Xem sơ đồ tư duy"
-                          aria-label="Xem sơ đồ tư duy"
-                        >
-                          <Network className="w-3.5 h-3.5" />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            togglePin(folder.id);
-                          }}
-                          className={`p-0.5 rounded transition-colors ${
-                            pinnedIds.includes(folder.id)
-                              ? "text-amber-400"
-                              : "text-[rgb(var(--color-text-muted))] hover:text-amber-400"
-                          }`}
-                          title={
-                            pinnedIds.includes(folder.id)
-                              ? "Bỏ ghim thư mục"
-                              : "Ghim thư mục"
-                          }
-                          aria-label={
-                            pinnedIds.includes(folder.id)
-                              ? "Bỏ ghim thư mục"
-                              : "Ghim thư mục"
-                          }
-                        >
-                          <Star
-                            className={`w-3.5 h-3.5 ${
+                      }
+                      isSelect={isSelected}
+                      onSelect={(id) => selectFolder(id)}
+                      className={`px-4 py-2.5 rounded-lg text-sm font-semibold text-[rgb(var(--color-text-secondary))] hover:bg-[rgb(var(--color-surface-2))] ${
+                        dragOverFolderId === folder.id &&
+                        draggingFile &&
+                        draggingFile.folderId !== folder.id
+                          ? "ring-2 ring-[rgb(var(--color-primary))] bg-[rgb(var(--color-primary)/0.08)]"
+                          : ""
+                      } ${dragOverFolderTarget === folder.id && draggingFolder && draggingFolder !== folder.id ? "ring-2 ring-emerald-400 bg-emerald-400/10" : ""}`}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        setDragOverFolderId(folder.id);
+                      }}
+                      onDragLeave={() =>
+                        setDragOverFolderId((id) =>
+                          id === folder.id ? null : id,
+                        )
+                      }
+                      onDrop={(e) => handleFolderDrop(e, folder.id)}
+                      onContextMenu={(e) =>
+                        openContextMenu(e, {
+                          type: "folder",
+                          folderId: folder.id,
+                          name: folder.name,
+                        })
+                      }
+                      badge={folderBadge(folder)}
+                      openIcon={getFolderIcon(folder.type, folder.name, true)}
+                      closeIcon={getFolderIcon(folder.type, folder.name, false)}
+                      actions={
+                        <>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openRename({
+                                type: "folder",
+                                folderId: folder.id,
+                                name: folder.name,
+                              });
+                            }}
+                            className="text-[rgb(var(--color-text-muted))] hover:text-amber-400 p-0.5 rounded transition-colors"
+                            title="Đổi tên thư mục"
+                            aria-label="Đổi tên thư mục"
+                          >
+                            <Pencil className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              store.setSelectedFolder(folder.id);
+                              router.push(`/dashboard/folders/${folder.id}?view=mindmap`);
+                            }}
+                            className="text-[rgb(var(--color-text-muted))] hover:text-indigo-400 p-0.5 rounded transition-colors"
+                            title="Xem sơ đồ tư duy"
+                            aria-label="Xem sơ đồ tư duy"
+                          >
+                            <Network className="w-3.5 h-3.5" />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              togglePin(folder.id);
+                            }}
+                            className={`p-0.5 rounded transition-colors ${
                               pinnedIds.includes(folder.id)
-                                ? "fill-amber-400"
+                                ? "text-amber-400"
+                                : "text-[rgb(var(--color-text-muted))] hover:text-amber-400"
+                            }`}
+                            title={
+                              pinnedIds.includes(folder.id)
+                                ? "Bỏ ghim thư mục"
+                                : "Ghim thư mục"
+                            }
+                            aria-label={
+                              pinnedIds.includes(folder.id)
+                                ? "Bỏ ghim thư mục"
+                                : "Ghim thư mục"
+                            }
+                          >
+                            <Star
+                              className={`w-3.5 h-3.5 ${
+                                pinnedIds.includes(folder.id)
+                                  ? "fill-amber-400"
+                                  : ""
+                              }`}
+                            />
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setUploadFolderId(folder.id);
+                              uploadInputRef.current?.click();
+                            }}
+                            disabled={isUploadingFile}
+                            className="text-[rgb(var(--color-text-muted))] hover:text-indigo-400 p-0.5 rounded transition-colors disabled:opacity-40"
+                            title="Tải lên file (md/txt)"
+                            aria-label="Tải lên file (md/txt)"
+                          >
+                            {isUploadingFile && uploadFolderId === folder.id && uploadProgress > 0 ? (
+                              <span className="text-[10px] font-bold text-indigo-400 leading-none">
+                                {uploadProgress}%
+                              </span>
+                            ) : (
+                              <Upload className="w-3.5 h-3.5" />
+                            )}
+                          </button>
+                          <button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setItemToDelete({
+                                type: "folder",
+                                folderId: folder.id,
+                                name: folder.name,
+                              });
+                              setDeleteConfirmOpen(true);
+                            }}
+                            className="text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-colors"
+                            title="Xóa thư mục"
+                            aria-label="Xóa thư mục"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </>
+                      }
+                    >
+                      {/* Subfolders con lồng nhau */}
+                      {folder.children && folder.children.length > 0 && (
+                        folder.children.map((child) => renderFolderItem(child, depth + 1))
+                      )}
+
+                      {/* Các file của folder */}
+                      {folder.files &&
+                        folder.files.map((file) => (
+                          <TreeFile
+                            key={file.id}
+                            value={file.id}
+                            isSelect={selectedFile?.id === file.id}
+                            handleSelect={() =>
+                              selectFile(folder.id, file.id)
+                            }
+                            className={`px-4 py-1.5 rounded-md text-[13px] ${
+                              draggingFile?.fileId === file.id
+                                ? "opacity-40"
                                 : ""
                             }`}
-                          />
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setUploadFolderId(folder.id);
-                            uploadInputRef.current?.click();
-                          }}
-                          disabled={isUploadingFile}
-                          className="text-[rgb(var(--color-text-muted))] hover:text-indigo-400 p-0.5 rounded transition-colors disabled:opacity-40"
-                          title="Tải lên file (md/txt)"
-                          aria-label="Tải lên file (md/txt)"
-                        >
-                          {isUploadingFile && uploadFolderId === folder.id && uploadProgress > 0 ? (
-                            <span className="text-[10px] font-bold text-indigo-400 leading-none">
-                              {uploadProgress}%
+                            draggable
+                            onDragStart={(e) =>
+                              handleFileDragStart(e, folder.id, file.id)
+                            }
+                            onDragEnd={() => {
+                              setDraggingFile(null);
+                              setDragOverFolderId(null);
+                            }}
+                            onContextMenu={(e) =>
+                              openContextMenu(e, {
+                                type: "file",
+                                folderId: folder.id,
+                                fileId: file.id,
+                                name: file.name,
+                              })
+                            }
+                            fileIcon={
+                              selectionArmed &&
+                              selectedFileIds.includes(file.id) ? (
+                                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                              ) : (
+                                getFileIcon(file.name)
+                              )
+                            }
+                            preview={
+                              !selectionArmed && (
+                                <div className="mx-2 p-3 rounded-lg bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] shadow-xl shadow-black/30 animate-fade-in">
+                                  <div className="text-xs font-semibold text-[rgb(var(--color-text-primary))] truncate">
+                                    {file.name}
+                                  </div>
+                                  <div className="text-[11px] text-[rgb(var(--color-text-muted))] mt-1 line-clamp-3 whitespace-pre-line leading-relaxed">
+                                    {(file.content || "Chưa có nội dung").slice(0, 200)}
+                                  </div>
+                                  <div className="text-[10px] text-[rgb(var(--color-text-disabled))] mt-1.5">
+                                    Cập nhật {file.createdAt || file.created_at || "—"}
+                                  </div>
+                                </div>
+                              )
+                            }
+                            actions={
+                              <>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    openRename({
+                                      type: "file",
+                                      folderId: folder.id,
+                                      fileId: file.id,
+                                      name: file.name,
+                                    });
+                                  }}
+                                  className="text-[rgb(var(--color-text-muted))] hover:text-amber-400 p-0.5 rounded transition-colors"
+                                  title="Đổi tên tài liệu"
+                                  aria-label="Đổi tên tài liệu"
+                                >
+                                  <Pencil className="w-3 h-3" />
+                                </button>
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setItemToDelete({
+                                      type: "file",
+                                      folderId: folder.id,
+                                      fileId: file.id,
+                                      name: file.name,
+                                    });
+                                    setDeleteConfirmOpen(true);
+                                  }}
+                                  className="text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-all"
+                                  title="Xóa tài liệu"
+                                  aria-label="Xóa tài liệu"
+                                >
+                                  <Trash2 className="w-3 h-3" />
+                                </button>
+                              </>
+                            }
+                          >
+                            <span className="min-w-0 truncate text-xs">
+                              {highlightMatch(file.name, searchQuery)}
                             </span>
-                          ) : (
-                            <Upload className="w-3.5 h-3.5" />
-                          )}
-                        </button>
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setItemToDelete({
-                              type: "folder",
-                              folderId: folder.id,
-                              name: folder.name,
-                            });
-                            setDeleteConfirmOpen(true);
-                          }}
-                          className="text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-colors"
-                          title="Xóa thư mục"
-                          aria-label="Xóa thư mục"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      </>
-                    }
-                  >
-                    {folder.files &&
-                      folder.files.map((file) => (
-                        <TreeFile
-                          key={file.id}
-                          value={file.id}
-                          isSelect={selectedFile?.id === file.id}
-                          handleSelect={() =>
-                            selectFile(folder.id, file.id)
-                          }
-                          className={`px-4 py-1.5 rounded-md text-[13px] ${
-                            draggingFile?.fileId === file.id
-                              ? "opacity-40"
-                              : ""
-                          }`}
-                          draggable
-                          onDragStart={(e) =>
-                            handleFileDragStart(e, folder.id, file.id)
-                          }
-                          onDragEnd={() => {
-                            setDraggingFile(null);
-                            setDragOverFolderId(null);
-                          }}
-                          onContextMenu={(e) =>
-                            openContextMenu(e, {
-                              type: "file",
-                              folderId: folder.id,
-                              fileId: file.id,
-                              name: file.name,
-                            })
-                          }
-                          fileIcon={
-                            selectionArmed &&
-                            selectedFileIds.includes(file.id) ? (
-                              <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
-                            ) : (
-                              getFileIcon(file.name)
-                            )
-                          }
-                          preview={
-                            !selectionArmed && (
-                              <div className="mx-2 p-3 rounded-lg bg-[rgb(var(--color-surface-1))] border border-[rgb(var(--color-border))] shadow-xl shadow-black/30 animate-fade-in">
-                                <div className="text-xs font-semibold text-[rgb(var(--color-text-primary))] truncate">
-                                  {file.name}
-                                </div>
-                                <div className="text-[11px] text-[rgb(var(--color-text-muted))] mt-1 line-clamp-3 whitespace-pre-line leading-relaxed">
-                                  {(file.content || "Chưa có nội dung").slice(0, 200)}
-                                </div>
-                                <div className="text-[10px] text-[rgb(var(--color-text-disabled))] mt-1.5">
-                                  Cập nhật {file.createdAt || file.created_at || "—"}
-                                </div>
-                              </div>
-                            )
-                          }
-                          actions={
-                            <>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  openRename({
-                                    type: "file",
-                                    folderId: folder.id,
-                                    fileId: file.id,
-                                    name: file.name,
-                                  });
-                                }}
-                                className="text-[rgb(var(--color-text-muted))] hover:text-amber-400 p-0.5 rounded transition-colors"
-                                title="Đổi tên tài liệu"
-                                aria-label="Đổi tên tài liệu"
-                              >
-                                <Pencil className="w-3 h-3" />
-                              </button>
-                              <button
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  setItemToDelete({
-                                    type: "file",
-                                    folderId: folder.id,
-                                    fileId: file.id,
-                                    name: file.name,
-                                  });
-                                  setDeleteConfirmOpen(true);
-                                }}
-                                className="text-[rgb(var(--color-text-muted))] hover:text-rose-500 p-0.5 rounded transition-all"
-                                title="Xóa tài liệu"
-                                aria-label="Xóa tài liệu"
-                              >
-                                <Trash2 className="w-3 h-3" />
-                              </button>
-                            </>
-                          }
-                        >
-                          <span className="min-w-0 truncate text-xs">
-                            {highlightMatch(file.name, searchQuery)}
-                          </span>
-                        </TreeFile>
-                      ))}
+                          </TreeFile>
+                        ))}
 
-                    {(!folder.files || folder.files.length === 0) && (
-                      <div className="text-[10px] text-[rgb(var(--color-text-disabled))] px-4 py-1 italic select-none">
-                        {currentText.sidebar.empty_file_list.no_files}
-                      </div>
-                    )}
-                  </TreeFolder>
-                );
-              })}
+                      {(!folder.files || folder.files.length === 0) &&
+                        (!folder.children || folder.children.length === 0) && (
+                          <div className="text-[10px] text-[rgb(var(--color-text-disabled))] px-4 py-1 italic select-none">
+                            {currentText.sidebar.empty_file_list.no_files}
+                          </div>
+                        )}
+                    </TreeFolder>
+                  );
+                };
+
+                return sortedFolders.map((folder) => renderFolderItem(folder));
+              })()}
             </Tree>
           )}
         </div>

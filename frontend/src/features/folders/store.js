@@ -110,39 +110,58 @@ export const useWorkspaceStore = create((set, get) => ({
       return { chatPaneWidth: clamped };
     }),
 
-  // Derived getters
+  // Derived getters (hỗ trợ đệ quy cho cả subfolder / cây thư mục lồng nhau)
   getSelectedFolder: () => {
     const { folders, selectedFolderId } = get();
-    return folders.find((f) => f.id === selectedFolderId) || null;
+    if (!selectedFolderId) return null;
+    const findFolder = (list) => {
+      for (const f of list || []) {
+        if (f.id === selectedFolderId) return f;
+        if (f.children && f.children.length > 0) {
+          const found = findFolder(f.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+    return findFolder(folders);
   },
   getSelectedFile: () => {
-    const { folders, selectedFolderId, selectedFileId } = get();
-    const folder = folders.find((f) => f.id === selectedFolderId);
+    const { selectedFileId } = get();
+    if (!selectedFileId) return null;
+    const folder = get().getSelectedFolder();
     return folder?.files?.find((f) => f.id === selectedFileId) || null;
   },
   getFilteredFolders: () => {
     const { folders, searchQuery } = get();
     if (!searchQuery) return folders;
-    return folders
-      .map((folder) => {
-        const matchedFiles = folder.files.filter(
-          (file) =>
-            file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            (file.content || "")
-              .toLowerCase()
-              .includes(searchQuery.toLowerCase()),
-        );
-        const folderMatches = folder.name
-          .toLowerCase()
-          .includes(searchQuery.toLowerCase());
-        if (folderMatches || matchedFiles.length > 0) {
-          return {
-            ...folder,
-            files: matchedFiles.length > 0 ? matchedFiles : folder.files,
-          };
-        }
-        return null;
-      })
-      .filter(Boolean);
+
+    const filterFolder = (folder) => {
+      const matchedFiles = (folder.files || []).filter(
+        (file) =>
+          file.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          (file.content || "")
+            .toLowerCase()
+            .includes(searchQuery.toLowerCase()),
+      );
+      const filteredChildren = (folder.children || [])
+        .map(filterFolder)
+        .filter(Boolean);
+
+      const folderMatches = (folder.name || "")
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase());
+
+      if (folderMatches || matchedFiles.length > 0 || filteredChildren.length > 0) {
+        return {
+          ...folder,
+          files: matchedFiles.length > 0 ? matchedFiles : folder.files,
+          children: filteredChildren,
+        };
+      }
+      return null;
+    };
+
+    return folders.map(filterFolder).filter(Boolean);
   },
 }));

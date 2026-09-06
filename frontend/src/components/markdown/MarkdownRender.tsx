@@ -1,8 +1,11 @@
+"use client";
+
 import React from "react";
 import ReactMarkdown, { Options } from "react-markdown";
 import remarkGfm from "remark-gfm";
 import remarkMath from "remark-math";
 import rehypeKatex from "rehype-katex";
+import { normalizeLatex } from "@/utils/formatLatex";
 
 interface MarkdownRendererProps {
   content: string;
@@ -19,10 +22,10 @@ export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({
     <div className={className}>
       <ReactMarkdown
         remarkPlugins={[remarkGfm, remarkMath]}
-        rehypePlugins={[rehypeKatex]}
+        rehypePlugins={[[rehypeKatex, { strict: "ignore", throwOnError: false }]]}
         components={components}
       >
-        {content}
+        {normalizeLatex(content)}
       </ReactMarkdown>
     </div>
   );

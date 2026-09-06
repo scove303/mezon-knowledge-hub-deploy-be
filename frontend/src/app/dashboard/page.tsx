@@ -313,6 +313,19 @@ export default function DashboardIndex() {
             statusMessage: `Đang chỉnh sửa bài "${evt.title}"...`,
             output: `### ✏️ Đã chỉnh sửa bài học: **${evt.title}**\n\n${evt.content}`,
           }),
+          onCreateSubfolder: async (evt: any) => {
+            updateThread(threadId, {
+              status: 'done',
+              statusMessage: 'Hoàn tất!',
+              output: `### 📁 Đã tạo thư mục con: **${evt.subfolder_name}**`,
+              folderId: evt.subfolder_id || lastConversation.folderId,
+              folderName: evt.subfolder_name || lastConversation.folderName,
+            });
+            await refreshSidebarFolders();
+            if (evt.subfolder_id) {
+              router.push(`/dashboard/folders/${evt.subfolder_id}`);
+            }
+          },
           onDone: async (evt: any) => {
             updateThread(threadId, {
               status: 'done',

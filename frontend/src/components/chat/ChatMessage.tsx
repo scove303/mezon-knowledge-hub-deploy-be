@@ -1,7 +1,12 @@
+"use client";
+
 import React, { useState } from "react";
 import { User, Bot, Paperclip, Copy, Check } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkMath from "remark-math";
+import rehypeKatex from "rehype-katex";
+import { normalizeLatex } from "@/utils/formatLatex";
 import { useToastStore } from "@/stores/toast";
 
 export interface MessageProps {
@@ -176,10 +181,11 @@ export default function ChatMessage({ message }: { message: MessageProps }) {
               <span className="whitespace-pre-wrap">{message.content}</span>
             ) : (
               <ReactMarkdown
-                remarkPlugins={[remarkGfm]}
+                remarkPlugins={[remarkGfm, remarkMath]}
+                rehypePlugins={[[rehypeKatex, { strict: "ignore", throwOnError: false }]]}
                 components={MarkdownComponents}
               >
-                {message.content}
+                {normalizeLatex(message.content)}
               </ReactMarkdown>
             )}
           </div>
