@@ -1,4 +1,12 @@
-# Ignore everything except backend
-/*
-!/backend
-!/backend/**
+__pycache__/
+*.py[cod]
+.venv/
+env/
+venv/
+*.log
+tests/
+scratch/
+debug_youtube_*.txt
+.git
+.gitignore
+!requirements.txt

@@ -61,5 +61,8 @@ temp_files/
 API_SUMMARY.md
 segment.txt
 backend/app/tts_cache/
+debug_youtube_*.txt
 *.txt
+!requirements.txt
+!**/requirements.txt
 /mezon-sdk-python

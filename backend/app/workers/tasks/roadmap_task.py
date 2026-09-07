@@ -4,6 +4,7 @@ from sqlmodel import Session
 from mezon_sdk.models import ChannelMessageContent, InteractiveMessageProps
 from mezon_sdk.structures.interactive_message import InteractiveBuilder
 
+from app.core.config import settings
 from app.core.database import engine
 from app.bot.client import client
 from app.bot.commands.roadmap import run_roadmap_service
@@ -11,8 +12,9 @@ from app.bot.utils.embeds import build_warning_embed
 
 
 def build_folder_tree_embed(folder_name: str, folder_id: str, files: list) -> InteractiveMessageProps:
+    web_url = getattr(settings, "WEB_APP_URL", getattr(settings, "FRONTEND_URL", "https://frontend-production-1593.up.railway.app")).rstrip("/")
     builder = InteractiveBuilder(f"📁 {folder_name}")
-    builder.set_description(f"**{len(files)} bài học** • [Mở Web UI](http://localhost:3001)")
+    builder.set_description(f"**{len(files)} bài học** • [Mở Web UI]({web_url})")
     builder.set_color("#00BFFF")
 
     file_names = [
