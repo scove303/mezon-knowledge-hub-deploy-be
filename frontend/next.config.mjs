@@ -28,7 +28,7 @@ const securityHeaders = [
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https:",
       "font-src 'self' data:",
-      "connect-src 'self' http://localhost:* ws://localhost:* https://*.mezon.vn http://localhost:8000 https://*",
+      "connect-src 'self' http://localhost:* ws://localhost:* https://*.mezon.vn http://localhost:8000 https://backend-production-a6b3.up.railway.app https://*",
       "frame-ancestors 'none'",
     ].join('; '),
   },
@@ -36,6 +36,14 @@ const securityHeaders = [
 
 const nextConfig = {
   devIndicators: false,
+  async rewrites() {
+    return [
+      {
+        source: '/api/v1/:path*',
+        destination: `${process.env.NEXT_PUBLIC_API_URL || 'https://backend-production-a6b3.up.railway.app/api/v1'}/:path*`,
+      },
+    ];
+  },
   async headers() {
     return [
       {

@@ -37,18 +37,27 @@ class Settings(BaseSettings):
     DB_PORT: int = 3306
     DB_USER: str = "root"
 
-    # Required field - lay tu .env
-    DB_PASSWORD: str
-
+    DB_PASSWORD: str = ""
     DB_NAME: str = "mezon_knowledge_hub"
 
     @property
     def DATABASE_URL(self) -> str:
+        import os
+        raw_url = os.getenv("DATABASE_URL") or os.getenv("MYSQL_URL")
+        if raw_url:
+            if raw_url.startswith("mysql://"):
+                return raw_url.replace("mysql://", "mysql+pymysql://", 1)
+            return raw_url
+        host = os.getenv("MYSQLHOST", self.DB_HOST)
+        port = os.getenv("MYSQLPORT", str(self.DB_PORT))
+        user = os.getenv("MYSQLUSER", self.DB_USER)
+        password = os.getenv("MYSQLPASSWORD", self.DB_PASSWORD)
+        name = os.getenv("MYSQLDATABASE", self.DB_NAME)
         return (
             f"mysql+pymysql://"
-            f"{self.DB_USER}:{self.DB_PASSWORD}"
-            f"@{self.DB_HOST}:{self.DB_PORT}"
-            f"/{self.DB_NAME}"
+            f"{user}:{password}"
+            f"@{host}:{port}"
+            f"/{name}"
         )
 
     # =========================================================
@@ -80,19 +89,23 @@ class Settings(BaseSettings):
     MEZON_CLIENT_ID: str = ""
     MEZON_CLIENT_SECRET: str = ""
 
+    API_BASE_URL: str = "https://backend-production-a6b3.up.railway.app"
+    WEB_APP_URL: str = "https://frontend-production-1593.up.railway.app"
+
     MEZON_REDIRECT_URI: str = (
-        "http://localhost:8000/api/v1/auth/mezon/callback"
+        "https://backend-production-a6b3.up.railway.app/api/v1/auth/mezon/callback"
     )
 
     # =========================================================
     # Frontend
     # =========================================================
-    FRONTEND_URL: str = "http://localhost:3000"
+    FRONTEND_URL: str = "https://frontend-production-1593.up.railway.app"
 
     # =========================================================
     # CORS
     # =========================================================
     BACKEND_CORS_ORIGINS: List[str] = [
+        "https://frontend-production-1593.up.railway.app",
         "http://localhost:3000",
         "http://localhost:3001",
         "http://127.0.0.1:3000",
@@ -103,7 +116,7 @@ class Settings(BaseSettings):
     # Pydantic v2
     # =========================================================
     model_config = SettingsConfigDict(
-        env_file=DOTENV_PATH,
+        env_file=(DOTENV_PATH, ".env"),
         extra="ignore",
         case_sensitive=True,
     )

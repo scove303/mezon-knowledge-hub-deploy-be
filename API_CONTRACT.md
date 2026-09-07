@@ -1,7 +1,8 @@
 # Tài Liệu Giao Tiếp API - Mezon Knowledge Hub
 
 Tài liệu này quy định cấu trúc và các điểm kết nối (endpoints) giữa Frontend (Dashboard) và Backend.
-- **Base URL (Local):** `http://localhost:3000/api/v1`
+- **Base URL (Production):** `https://backend-production-a6b3.up.railway.app/api/v1`
+- **Base URL (Local):** `http://localhost:8000/api/v1`
 - **Môi trường:** JSON (`Content-Type: application/json`)
 
 ---

@@ -2,7 +2,7 @@ import axios from 'axios';
 import axiosInstance, { getTokens } from '@/libs/axios';
 import { useAuthStore } from '@/features/auth/store';
 
-const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+const BASE_URL = process.env.NEXT_PUBLIC_API_URL || "https://backend-production-a6b3.up.railway.app/api/v1";
 
 function buildAuthHeaders() {
   const headers = {};

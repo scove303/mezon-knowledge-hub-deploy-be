@@ -9,7 +9,7 @@ from app.bot.utils.embeds import build_status_embed, build_error_embed, build_wa
 from mezon_sdk.models import ChannelMessageContent, InteractiveMessageProps
 
 
-API_BASE = getattr(settings, "API_BASE_URL", "http://localhost:8000")
+API_BASE = getattr(settings, "API_BASE_URL", "https://backend-production-a6b3.up.railway.app")
 
 
 async def share_chat_command(channel, user_id: int, folder_id: str, title: str = "", description: str = ""):

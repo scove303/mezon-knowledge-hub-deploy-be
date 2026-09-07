@@ -67,7 +67,7 @@ def list_all_folder(user_id: Union[int, str]) -> InteractiveMessageProps:
             "Bạn chưa tạo lộ trình học tập nào.\n\n💡 Gõ `/roadmap [chủ đề]` để bắt đầu!"
         )
 
-    base_web_url = getattr(settings, "WEB_APP_URL", getattr(settings, "WEB_FRONTEND_URL", "https://localhost:3001"))
+    base_web_url = getattr(settings, "WEB_APP_URL", getattr(settings, "FRONTEND_URL", "https://frontend-production-1593.up.railway.app"))
     return build_folder_list_embed(folder_data, base_web_url)
 
 
@@ -75,7 +75,7 @@ def get_folder_by_id(user_id: Union[int, str], folder_id: str) -> InteractiveMes
     """
     Lấy chi tiết một thư mục và danh sách file bài học bên trong.
     """
-    base_web_url = getattr(settings, "WEB_APP_URL", getattr(settings, "WEB_FRONTEND_URL", "https://localhost:3001"))
+    base_web_url = getattr(settings, "WEB_APP_URL", getattr(settings, "FRONTEND_URL", "https://frontend-production-1593.up.railway.app"))
 
     with Session(engine) as session:
         print(f"🔍 [DEBUG /folder_detail] Querying folder_id={folder_id} for user_id={user_id}")
