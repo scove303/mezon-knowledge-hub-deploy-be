@@ -30,6 +30,7 @@ aiosqlite>=0.20.0
 tenacity>=8.2.0
 mmn-sdk>=1.0.1
 pyjwt>=2.8.0
+ecdsa==0.19.2  # pinned: PYSEC-2026-1325 timing side-channel, no patch yet
 
 # Optional: bật semantic-cache cho roadmap (nặng, kèm torch). Thiếu thì tự fallback.
 # sentence-transformers>=3.0.0

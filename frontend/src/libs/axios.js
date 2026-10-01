@@ -48,7 +48,13 @@ const getTokens = () => {
 // Kiểm tra xem URL có phải là cùng origin / API base của ứng dụng không
 const isSameOriginOrApi = (url) => {
   if (!url) return true;
+
+  // Check for protocol-relative URLs (//evil.com) - these are NOT same origin
+  if (url.startsWith("//")) return false;
+
+  // Relative paths (/, ./, ../) are safe - they resolve to current origin
   if (url.startsWith("/") || url.startsWith("./") || url.startsWith("../")) return true;
+
   try {
     const targetUrl = new URL(url, BASE_URL);
     const apiUrl = new URL(BASE_URL);

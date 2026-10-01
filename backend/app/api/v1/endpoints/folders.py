@@ -1,7 +1,7 @@
 from typing import Annotated, List, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
-from pydantic import BaseModel
+from pydantic import BaseModel, Field, field_validator
 from sqlmodel import Session
 
 from app.core.database import get_session
@@ -212,7 +212,16 @@ def delete_folder(
 
 
 class FolderName(BaseModel):
-    name: str
+    name: str = Field(max_length=255)
+
+    @field_validator("name")
+    @classmethod
+    def strip_control_chars(cls, v: str) -> str:
+        """Strip non-printable control characters from folder name."""
+        if not isinstance(v, str):
+            return v
+        # Remove null bytes, zero-width spaces, and other control characters
+        return "".join(ch for ch in v if ch.isprintable() or ch in ("\t", "\n", "\r"))
 
 
 class FolderReorder(BaseModel):
