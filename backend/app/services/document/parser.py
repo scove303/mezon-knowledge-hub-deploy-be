@@ -508,15 +508,34 @@ async def generate_single_lesson(topic: str, lesson: dict, tavily_context: str, 
             domain=None,  # Auto-detect inside
         )
 
+# Separate system instruction from user content to prevent prompt injection
+        # System instruction is the detailed prompt template
+        # User content is the specific lesson info + tavily context
+        
+        system_instruction = LESSON_GENERATION_SYSTEM_INSTRUCTION
+        
+        # Build user content (topic, lesson_title, lesson_summary, tavily_context)
+        user_content = f"""THÔNG TIN BÀI HỌC CẦN VIẾT:
+- Chủ đề tổng thể: {topic}
+- Tên bài học: {lesson_title}
+- Mục tiêu tóm tắt: {lesson_summary}
+
+NGỮ CẢNH THAM KHẢO (Tavily):
+{tavily_context}
+
+---
+HÃY SOẠN THẢO BÀI HỌC THEO ĐÚNG CẤU TRÚC VÀ PHONG CÁCH TRÊN.
+NHỚ: PHẢI THAY THẾ TẤT CẢ label="**AI: ...**" BẰNG TỪ KHÓA CỤ THỂ TỪ NỘI DUNG BẠN VIẾT!"""
+
         try:
-            async with asyncio.timeout(180.0):
-                response = await _generate_content_with_retry(
-                    detail_prompt,
-                    types.GenerateContentConfig(
-                        temperature=0.4,
-                        system_instruction=LESSON_GENERATION_SYSTEM_INSTRUCTION,
-                    ),
-                )
+                async with asyncio.timeout(180.0):
+                    response = await _generate_content_with_retry(
+                        user_content,
+                        types.GenerateContentConfig(
+                            temperature=0.4,
+                            system_instruction=system_instruction,
+                        ),
+                    )
                 
                 text_content = response.text or ""
 
@@ -579,13 +598,30 @@ async def parse_context_to_structure(
     if on_event:
         on_event({"type": "status", "message": "Đang lập khung lộ trình với Gemini..."})
 
-    outline_prompt = build_outline_prompt(topic, tavily_context)
+    # Use system_instruction to separate system prompt from user content (prevents prompt injection)
+    outline_system_prompt = """Bạn là Kiến trúc sư Chương trình Giảng dạy (Curriculum Architect).
+Dựa trên thông tin ngữ cảnh thu thập (Tavily Context), hãy thiết kế một Cây Lộ Trình Học Tập từ cơ bản đến nâng cao cho chủ đề được yêu cầu.
+
+YÊU CẦU:
+1. Tạo danh sách BẮT BUỘC từ 10 đến 12 Bài học theo thứ tự logic.
+2. Trả về đúng định dạng JSON:
+{
+  "folder_name": "Tên Lộ trình Học tập Toàn diện",
+  "lessons": [
+    {"title": "Bài 1: [Tên bài học]", "summary": "Tóm tắt 1-2 câu về nội dung bài này"},
+    {"title": "Bài 2: [Tên bài học]", "summary": "Tóm tắt 1-2 câu..."}
+  ]
+}"""
+
+    # User content goes in the main prompt
+    outline_user_prompt = f"Chủ đề: {topic}\n\nNgữ cảnh Tavily:\n{tavily_context}"
 
     outline_res = await _generate_content_with_retry(
-        outline_prompt,
+        outline_user_prompt,
         types.GenerateContentConfig(
             response_mime_type="application/json",  # Ép trả về JSON chuẩn
             temperature=0.3,
+            system_instruction=outline_system_prompt,
         ),
     )
 

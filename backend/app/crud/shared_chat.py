@@ -62,7 +62,7 @@ def create_shared_chat(session: Session, user_id: int, data: SharedChatCreate) -
     return shared_chat
 
 
-def get_shared_chat_by_code(session: Session, share_code: str) -> Optional[SharedChat]:
+def get_shared_chat_by_code(session: Session, share_code: str, user_id: Optional[int] = None) -> Optional[SharedChat]:
     chat = session.exec(
         select(SharedChat).where(SharedChat.share_code == share_code)
     ).first()
@@ -73,6 +73,11 @@ def get_shared_chat_by_code(session: Session, share_code: str) -> Optional[Share
     # Check expiration
     if chat.expires_at and chat.expires_at < datetime.utcnow():
         return None
+    
+    # Check is_public flag - private chats require authentication + ownership
+    if not chat.is_public:
+        if user_id is None or chat.creator_id != user_id:
+            return None
     
     return chat
 
@@ -111,9 +116,10 @@ def increment_view_count(session: Session, chat_id: str) -> None:
 
 
 def import_shared_chat(session: Session, user_id: int, data: ImportChatRequest) -> tuple[Folder, ChatImport]:
-    shared_chat = get_shared_chat_by_code(session, data.share_code)
+    # Pass user_id to allow importing private chats you own
+    shared_chat = get_shared_chat_by_code(session, data.share_code, user_id)
     if not shared_chat:
-        raise ValueError("Shared chat not found or expired")
+        raise ValueError("Shared chat not found, expired, or private")
     
     # Check if already imported
     existing = session.exec(

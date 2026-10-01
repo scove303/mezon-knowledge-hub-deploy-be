@@ -70,3 +70,29 @@ def get_current_actor(
 
 CurrentUser = Annotated[User, Depends(get_current_user)]
 CurrentActor = Annotated[User, Depends(get_current_actor)]
+
+
+def get_current_user_optional(
+    credentials: Annotated[
+        HTTPAuthorizationCredentials | None,
+        Depends(bearer_scheme),
+    ],
+    session: SessionDep,
+) -> User | None:
+    """Optional version that returns None instead of raising 401."""
+    if not credentials:
+        return None
+    try:
+        payload = decode_token(credentials.credentials)
+        if payload.get("type") != "access":
+            return None
+        user_id = payload.get("sub")
+        if user_id is None:
+            return None
+        user = session.get(User, int(user_id))
+        return user
+    except JWTError:
+        return None
+
+
+CurrentActorOptional = Annotated[User | None, Depends(get_current_user_optional)]

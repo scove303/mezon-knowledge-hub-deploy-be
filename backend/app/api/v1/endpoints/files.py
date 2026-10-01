@@ -51,9 +51,19 @@ async def upload_file(
             detail=error_response("File quá lớn (tối đa 5MB)"),
         )
 
-    name = (file.filename or "document.md").strip() or "document.md"
-    if not name.lower().endswith((".md", ".markdown", ".txt")):
-        name += ".md"
+    # Validate file extension against ALLOWED_EXTENSIONS (consistent with /digest and /summarize-folder)
+    filename = file.filename or ""
+    extension = "." + filename.rsplit(".", 1)[-1].lower() if "." in filename else ""
+    if extension not in ALLOWED_EXTENSIONS:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=error_response(
+                f"Định dạng file không được hỗ trợ. Chỉ chấp nhận: "
+                f"{', '.join(sorted(ALLOWED_EXTENSIONS))}"
+            ),
+        )
+
+    name = filename.strip() or "document.md"
 
     try:
         content = raw.decode("utf-8")

@@ -33,7 +33,8 @@ class SharedChat(SQLModel, table=True):
     
     # Share settings
     is_public: bool = Field(default=True)
-    share_code: str = Field(default_factory=lambda: uuid.uuid4().hex[:8], unique=True, index=True)
+    # Use full 32-char UUID for better entropy (was 8 chars = 32 bits)
+    share_code: str = Field(default_factory=lambda: uuid.uuid4().hex, unique=True, index=True)
     
     # Stats
     import_count: int = Field(default=0)

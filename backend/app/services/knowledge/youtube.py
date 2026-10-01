@@ -24,6 +24,28 @@ SUPADATA_API_KEY = getattr(settings, "SUPADATA_API_KEY", "")
 SUPADATA_API_BASE = getattr(settings, "SUPADATA_API_BASE", "https://api.supadata.ai/v1")
 
 
+from urllib.parse import urlparse
+
+
+def _validate_youtube_url(url: str) -> bool:
+    """
+    Validate that the URL is a legitimate YouTube URL by parsing and checking hostname.
+    Prevents SSRF by ensuring the URL's actual domain is youtube.com, www.youtube.com, m.youtube.com, or youtu.be.
+    """
+    try:
+        parsed = urlparse(url)
+        if not parsed.scheme or not parsed.netloc:
+            return False
+        hostname = parsed.netloc.lower()
+        # Strip www. and m. prefixes
+        for prefix in ("www.", "m."):
+            if hostname.startswith(prefix):
+                hostname = hostname[len(prefix):]
+        return hostname in ("youtube.com", "youtu.be")
+    except Exception:
+        return False
+
+
 def extract_video_id(url):
     """Extracts 11-char video ID from YouTube URL."""
     match = re.search(r"(?:v=|\/)([a-zA-Z0-9_-]{11})", url)
@@ -206,6 +228,10 @@ class YouTubeNativeService:
     @classmethod
     def fetch_video_metadata(cls, youtube_url):
         """Fallback: Lay Tieu de, Mo ta va Tags khi video khong co Phu de."""
+        # SSRF protection: validate URL before passing to yt-dlp
+        if not _validate_youtube_url(youtube_url):
+            raise ValueError("URL không hợp lệ: chỉ chấp nhận youtube.com hoặc youtu.be")
+        
         try:
             with YoutubeDL({'skip_download': True, 'quiet': True}) as ydl:
                 info = ydl.extract_info(youtube_url, download=False)

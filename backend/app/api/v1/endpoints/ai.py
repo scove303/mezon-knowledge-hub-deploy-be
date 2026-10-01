@@ -1,6 +1,7 @@
 import asyncio
 import json
 import uuid
+from urllib.parse import urlparse
 from app.crud import file as file_crud
 from app.crud import folder as folder_crud
 from app.schemas.file import FileCreate, FileMove, FileRename, FileUpdate
@@ -662,6 +663,32 @@ async def _run_youtube_task(user_id: int, youtube_url: str, folder_id: str = Non
         )
 
 
+from urllib.parse import urlparse
+
+
+# ... existing code ...
+
+
+def _validate_youtube_url(url: str) -> bool:
+    """
+    Validate that the URL is a legitimate YouTube URL by parsing and checking hostname.
+    Prevents SSRF by ensuring the URL's actual domain is youtube.com, www.youtube.com, or youtu.be.
+    """
+    try:
+        parsed = urlparse(url)
+        # Must have a scheme and netloc
+        if not parsed.scheme or not parsed.netloc:
+            return False
+        # Normalize hostname (lowercase, strip www.)
+        hostname = parsed.netloc.lower()
+        if hostname.startswith("www."):
+            hostname = hostname[4:]
+        # Check exact hostname match (not substring)
+        return hostname in ("youtube.com", "youtu.be")
+    except Exception:
+        return False
+
+
 @router.post("/youtube")
 async def summarize_youtube(
     url: str,
@@ -670,10 +697,10 @@ async def summarize_youtube(
     background_tasks: BackgroundTasks,
     folder_id: str = None,
 ):
-    if "youtube.com" not in url and "youtu.be" not in url:
+    if not _validate_youtube_url(url):
         raise HTTPException(
             status_code=400,
-            detail="URL YouTube không hợp lệ!",
+            detail="URL YouTube không hợp lệ! Chỉ chấp nhận youtube.com hoặc youtu.be",
         )
 
     # Capture folder_id explicitly before background task

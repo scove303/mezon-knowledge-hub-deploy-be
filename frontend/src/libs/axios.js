@@ -80,8 +80,46 @@ axiosInstance.interceptors.request.use(
 );
 
 // ─── Response Interceptor ─────────────────────────────────────────────────────
+// BroadcastChannel để đồng bộ refresh state giữa các tab
+let refreshChannel = null;
+if (typeof window !== "undefined" && window.BroadcastChannel) {
+  refreshChannel = new BroadcastChannel("mezon-auth-refresh");
+}
+
 let isRefreshing = false;
 let pendingQueue = [];
+
+// Xử lý message từ tab khác
+if (refreshChannel) {
+  refreshChannel.onmessage = (event) => {
+    const { type, token } = event.data;
+    if (type === "REFRESH_SUCCESS" && token) {
+      // Tab khác đã refresh thành công, dùng token đó
+      processQueue(null, token);
+    } else if (type === "REFRESH_FAILED") {
+      // Tab khác refresh thất bại, reject queue
+      processQueue(new Error("Refresh failed in another tab"), null);
+    }
+  };
+}
+
+// Fallback: Listen for localStorage changes (storage event fires in other tabs)
+if (typeof window !== "undefined") {
+  window.addEventListener("storage", (event) => {
+    if (event.key === "mezon-auth" && event.newValue) {
+      try {
+        const parsed = JSON.parse(event.newValue);
+        const newAccessToken = parsed.state?.accessToken;
+        if (newAccessToken && isRefreshing) {
+          // Another tab updated the token, use it
+          processQueue(null, newAccessToken);
+        }
+      } catch {
+        // Ignore parse errors
+      }
+    }
+  });
+}
 
 const processQueue = (error, token = null) => {
   pendingQueue.forEach(({ resolve, reject }) => {
@@ -139,10 +177,19 @@ axiosInstance.interceptors.response.use(
         // Cập nhật Zustand store (đồng thời zustand persist sẽ tự sync vào localStorage)
         useAuthStore.getState().updateTokens(newAccessToken, newRefreshToken);
 
+        // Broadcast success to other tabs
+        if (refreshChannel) {
+          refreshChannel.postMessage({ type: "REFRESH_SUCCESS", token: newAccessToken });
+        }
+
         processQueue(null, newAccessToken);
         originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
         return axiosInstance(originalRequest);
       } catch (refreshError) {
+        // Broadcast failure to other tabs
+        if (refreshChannel) {
+          refreshChannel.postMessage({ type: "REFRESH_FAILED" });
+        }
         processQueue(refreshError, null);
         // Clear auth qua Zustand store
         useAuthStore.getState().clearAuth();

@@ -74,23 +74,25 @@ async def generate_concept_mindmap(folder_name: str, combined_content: str) -> d
     Gọi AI để sinh cây mindmap concept-based từ nội dung folder.
     Trả về dict dạng { root: { label, description, children: [...] } }
     """
-    prompt = f"""
-{MINDMAP_GENERATION_PROMPT}
-
-TÊN FOLDER: {folder_name}
+    # Use system_instruction to separate system prompt from user content (prevents prompt injection)
+    system_instruction = MINDMAP_GENERATION_PROMPT
+    
+    # User content goes in the main prompt
+    user_content = f"""TÊN FOLDER: {folder_name}
 
 NỘI DUNG TÀI LIỆU:
 {combined_content}
 
-Hãy phân tích toàn bộ nội dung trên và trả về JSON mindmap theo đúng cấu trúc quy định.
-"""
+Hãy phân tích toàn bộ nội dung trên và trả về JSON mindmap theo đúng cấu trúc quy định."""
+
     try:
         async with asyncio.timeout(120.0):
             response = await _generate_content_with_retry(
-                prompt,
+                user_content,
                 types.GenerateContentConfig(
                     response_mime_type="application/json",
                     temperature=0.3,
+                    system_instruction=system_instruction,
                 ),
             )
             raw = response.text or "{}"

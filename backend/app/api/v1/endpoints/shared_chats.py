@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Query
 from sqlmodel import Session
 
 from app.core.database import get_session
-from app.api.deps import CurrentActor
+from app.api.deps import CurrentActor, CurrentActorOptional
 from app.crud.shared_chat import (
     create_shared_chat,
     get_shared_chat_by_code,
@@ -127,13 +127,16 @@ def list_my_shared_chats(
 def get_shared_chat(
     share_code: str,
     session: SessionDep,
+    # Optional: if user is authenticated, pass their ID to check private chat ownership
+    current_user: CurrentActorOptional = None,
 ):
-    """Get shared chat detail (public access)."""
-    chat = get_shared_chat_by_code(session, share_code)
+    """Get shared chat detail (public access for public chats, owner-only for private chats)."""
+    user_id = current_user.id if current_user else None
+    chat = get_shared_chat_by_code(session, share_code, user_id)
     if not chat:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=error_response("Shared chat not found or expired"),
+            detail=error_response("Shared chat not found, expired, or private"),
         )
     
     increment_view_count(session, chat.id)

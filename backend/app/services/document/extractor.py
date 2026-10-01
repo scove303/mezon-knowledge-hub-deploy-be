@@ -7,7 +7,10 @@ import io
 from typing import Optional
 
 from pypdf import PdfReader
+from pypdf.errors import PdfReadError, PdfStreamError
 from docx import Document
+from docx.opc.exceptions import PackageNotFoundError
+from docx.oxml.exceptions import InvalidXmlError
 
 # Các định dạng file được phép upload
 ALLOWED_EXTENSIONS = {".pdf", ".docx", ".txt"}
@@ -32,7 +35,13 @@ def get_file_extension(filename: str) -> str:
 
 def extract_text_from_pdf(file_bytes: bytes) -> str:
     """Crawl toàn bộ text từ file PDF bằng pypdf."""
-    reader = PdfReader(io.BytesIO(file_bytes))
+    try:
+        reader = PdfReader(io.BytesIO(file_bytes))
+    except (PdfReadError, PdfStreamError) as e:
+        raise EmptyFileContentError(
+            "File PDF bị lỗi hoặc bị hỏng, không thể đọc được."
+        ) from e
+    
     pages_text = []
     for page in reader.pages:
         text = page.extract_text() or ""
@@ -43,7 +52,12 @@ def extract_text_from_pdf(file_bytes: bytes) -> str:
 
 def extract_text_from_docx(file_bytes: bytes) -> str:
     """Crawl toàn bộ text từ file Word (.docx) bằng python-docx."""
-    document = Document(io.BytesIO(file_bytes))
+    try:
+        document = Document(io.BytesIO(file_bytes))
+    except (PackageNotFoundError, InvalidXmlError) as e:
+        raise EmptyFileContentError(
+            "File Word (.docx) bị lỗi hoặc bị hỏng, không thể đọc được."
+        ) from e
 
     parts = []
 

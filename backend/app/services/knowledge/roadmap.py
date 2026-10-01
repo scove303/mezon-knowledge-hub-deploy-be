@@ -357,19 +357,63 @@ async def revise_roadmap(
             }
         )
 
-    prompt = build_revise_prompt(
-        topic=topic,
-        folder_name=folder.name,
-        user_query=topic,
-        relevant_docs=docs,
-        domain=None,  # auto-detect
+    # Use system_instruction to separate system prompt from user content (prevents prompt injection)
+    # Get domain for style guide
+    from app.services.ai.domain_prompts import detect_domain, get_domain_style_guide, COMMON_LESSON_STRUCTURE
+    
+    domain = detect_domain(topic, " ".join(d.get("excerpt", "") for d in docs))
+    style_guide = get_domain_style_guide(domain)
+    
+    # System instruction: the domain style guide + common lesson structure + behavior rules
+    system_instruction = f"""{style_guide}
+
+{COMMON_LESSON_STRUCTURE}
+
+Bạn là Trợ lý AI Biên tập Tài liệu Học tập.
+Người dùng đưa ra yêu cầu tiếp theo HOẶC yêu cầu CHỈNH SỬA nội dung cũ trong folder tài liệu hiện có.
+
+Hãy xử lý và trả về JSON duy nhất:
+
+1. Nếu người dùng HỎI CÂU HỎI (giải thích, làm rõ, tóm tắt, hỏi thêm kiến thức liên quan):
+   {{"action": "answer", "text": "Câu trả lời chi tiết, dựa trên tài liệu trong folder"}}
+
+2. Nếu người dùng yêu cầu CHỈNH SỬA / VIẾT LẠI / BỔ SUNG nội dung bài học cụ thể:
+   - Chọn file_id khớp nhất.
+   - Trả về TOÀN BỘ nội dung markdown MỚI của bài học (giữ cấu trúc, đã cải thiện theo yêu cầu).
+   {{"action": "edit", "file_id": "<file_id>", "title": "<tiêu đề>", "content": "<TOÀN BỘ markdown mới>"}}
+
+3. Nếu yêu cầu tạo nội dung MỚI không thuộc bài nào (tạo file mới trong folder hiện tại):
+   {{"action": "edit", "file_id": "new", "title": "<tiêu đề mới>", "content": "<markdown mới>"}}
+
+4. Nếu người dùng yêu cầu TẠO THƯ MỤC CON (subfolder) mới để tổ chức lại nội dung:
+   - Trả về tên thư mục con, loại, và danh sách file bên trong (nếu có)
+   {{"action": "create_subfolder", "name": "Tên thư mục con", "type": "roadmap|document|video", "files": [{{"title": "File 1", "content": "markdown content"}}]}}
+
+YÊU CẦU:
+- LUÔN trả về JSON hợp lệ, KHÔNG BAO GIỜ trả về văn bản ngoài JSON.
+- KHÔNG giải thích, KHÔNG thêm nhận xét, CHỈ trả về object JSON đơn lẻ.
+- Với action "edit": content phải là TOÀN BỘ bài học mới, không phải đoạn vởn vẹn.
+- Với action "create_subfolder": files là tùy chọn, có thể rỗng []."""
+
+    # User content: the specific folder info, user query, and relevant docs
+    doc_block = "\n\n".join(
+        f"--- FILE: {d['title']} (file_id: {d['file_id']}) ---\n{d['excerpt']}"
+        for d in docs
     )
+    
+    user_content = f"""Folder: {folder.name}
+Chủ đề: {topic}
+Yêu cầu của người dùng: {topic}
+
+Tài liệu tìm thấy trong folder:
+{doc_block}"""
 
     response = await _generate_content_with_retry(
-        prompt,
+        user_content,
         types.GenerateContentConfig(
             response_mime_type="application/json",
             temperature=0.4,
+            system_instruction=system_instruction,
         ),
     )
 
