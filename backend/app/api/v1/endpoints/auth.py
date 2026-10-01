@@ -450,3 +450,81 @@ def refresh_token(
             status_code=401,
             detail=error_response("Token không hợp lệ hoặc đã hết hạn"),
         )
+
+
+# =============================================================
+# 5. ĐĂNG XUẤT (LOGOUT) - THU HỒI REFRESH TOKEN HIỆN TẠI
+# =============================================================
+@router.post("/logout")
+def logout(
+    data: RefreshRequest,
+    session: SessionDep,
+    response: Response = None,
+):
+    """
+    Thu hồi refresh token hiện tại của user (logout).
+    User cung cấp refresh token trong body để xác thực identity.
+    """
+    try:
+        token_str = data.refreshToken
+        payload = decode_token(token_str)
+
+        if payload.get("type") != "refresh":
+            raise HTTPException(status_code=401, detail=error_response("Token không hợp lệ"))
+
+        user_id = int(payload["sub"])
+        jti = payload.get("jti")
+
+        if not jti:
+            raise HTTPException(status_code=401, detail=error_response("Token thiếu định danh jti"))
+
+        # Tìm token trong database
+        db_token = session.exec(select(RefreshToken).where(RefreshToken.jti == jti)).first()
+
+        if db_token:
+            # Thu hồi token này
+            db_token.is_revoked = True
+            session.add(db_token)
+            session.commit()
+
+        # Xóa cookie nếu có
+        if response is not None:
+            response.delete_cookie(
+                key="refreshToken",
+                path="/",
+                httponly=True,
+                secure=not settings.DEBUG,
+                samesite="lax",
+            )
+
+        return success_response(
+            message="Đăng xuất thành công",
+            data={"revoked": True},
+        )
+
+    except JWTError:
+        raise HTTPException(
+            status_code=401,
+            detail=error_response("Token không hợp lệ hoặc đã hết hạn"),
+        )
+
+
+# =============================================================
+# 6. ĐĂNG XUẤT TẤT CẢ THIẾT BỊ (LOGOUT ALL) - TUỲ CHỌN
+# =============================================================
+@router.post("/logout-all")
+def logout_all(
+    current_user: Annotated[User, Depends(lambda: None)],  # Will be replaced by actual auth dependency
+    session: SessionDep,
+    response: Response = None,
+):
+    """
+    Thu hồi TẤT CẢ refresh tokens của user (logout from all devices).
+    Note: Requires authentication dependency to be added.
+    """
+    # This endpoint needs proper auth dependency injection
+    # For now, return not implemented
+    raise HTTPException(
+        status_code=501,
+        detail=error_response("Chức năng này đang phát triển"),
+    )
