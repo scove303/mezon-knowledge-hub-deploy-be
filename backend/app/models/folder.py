@@ -23,6 +23,7 @@ class Folder(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = Field(default=None)
     order_index: int = Field(default=0)
+    last_mindmap_generated_at: Optional[datetime] = Field(timezone=True, sa_type=DateTime(timezone=True))
 
     # Hierarchical structure
     parent_id: Optional[str] = Field(foreign_key="folders.id", index=True, default=None)

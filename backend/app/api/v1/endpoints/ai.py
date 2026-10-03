@@ -34,7 +34,7 @@ from sqlalchemy.orm import selectinload
 from sqlmodel import select
 
 from app.api.deps import CurrentActor, SessionDep
-from app.core.state import create_job, get_job_for_user, roadmap_jobs
+from app.core.state import create_job, get_job_for_user, roadmap_jobs, job_creation_lock
 from app.models.folder import Folder
 from app.models.knowledge_file import KnowledgeFile
 from app.schemas.ai import RoadmapCreateRequest, RoadmapFollowUpRequest
@@ -116,30 +116,33 @@ async def generate_roadmap(
     session: SessionDep,
     current_user: CurrentActor,
 ):
-    # Giới hạn số job đồng thời mỗi user
-    # (tránh lạm dụng), không chặn chạy song song
-    user_jobs = sum(
-        1
-        for j in roadmap_jobs.values()
-        if j.user_id == current_user.id
-        and j.status in ("queued", "running")
-    )
-
-    if user_jobs >= MAX_CONCURRENT_JOBS_PER_USER:
-        raise HTTPException(
-            status_code=status.HTTP_429_TOO_MANY_REQUESTS,
-            detail=(
-                "Bạn đang có quá nhiều lộ trình đang tạo. "
-                "Vui lòng đợi một vài lộ trình hoàn tất!"
-            ),
+    # Bọc toàn bộ Check & Act trong Lock nguyên tử
+    async with job_creation_lock:
+        # 1. CHECK: Đếm số job active của user
+        user_jobs = sum(
+            1
+            for j in roadmap_jobs.values()
+            if j.user_id == current_user.id
+            and j.status in ("queued", "running")
         )
 
-    job = create_job(
-        user_id=current_user.id,
-        topic=body.topic,
-        folder_name=body.folder_name,
-    )
+        if user_jobs >= MAX_CONCURRENT_JOBS_PER_USER:
+            raise HTTPException(
+                status_code=status.HTTP_429_TOO_MANY_REQUESTS,
+                detail=(
+                    "Bạn đang có quá nhiều lộ trình đang tạo. "
+                    "Vui lòng đợi một vài lộ trình hoàn tất!"
+                ),
+            )
 
+        # 2. ACT: Tạo job mới và lưu vào memory state
+        job = create_job(
+            user_id=current_user.id,
+            topic=body.topic,
+            folder_name=body.folder_name,
+        )
+
+    # Sau khi giải phóng lock, tiếp tục gửi event & spawn background task
     job.push(
         {
             "type": "status",

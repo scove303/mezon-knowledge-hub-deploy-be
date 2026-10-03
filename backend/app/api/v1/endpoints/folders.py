@@ -11,6 +11,8 @@ from app.crud import file as file_crud
 from app.schemas.common import error_response, success_response
 from app.schemas.folder import FolderCreate, SubfolderCreate
 from app.services.ai.mindmap_generator import generate_concept_mindmap
+from datetime import datetime, timezone
+
 import json
 
 router = APIRouter()
@@ -169,6 +171,22 @@ async def regenerate_mindmap(
             status_code=404, detail=error_response("Không tìm thấy thư mục")
         )
 
+    # 1. Kiểm tra Cooldown
+    now = datetime.now(timezone.utc)
+    if folder.last_mindmap_generated_at:
+        # Tự động chuyển đổi dạng timezone-aware nếu từ DB trả về chưa có tzinfo
+        last_gen = folder.last_mindmap_generated_at
+        if last_gen.tzinfo is None:
+            last_gen = last_gen.replace(tzinfo=timezone.utc)
+            
+        elapsed = (now - last_gen).total_seconds()
+        if elapsed < 60:
+            remaining = int(60 - elapsed)
+            raise HTTPException(
+                status_code=429, 
+                detail=error_response(f"Vui lòng chờ {remaining} giây trước khi yêu cầu tạo lại mindmap.")
+            )
+
     files = folder.files or []
     if not files:
         return success_response(
@@ -185,13 +203,14 @@ async def regenerate_mindmap(
     combined = "\n\n".join(content_parts)
     mindmap_data = await generate_concept_mindmap(folder.name, combined)
 
-    # Cập nhật cache
+    # 2. Cập nhật cache và thời gian Cooldown
     try:
         folder.mindmap_json = json.dumps(mindmap_data, ensure_ascii=False)
+        folder.last_mindmap_generated_at = now
         session.add(folder)
         session.commit()
     except Exception as e:
-        print(f"⚠️ [Mindmap cache save error]: {e}")
+        print(f"⚠️️ [Mindmap cache save error]: {e}")
 
     return success_response(
         message="Đã tạo lại mindmap thành công",

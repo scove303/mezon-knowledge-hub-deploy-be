@@ -7,6 +7,8 @@ from typing import Optional
 
 MAX_JOBS = 100
 JOB_TTL_SECONDS = 3600  # 1 hour TTL for in-memory jobs
+# Khóa đồng bộ cho việc kiểm tra và tạo job
+job_creation_lock = asyncio.Lock()
 
 
 @dataclass

@@ -46,6 +46,7 @@ def create_shared_chat(session: Session, user_id: int, data: SharedChatCreate) -
         expires_at = datetime.utcnow() + timedelta(days=data.expires_in_days)
     
     shared_chat = SharedChat(
+        share_code=uuid.uuid4().hex,  # Tạo chuỗi hex 32 ký tự đầy đủ (128-bit)
         creator_id=user_id,
         folder_snapshot=folder_snapshot,
         conversation_history=data.conversation_history,
