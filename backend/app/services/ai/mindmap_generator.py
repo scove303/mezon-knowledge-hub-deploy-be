@@ -68,16 +68,12 @@ TRẢ VỀ JSON ĐÚNG ĐỊNH DẠNG (không code block, không text ngoài JSO
 }
 """
 
-
+from google.genai import types  # Kiểm tra import cấu hình Gemini SDK
 async def generate_concept_mindmap(folder_name: str, combined_content: str) -> dict:
-    """
-    Gọi AI để sinh cây mindmap concept-based từ nội dung folder.
-    Trả về dict dạng { root: { label, description, children: [...] } }
-    """
-    # Use system_instruction to separate system prompt from user content (prevents prompt injection)
+    # 1. Tách biệt hoàn toàn Prompt hệ thống làm system_instruction
     system_instruction = MINDMAP_GENERATION_PROMPT
     
-    # User content goes in the main prompt
+    # 2. Nội dung người dùng truyền vào (User Content) chỉ chứa dữ liệu thuần
     user_content = f"""TÊN FOLDER: {folder_name}
 
 NỘI DUNG TÀI LIỆU:
@@ -87,9 +83,10 @@ Hãy phân tích toàn bộ nội dung trên và trả về JSON mindmap theo đ
 
     try:
         async with asyncio.timeout(120.0):
+            # Dam bao _generate_content_with_retry nhan config va truyen system_instruction cho Gemini API
             response = await _generate_content_with_retry(
                 user_content,
-                types.GenerateContentConfig(
+                config=types.GenerateContentConfig(
                     response_mime_type="application/json",
                     temperature=0.3,
                     system_instruction=system_instruction,
@@ -98,15 +95,12 @@ Hãy phân tích toàn bộ nội dung trên và trả về JSON mindmap theo đ
             raw = response.text or "{}"
             data = json.loads(raw)
 
-            # Validate structure
             if "root" not in data:
-                # Nếu AI trả về dạng phẳng, bọc lại
                 data = {"root": data}
 
             return data
     except Exception as e:
         print(f"❌ [Mindmap Generator Error]: {e}")
-        # Trả về cây rỗng để frontend fallback
         return {
             "root": {
                 "label": folder_name or "Mindmap",

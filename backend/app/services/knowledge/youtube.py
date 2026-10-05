@@ -10,6 +10,10 @@ from google import genai
 from google.genai import types
 from app.core.config import settings
 from app.services.search.tavily import tavily_search
+from app.prompt.youtube_prompts import (
+    YOUTUBE_OUTLINE_SYSTEM_INSTRUCTION,
+    build_youtube_outline_user_prompt,
+)
 
 api_key = getattr(settings, "GEMINI_API_KEY", None) or getattr(settings, "GOOGLE_API_KEY", None)
 client = genai.Client(api_key=api_key)
@@ -26,22 +30,26 @@ SUPADATA_API_BASE = getattr(settings, "SUPADATA_API_BASE", "https://api.supadata
 
 from urllib.parse import urlparse
 
+ALLOWED_NETLOCS = {
+    "youtube.com",
+    "www.youtube.com",
+    "m.youtube.com",
+    "youtu.be"
+}
 
 def _validate_youtube_url(url: str) -> bool:
-    """
-    Validate that the URL is a legitimate YouTube URL by parsing and checking hostname.
-    Prevents SSRF by ensuring the URL's actual domain is youtube.com, www.youtube.com, m.youtube.com, or youtu.be.
-    """
-    try:
+   try:
         parsed = urlparse(url)
-        if not parsed.scheme or not parsed.netloc:
+        if parsed.scheme not in ("http", "https"):
             return False
-        hostname = parsed.netloc.lower()
-        # Strip www. and m. prefixes
-        for prefix in ("www.", "m."):
-            if hostname.startswith(prefix):
-                hostname = hostname[len(prefix):]
-        return hostname in ("youtube.com", "youtu.be")
+        
+        hostname = parsed.hostname
+        if not hostname:
+            return False
+        
+        hostname = hostname.lower()
+        # Bắt buộc domain/hostname phải trùng khớp hoàn toàn với danh sách whitelist
+        return hostname in ALLOWED_NETLOCS
     except Exception:
         return False
 
@@ -227,13 +235,23 @@ class YouTubeNativeService:
 
     @classmethod
     def fetch_video_metadata(cls, youtube_url):
-        """Fallback: Lay Tieu de, Mo ta va Tags khi video khong co Phu de."""
-        # SSRF protection: validate URL before passing to yt-dlp
+        """Fallback: Lấy Tiêu đề, Mô tả và Tags khi video không có Phụ đề."""
+        # 1. Kiểm tra SSRF bằng whitelist domain chuẩn
         if not _validate_youtube_url(youtube_url):
             raise ValueError("URL không hợp lệ: chỉ chấp nhận youtube.com hoặc youtu.be")
         
+        # 2. Cấu hình cấm yt-dlp truy cập IP nội bộ / chuyển hướng không an toàn
+        ydl_opts = {
+            'skip_download': True,
+            'quiet': True,
+            'no_check_certificate': False,
+            'deny_ip_allowed_country_code': None,
+            # Giới hạn giao thức chỉ cho phép http/https
+            'allowed_extractors': ['youtube'],
+        }
+        
         try:
-            with YoutubeDL({'skip_download': True, 'quiet': True}) as ydl:
+            with YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(youtube_url, download=False)
                 title = info.get('title', '')
                 description = info.get('description', '')
@@ -259,40 +277,7 @@ class YouTubeNativeService:
         video_id = cls.extract_video_id(youtube_url)
         context_text, raw_transcript = await cls.fetch_transcript_text(video_id, youtube_url)
 
-        prompt = f"""
-        Dữ liệu dưới đây là Nội dung kèm mốc thời gian Timestamp [MM:SS] của một Video YouTube:
-
-        ---
-        {context_text[:30000]}
-        ---
-
-        Dựa trên nội dung có timestamp ở trên, hãy thiết kế một Cây Lộ Trình Học Tập gồm 6-10 bài học.
-        Đối với mỗi bài học, hãy trích xuất mốc thời gian bắt đầu chính xác nhất dựa trên timestamp có trong dữ liệu (tính ra số giây `start_seconds`).
-
-        Trả về DUY NHẤT định dạng JSON theo mẫu:
-        {{
-          "video_id": "{video_id}",
-          "folder_name": "Tên Lộ Trình Học Tập Theo Chủ Đề Video",
-          "lessons": [
-            {{
-              "lesson_key": "Bài 1",
-              "title": "Bài 1: [Tên bài học]",
-              "summary": "Tóm tắt 1-2 câu",
-              "start_time": "00:01:15",
-              "start_seconds": 75,
-              "anchor_url": "https://www.youtube.com/watch?v={video_id}&t=75s"
-            }},
-            {{
-              "lesson_key": "Bài 2",
-              "title": "Bài 2: [Tên bài học]",
-              "summary": "Tóm tắt 1-2 câu",
-              "start_time": "00:05:40",
-              "start_seconds": 340,
-              "anchor_url": "https://www.youtube.com/watch?v={video_id}&t=340s"
-            }}
-          ]
-        }}
-        """
+        user_prompt = build_youtube_outline_user_prompt(context_text=context_text, video_id=video_id)
 
         # Wrap with retry for 503 errors
         async def generate_with_retry():
@@ -302,8 +287,9 @@ class YouTubeNativeService:
                 try:
                     return await client.aio.models.generate_content(
                         model=MODEL_NAME,
-                        contents=prompt,
+                        contents=user_prompt,
                         config=types.GenerateContentConfig(
+                            system_instruction=YOUTUBE_OUTLINE_SYSTEM_INSTRUCTION, # Phân tách chỉ dẫn hệ thống
                             response_mime_type="application/json",
                             temperature=0.3,
                         ),
