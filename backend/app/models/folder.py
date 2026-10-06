@@ -3,7 +3,7 @@ from datetime import datetime
 import uuid
 
 from sqlmodel import Field, SQLModel, Relationship, JSON
-from sqlalchemy import CheckConstraint, Column
+from sqlalchemy import CheckConstraint, Column, DateTime
 
 if TYPE_CHECKING:
     from app.models.user import User
