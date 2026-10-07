@@ -1,50 +1,35 @@
-# Ignore everything by default
+# Keep only what the backend image needs.
+# NOTE: patterns like `*.py`, `*.txt`, `*.json`, `Dockerfile` match at every
+# level and would strip backend/requirements.txt and backend/Dockerfile, so
+# they must never appear here.
 *
-
-# Allow only backend for backend deployment
 !backend/
 !backend/**
-!.railway/
+!railway.json
 
-# Exclude frontend
+# VCS and local env
+.git
+.gitignore
+.gitattributes
+.env
+.env.*
+**/.env.local
+
+# Other services and local tooling
 frontend/
-frontend/**
-
-# Exclude everything else
-.git/
-.env*
-*.md
-*.txt
-*.py
-*.sql
-*.yml
-*.yaml
-*.json
-*.lock
-Dockerfile
-Dockerfile.*
-docker-compose*
-*.log
-*.pyc
-__pycache__/
-node_modules/
+venv/
 mezon-cache/
 mezon_sdk_download/
 mezon-sdk-python/
-mezon_sdk/
-.git/
-.gitignore
-.gitattributes
-Dockerfile*
-docker-compose*
-*.md
-*.txt
-*.py
-*.sql
-*.yml
-*.yaml
-*.json
-*.lock
-*.log
-*.pyc
-__pycache__/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Backend debug dumps and scratch scripts
+backend/*.log
+backend/check_*.py
+backend/test_*.py
+backend/debug_*.txt
+backend/chat_check.txt
+backend/db_check.txt
