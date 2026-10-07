@@ -24,6 +24,10 @@ mezon-cache/
 mezon_sdk_download/
 mezon-sdk-python/
 *.log
-backend/*.txt
 backend/check_*.py
 backend/test_*.py
+backend/debug_*.txt
+backend/chat_check.txt
+backend/db_check.txt
+backend/backend.log
+backend/backend.err.log

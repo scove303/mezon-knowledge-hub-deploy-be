@@ -66,3 +66,7 @@ debug_youtube_*.txt
 !requirements.txt
 !**/requirements.txt
 /mezon-sdk-python
+
+# local debug tokens
+.tok
+.tok2
