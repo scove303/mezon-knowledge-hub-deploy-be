@@ -1,0 +1,29 @@
+# VCS
+.git
+.gitignore
+.gitattributes
+
+# Python
+venv/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+
+# Node
+**/node_modules
+**/.next
+
+# Local env files — never bake localhost URLs into images
+**/.env.local
+**/.env.development.local
+**/.env.production.local
+
+# Local caches and debug dumps
+mezon-cache/
+mezon_sdk_download/
+mezon-sdk-python/
+*.log
+backend/*.txt
+backend/check_*.py
+backend/test_*.py

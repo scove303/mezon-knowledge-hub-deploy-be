@@ -38,7 +38,7 @@ ALLOWED_NETLOCS = {
 }
 
 def _validate_youtube_url(url: str) -> bool:
-   try:
+    try:
         parsed = urlparse(url)
         if parsed.scheme not in ("http", "https"):
             return False

@@ -2,12 +2,12 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
-COPY package*.json ./
+COPY frontend/package*.json ./
 RUN npm install
 
-COPY . .
+COPY frontend/ .
 
-ARG NEXT_PUBLIC_API_URL="https://backend-production-a6b3.up.railway.app/api/v1"
+ARG NEXT_PUBLIC_API_URL="https://mezon-backend.fly.dev/api/v1"
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 RUN npm run build
@@ -28,4 +28,3 @@ USER node
 EXPOSE 3000
 
 CMD ["npm", "start"]
-

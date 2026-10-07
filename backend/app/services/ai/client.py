@@ -38,11 +38,11 @@ async def generate_content_with_retry(
 ):
     """Gợi Gemini kèm retry khi gặp lỗi thoáng qua (503 - quá tải)."""
     if config is None:
-        config = types.GenerateContentConfig()[cite: 1]
-    
+        config = types.GenerateContentConfig()
+
     # Tự động gán system_instruction vào config nếu được truyền riêng
     if system_instruction:
-        config.system_instruction = system_instruction[cite: 1, 3]
+        config.system_instruction = system_instruction
 
     last_exc = None
     for attempt in range(retries):
@@ -50,16 +50,16 @@ async def generate_content_with_retry(
             return await client.aio.models.generate_content(
                 model=MODEL_NAME,
                 contents=prompt,  # Dữ liệu từ người dùng (user input)
-                config=config,    # Cấu hình chứa system_instruction riêng biệt[cite: 1, 3]
+                config=config,    # Cấu hình chứa system_instruction riêng biệt
             )
         except Exception as e:
-            last_exc = e[cite: 1]
-            code = getattr(e, "code", None)[cite: 1]
-            is_503 = code == 503 or "503" in str(e) or "UNAVAILABLE" in str(e)[cite: 1]
+            last_exc = e
+            code = getattr(e, "code", None)
+            is_503 = code == 503 or "503" in str(e) or "UNAVAILABLE" in str(e)
             if is_503 and attempt < retries - 1:
-                print(f"⚠️ [Gemini 503] Thử lại lần {attempt + 1}/{retries} sau {base_delay}s...")[cite: 1]
-                await asyncio.sleep(base_delay)[cite: 1]
-                base_delay *= 2[cite: 1]
+                print(f"⚠️ [Gemini 503] Thử lại lần {attempt + 1}/{retries} sau {base_delay}s...")
+                await asyncio.sleep(base_delay)
+                base_delay *= 2
             else:
-                raise[cite: 1]
-    raise last_exc[cite: 1]
+                raise
+    raise last_exc

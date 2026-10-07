@@ -122,13 +122,8 @@ def list_my_shared_chats(
         data=result,
     )
 
-from fastapi import Request
-from app.core.limiter import limiter # Instance limiter của ứng dụng
-
 @router.get("/{share_code}")
-@limiter.limit("10/minute")  # Giới hạn tối đa 10 lượt request / phút trên mỗi IP
 def get_shared_chat(
-    request: Request,        # Bổ sung tham số request để limiter hoạt động
     share_code: str,
     session: SessionDep,
     # Optional: if user is authenticated, pass their ID to check private chat ownership
