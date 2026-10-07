@@ -3,7 +3,7 @@ from datetime import datetime
 import uuid
 
 from sqlmodel import Field, SQLModel, Relationship, JSON
-from sqlalchemy import CheckConstraint, Column, DateTime
+from sqlalchemy import CheckConstraint, Column
 
 if TYPE_CHECKING:
     from app.models.user import User
@@ -23,7 +23,7 @@ class Folder(SQLModel, table=True):
     created_at: datetime = Field(default_factory=datetime.utcnow)
     updated_at: Optional[datetime] = Field(default=None)
     order_index: int = Field(default=0)
-    last_mindmap_generated_at: Optional[datetime] = Field(default=None, sa_type=DateTime(timezone=True))
+    last_mindmap_generated_at: Optional[datetime] = Field(default=None)
 
     # Hierarchical structure
     parent_id: Optional[str] = Field(foreign_key="folders.id", index=True, default=None)

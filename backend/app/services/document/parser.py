@@ -617,11 +617,11 @@ YÊU CẦU:
     outline_user_prompt = f"Chủ đề: {topic}\n\nNgữ cảnh Tavily:\n{tavily_context}"
 
     outline_res = await _generate_content_with_retry(
-        user_content, #outline_user_prompt,
+        outline_user_prompt,
         types.GenerateContentConfig(
             response_mime_type="application/json",  # Ép trả về JSON chuẩn
             temperature=0.3,
-            system_instruction=system_instruction, #outline_system_prompt,
+            system_instruction=outline_system_prompt,
         ),
     )
 
