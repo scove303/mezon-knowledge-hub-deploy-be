@@ -1,0 +1,50 @@
+# Ignore everything by default
+*
+
+# Allow only backend for backend deployment
+!backend/
+!backend/**
+!.railway/
+
+# Exclude frontend
+frontend/
+frontend/**
+
+# Exclude everything else
+.git/
+.env*
+*.md
+*.txt
+*.py
+*.sql
+*.yml
+*.yaml
+*.json
+*.lock
+Dockerfile
+Dockerfile.*
+docker-compose*
+*.log
+*.pyc
+__pycache__/
+node_modules/
+mezon-cache/
+mezon_sdk_download/
+mezon-sdk-python/
+mezon_sdk/
+.git/
+.gitignore
+.gitattributes
+Dockerfile*
+docker-compose*
+*.md
+*.txt
+*.py
+*.sql
+*.yml
+*.yaml
+*.json
+*.lock
+*.log
+*.pyc
+__pycache__/

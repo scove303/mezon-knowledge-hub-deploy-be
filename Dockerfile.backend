@@ -1,3 +1,4 @@
+# Force rebuild: Tue,
 FROM python:3.13-slim
 
 WORKDIR /app
@@ -20,4 +21,5 @@ USER appuser
 
 EXPOSE 8000
 
-CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]
+CMD ["sh", "-c", "uvicorn app.main:app --host 0.0.0.0 --port ${PORT:-8000}"]# Build fix: Tue, Oct  6, 2026 10:59:06 AM
+# Force rebuild

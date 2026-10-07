@@ -1,0 +1,51 @@
+services:
+  - type: web
+    name: mezon-backend
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: mezon-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: MEZON_BOT_TOKEN
+        sync: false
+      - key: MEZON_BOT_ID
+        sync: false
+      - key: TAVILY_API_KEY
+        sync: false
+      - key: DEEPSEEK_API_KEY
+        sync: false
+      - key: TRANSCRIPT_API_KEY
+        sync: false
+      - key: SUPADATA_API_KEY
+        sync: false
+      - key: MEZON_CLIENT_ID
+        sync: false
+      - key: MEZON_CLIENT_SECRET
+        sync: false
+      - key: FRONTEND_URL
+        value: "https://frontend.onrender.com"
+      - key: API_BASE_URL
+        value: "https://mezon-backend.onrender.com"
+      - key: MEZON_REDIRECT_URI
+        value: "https://mezon-backend.onrender.com/api/v1/auth/mezon/callback"
+      - key: WEB_APP_URL
+        value: "https://frontend.onrender.com"
+
+  - type: web
+    name: mezon-frontend
+    runtime: docker
+    dockerfilePath: ./frontend/Dockerfile
+    envVars:
+      - key: NEXT_PUBLIC_API_URL
+        value: "https://mezon-backend.onrender.com/api/v1"
+
+databases:
+  - name: mezon-db
+    databaseName: mezon_knowledge_hub
+    user: mezon_user

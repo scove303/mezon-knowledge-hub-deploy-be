@@ -1,12 +1,27 @@
-__pycache__/
-*.py[cod]
-.venv/
-env/
-venv/
+# Ignore everything by default
+*
+# But include these files/folders
+!Dockerfile
+!requirements.txt
+!app/
+!alembic.ini
+!scripts/
+
+# Exclude everything else
+mezon-cache/
+mezon_sdk_download/
+.git/
+.gitignore
 *.log
+*.pyc
+__pycache__/
 tests/
 scratch/
 debug_youtube_*.txt
-.git
-.gitignore
-!requirements.txt
+chat_check.txt
+check_*.py
+backend.err.log
+backend.log
+dev-server.log
+restructure.py
+scratch_test_ws.py
