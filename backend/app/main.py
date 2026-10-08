@@ -19,8 +19,16 @@ async def lifespan(app: FastAPI):
     create_db_and_tables()
     run_migrations()
     
-    # Bật Bot Mezon chạy ngầm cùng lúc
-    bot_task = asyncio.create_task(start_mezon_bot())
+    # Bật Bot Mezon chạy ngầm cùng lúc (không làm sập app nếu bot fail)
+    async def safe_start_bot():
+        try:
+            await start_mezon_bot()
+        except Exception as e:
+            print(f"[BOT] Khong the khoi dong Mezon Bot (se chay rieng): {e}")
+            import sys
+            sys.stdout.flush()
+    
+    bot_task = asyncio.create_task(safe_start_bot())
     
     yield
     # Shutdown (cleanup)
