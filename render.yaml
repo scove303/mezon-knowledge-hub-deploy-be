@@ -3,6 +3,7 @@ services:
     name: mezon-backend
     runtime: docker
     dockerfilePath: ./backend/Dockerfile
+    plan: starter
     envVars:
       - key: DATABASE_URL
         fromDatabase:
@@ -29,7 +30,7 @@ services:
       - key: MEZON_CLIENT_SECRET
         sync: false
       - key: FRONTEND_URL
-        value: "https://frontend.onrender.com"
+        value: "https://mezon-frontend.onrender.com"
       - key: API_BASE_URL
         value: "https://mezon-backend.onrender.com"
       - key: MEZON_REDIRECT_URI
@@ -41,11 +42,13 @@ services:
     name: mezon-frontend
     runtime: docker
     dockerfilePath: ./frontend/Dockerfile
+    plan: starter
     envVars:
       - key: NEXT_PUBLIC_API_URL
         value: "https://mezon-backend.onrender.com/api/v1"
 
 databases:
   - name: mezon-db
+    plan: free
     databaseName: mezon_knowledge_hub
     user: mezon_user
